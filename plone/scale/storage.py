@@ -54,10 +54,13 @@ class IImageScaleStorage(Interface):
 
 
 class AnnotationStorage(object):
-    """:obj:`IImageScaleStorage` implementation using annotations. The image
-    scales themselves are stored as dictionaries in an annotation with
-    `plone.scale.<id>` as key. Each image scale dictionary has the following
-    keys:
+    """:obj:`IImageScaleStorage` implementation using annotations. Image data
+    is stored as an annotation on the object container the image. This is
+    needed since not all images are themselves annotatable.
+
+    The image scales are stored as dictionaries in an annotation with
+    `plone.scale.<field>.<id>` as key. Each image scale dictionary has the
+    following keys:
 
     * dimensions: A (width, height) tuple with the image dimensions.
     * mimetype: the MIME type of the image
@@ -65,7 +68,7 @@ class AnnotationStorage(object):
     * data: the raw image data
 
     In addition a list of all image scales and their parameters are maintained
-    in an annotation with key `plone.scale.scales`. This makes it possible to
+    in an annotation with key `plone.scale.<field>`. This makes it possible to
     find an existing scale with specific parameters without having to iterate
     over all scales.
     """
