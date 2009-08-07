@@ -28,10 +28,13 @@ In addition several implementation goals were defined:
   server. This should be configurable via just a filesystem path & base
   URL.
 
-- The API for using plone.scale is envisioned to look like this::
+- minimum number of external dependencies, allowing this package to be
+  used in many environments.
 
-    <img tal:define="scale python:scale(context.image, width=100, direction='down')"
-      tal:attributes="title context/title; width scale/width; height scale/height; src scale/url"
-      alt=""/>
+The API for using plone.scale is envisioned to look like this::
+
+  <img tal:define="scale python:scale(context.image, width=100, direction='down')"
+    tal:attributes="title context/title; width scale/width; height scale/height; src scale/url"
+    alt=""/>
 
 .. _repoze.bitblt: http://pypi.python.org/pypi/repoze.bitblt
