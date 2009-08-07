@@ -31,5 +31,6 @@ setup(name="plone.scale",
       install_requires=[
           "PIL",
           "setuptools",
+          "zope.interface",
       ],
       )
