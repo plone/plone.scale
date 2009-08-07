@@ -2,7 +2,7 @@
 Image storage
 =============
 
-Storage and retrieval of images os abstracted, allowing different
+Storage and retrieval of images is abstracted, allowing different
 implementations to be used.
 
 Scales can be retrieved using either their scaling parameters or via an

@@ -21,6 +21,10 @@ In addition several implementation goals were defined:
 - image scaling must happen on demand instead of up-front. This reduces
   initial save time and prevents unnecessary scalings from being generated.
 
+- image scaling parameters should not be part of the generated URL. Since
+  the number of parameters can change and new parameters may be added in
+  the future this would create overly complex URLs and URL parsing.
+
 - no HTML rewriting (such as done by `repoze.bitblt`_) should be required.
 
 - it should be possibly to develop an external storage system which stores
@@ -33,6 +37,7 @@ In addition several implementation goals were defined:
 
 - testable without requiring zope.testing. Running `setup.py test` should
   be sufficient.
+ 
 
 The API for using plone.scale is envisioned to look like this::
 
