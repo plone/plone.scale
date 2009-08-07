@@ -1,5 +1,5 @@
 """
-Image storing
+Image storage
 =============
 
 Storage and retrieval of images os abstracted, allowing different
