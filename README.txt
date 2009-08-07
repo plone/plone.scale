@@ -31,6 +31,9 @@ In addition several implementation goals were defined:
 - minimum number of external dependencies, allowing this package to be
   used in many environments.
 
+- testable without requiring zope.testing. Running `setup.py test` should
+  be sufficient.
+
 The API for using plone.scale is envisioned to look like this::
 
   <img tal:define="scale python:scale(context.image, width=100, direction='down')"
