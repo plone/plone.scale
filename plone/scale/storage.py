@@ -23,7 +23,7 @@ class IImageScale(Interface):
 
     id = Attribute("An identifier uniquely identifying this scale")
     dimensions = Attribute("A (width, height) tuple with the image dimensions.")
-    url = Attribute("absolute URL for this image.")
+    url = Attribute("Absolute URL for this image.")
     mimetype = Attribute("The MIME-type of the image.")
     size = Attribute("The size of the image data in bytes.")
 
@@ -51,3 +51,23 @@ class IImageScaleStorage(Interface):
     def __getitem__(self, key):
         """Find a scale based on its id."""
 
+
+
+class AnnotationStorage(object):
+    """:obj:`IImageScaleStorage` implementation using annotations. The image
+    scales themselves are stored as dictionaries in an annotation with
+    `plone.scale.<id>` as key. Each image scale dictionary has the following
+    keys:
+
+    * dimensions: A (width, height) tuple with the image dimensions.
+    * mimetype: the MIME type of the image
+    * size: size of the image data in bytes
+    * data: the raw image data
+
+    In addition a list of all image scales and their parameters are maintained
+    in an annotation with key `plone.scale.scales`. This makes it possible to
+    find an existing scale with specific parameters without having to iterate
+    over all scales.
+    """
+
+    implements(IImageScaleStorage)
