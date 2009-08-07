@@ -38,6 +38,9 @@ In addition several implementation goals were defined:
 - testable without requiring zope.testing. Running `setup.py test` should
   be sufficient.
  
+- URLs for scaled images should have an extension which reflects their
+  MIME type. This is facilitates cache (and other front-end services)
+  configuration.
 
 The API for using plone.scale is envisioned to look like this::
 
