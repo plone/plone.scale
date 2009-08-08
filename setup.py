@@ -6,8 +6,18 @@ except ImportError:
 
 from setuptools import setup, find_packages
 import os
+import sys
 
 version = "1.0"
+
+install_requires = [
+        "PIL",
+        "setuptools",
+        "zope.interface",
+        ]
+
+if sys.version_info[:2]<(2,5):
+    install_requires.append("uuid")
 
 setup(name="plone.scale",
       version=version,
@@ -28,9 +38,5 @@ setup(name="plone.scale",
       include_package_data=True,
       zip_safe=True,
       test_suite="plone.scale",
-      install_requires=[
-          "PIL",
-          "setuptools",
-          "zope.interface",
-      ],
+      install_requires=install_requires,
       )

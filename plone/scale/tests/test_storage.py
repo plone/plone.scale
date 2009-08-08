@@ -95,7 +95,16 @@ class BaseAnnotationStorageTests(unittest.TestCase):
 
     def testGetScaleForNonExistingScaleWithoutCreation(self):
         storage=self.createStorage()
-        scale=storage.getScale(width=100, height=200, direction="up")
+        scale=storage.getScale(width=100, height=200, direction="up", create=False)
         self.failUnless(scale is None)
+
+    def testGetScaleForNonExistingScaleWithCreation(self):
+        storage=self.createStorage()
+        def _data():
+            from plone.scale.tests.test_scale import PNG
+            return PNG
+        storage._data=_data
+        scale=storage.getScale(width=100, height=200, direction="up", create=True)
+        self.failUnless(scale is not None)
 
 
