@@ -10,9 +10,32 @@ class BaseAnnotationStorageTests(unittest.TestCase):
         storage.annotations={}
         return storage
 
+    def testInterface(self):
+        from zope.interface.verify import verifyObject
+        from plone.scale.storage import IImageScaleStorage
+        storage=self.createStorage()
+        self.failUnless(verifyObject(IImageScaleStorage, storage))
+
     def testGetItemWithoutAnnotations(self):
         storage=self.createStorage()
         self.assertRaises(KeyError, operator.itemgetter("key"), storage)
+
+    def testGetItem(self):
+        from plone.scale.storage import IImageScale
+        from zope.interface.verify import verifyObject
+        storage=self.createStorage()
+        marker=[]
+        storage.annotations["plone.scale.fieldname.one"]=dict(
+                dimensions=(100,200), mimetype="image/png",
+                size=76543, data=marker)
+        scale=storage["one"]
+        self.failUnless(verifyObject(IImageScale, scale))
+        self.assertEqual(scale.id, "one")
+        self.assertEqual(scale.dimensions, (100,200))
+        self.assertEqual(scale.mimetype, "image/png")
+        self.assertEqual(scale.size, 76543)
+        self.failUnless(hasattr(scale, "url"), True)
+        self.failUnless(isinstance(scale.url), str)
 
     def testSetItemNotAllowed(self):
         storage=self.createStorage()

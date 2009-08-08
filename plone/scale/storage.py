@@ -94,6 +94,7 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         return "plone.scale.%s.%s" % (self.fieldname, id)
     
     def __getitem__(self, id):
+# XXX Wrap!
         return self.annotations[self._AnnotationKey(id)]
 
     def __setitem__(self, id, scale):
