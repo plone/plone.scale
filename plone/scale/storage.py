@@ -54,6 +54,9 @@ class IImageScaleStorage(Interface):
         """Find a scale based on its id."""
 
 
+class ImageScale(object):
+    implements(IImageScale)
+
 
 class BaseAnnotationStorage(UserDict.DictMixin):
     """:obj:`IImageScaleStorage` implementation using annotations. Image data
@@ -76,7 +79,8 @@ class BaseAnnotationStorage(UserDict.DictMixin):
 
     This is a base class for adapters. Derived classes need to implement
     a constructor which puts the field name in `self.fieldname` and sets 
-    `self.annotations` to the appropriate annotation of the content object.
+    `self.annotations` to the appropriate annotation of the content object
+    and a `:method:_url` method.
     """
     # Extra implementation note: the list of scales is kept as a list of
     # (id, scale parameter) tuples. This is not as ideal as a mapping of
@@ -84,6 +88,11 @@ class BaseAnnotationStorage(UserDict.DictMixin):
     # common operation), but dicts are not hashable making this impossible.
 
     implements(IImageScaleStorage)
+
+    def _url(self, id):
+        """Return the absolute URL for a scaled image with a given id. This
+        method must be implemented by derived classes."""
+        return "dummy"
 
     def __repr__(self):
         return "<%s fieldname=%s>" % (self.__class__.__name__, self.fieldname)
@@ -94,8 +103,14 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         return "plone.scale.%s.%s" % (self.fieldname, id)
     
     def __getitem__(self, id):
-# XXX Wrap!
-        return self.annotations[self._AnnotationKey(id)]
+        data=self.annotations[self._AnnotationKey(id)]
+        scale=ImageScale()
+        scale.id=id
+        scale.dimensions=data["dimensions"]
+        scale.mimetype=data["mimetype"]
+        scale.size=data["size"]
+        scale.url=self._url(id)
+        return scale
 
     def __setitem__(self, id, scale):
         raise RuntimeError("New scales have to be created via getScale()")

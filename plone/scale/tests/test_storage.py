@@ -35,7 +35,7 @@ class BaseAnnotationStorageTests(unittest.TestCase):
         self.assertEqual(scale.mimetype, "image/png")
         self.assertEqual(scale.size, 76543)
         self.failUnless(hasattr(scale, "url"), True)
-        self.failUnless(isinstance(scale.url), str)
+        self.failUnless(isinstance(scale.url, str))
 
     def testSetItemNotAllowed(self):
         storage=self.createStorage()
