@@ -24,10 +24,9 @@ class BaseAnnotationStorageTests(unittest.TestCase):
         from plone.scale.storage import IImageScale
         from zope.interface.verify import verifyObject
         storage=self.createStorage()
-        marker=[]
         storage.annotations["plone.scale.fieldname.one"]=dict(
                 dimensions=(100,200), mimetype="image/png",
-                size=76543, data=marker)
+                size=76543, data=None)
         scale=storage["one"]
         self.failUnless(verifyObject(IImageScale, scale))
         self.assertEqual(scale.id, "one")
@@ -80,5 +79,23 @@ class BaseAnnotationStorageTests(unittest.TestCase):
         del storage["key"]
         self.assertEqual(storage.annotations["plone.scale.fieldname"], [("other", None)])
         self.failUnless("plone.scale.fieldname.key" not in storage.annotations)
+
+    def testGetScaleForExistingScale(self):
+        from plone.scale.storage import IImageScale
+        storage=self.createStorage()
+        storage.annotations["plone.scale.fieldname.one"]=dict(
+                dimensions=(100,200), mimetype="image/png",
+                size=76543, data=None)
+        storage.annotations["plone.scale.fieldname"]=[
+                ("one", dict(width=100, height=200, direction="up"))]
+        scale=storage.getScale(width=100, height=200, direction="up")
+        self.failUnless(IImageScale.providedBy(scale))
+        self.assertEqual(scale.dimensions, (100,200))
+        self.assertEqual(scale.id, "one")
+
+    def testGetScaleForNonExistingScaleWithoutCreation(self):
+        storage=self.createStorage()
+        scale=storage.getScale(width=100, height=200, direction="up")
+        self.failUnless(scale is None)
 
 

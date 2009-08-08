@@ -51,7 +51,8 @@ class IImageScaleStorage(Interface):
         """
 
     def __getitem__(self, key):
-        """Find a scale based on its id."""
+        """Find a scale based on its id. Returns an object implementing the
+        `:obj:IImageScale` interface."""
 
 
 class ImageScale(object):
@@ -80,7 +81,7 @@ class BaseAnnotationStorage(UserDict.DictMixin):
     This is a base class for adapters. Derived classes need to implement
     a constructor which puts the field name in `self.fieldname` and sets 
     `self.annotations` to the appropriate annotation of the content object
-    and a `:method:_url` method.
+    and the `:method:_data` and `:method:_url` methods.
     """
     # Extra implementation note: the list of scales is kept as a list of
     # (id, scale parameter) tuples. This is not as ideal as a mapping of
@@ -89,19 +90,38 @@ class BaseAnnotationStorage(UserDict.DictMixin):
 
     implements(IImageScaleStorage)
 
+    def _data(self):
+        """Return the raw original image data. Scales are generated based on
+        this data."""
+
+
     def _url(self, id):
         """Return the absolute URL for a scaled image with a given id. This
         method must be implemented by derived classes."""
-        return "dummy"
+        return id
+
+
+    def getScale(self, width=None, height=None, direction=None, create=True):
+        parameters=dict(width=width, height=height, direction=direction)
+        index=self.annotations.get("plone.scale.%s" % self.fieldname, [])
+        for (id, info) in index:
+            if info==parameters:
+                return self[id]
+
+        if not create:
+            return None
+
 
     def __repr__(self):
         return "<%s fieldname=%s>" % (self.__class__.__name__, self.fieldname)
     __str__ = __repr__
 
+
     def _AnnotationKey(self, id):
         """Determine the annotation key for an image scale with id `id`."""
         return "plone.scale.%s.%s" % (self.fieldname, id)
-    
+
+
     def __getitem__(self, id):
         data=self.annotations[self._AnnotationKey(id)]
         scale=ImageScale()
@@ -112,8 +132,10 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         scale.url=self._url(id)
         return scale
 
+
     def __setitem__(self, id, scale):
         raise RuntimeError("New scales have to be created via getScale()")
+
 
     def __delitem__(self, id):
         key=self._AnnotationKey(id)
@@ -124,17 +146,19 @@ class BaseAnnotationStorage(UserDict.DictMixin):
                 del index[i]
                 break
 
+
     def __iter__(self):
         key="plone.scale.%s" % self.fieldname
         for (id, _) in self.annotations.get(key, []):
             yield id
 
+
     def keys(self):
         return list(self.__iter__())
+
 
     def has_key(self, id):
         key=self._AnnotationKey(id)
         return self.annotations.has_key(key)
-
     __contains__ = has_key
 

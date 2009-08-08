@@ -89,7 +89,6 @@ def scaleImage(image, width=None, height=None, direction="down"):
             if height is None:
                 height=new_height
             image=image.crop((left, 0, right, height))
-    
 
     result=StringIO()
 
