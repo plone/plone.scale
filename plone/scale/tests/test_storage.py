@@ -14,6 +14,10 @@ class BaseAnnotationStorageTests(unittest.TestCase):
         storage=self.createStorage()
         self.assertRaises(KeyError, operator.itemgetter("key"), storage)
 
+    def testSetItemNotAllowed(self):
+        storage=self.createStorage()
+        self.assertRaises(RuntimeError, operator.setitem, storage, "key", None)
+
     def testIterateWithoutAnnotations(self):
         storage=self.createStorage()
         self.assertEqual(list(storage), [])
