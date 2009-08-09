@@ -29,6 +29,11 @@ div.sphinxsidebar {
     border: 1px solid #eeeeee;
 }
 
+div.sphinxsidebar h3 {
+    margin-left: -11px;
+    margin-right: -6px;
+}
+
 div.sphinxsidebar h3,
 div.sphinxsidebar h3 a {
     background-color: #76ad17;
