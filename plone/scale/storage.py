@@ -66,29 +66,29 @@ class BaseAnnotationStorage(UserDict.DictMixin):
     is stored as an annotation on the object container the image. This is
     needed since not all images are themselves annotatable.
 
-    The image scales are stored as dictionaries in an annotation with
-    `plone.scale.<field>.<id>` as key. Each image scale dictionary has the
-    following keys:
-
-    * dimensions: A (width, height) tuple with the image dimensions.
-    * mimetype: the MIME type of the image
-    * size: size of the image data in bytes
-    * data: the raw image data
-
-    In addition a list of all image scales and their parameters are maintained
-    in an annotation with key `plone.scale.<field>`. This makes it possible to
-    find an existing scale with specific parameters without having to iterate
-    over all scales.
-
     This is a base class for adapters. Derived classes need to implement
     a constructor which puts the field name in `self.fieldname` and sets 
     `self.annotations` to the appropriate annotation of the content object
     and the `:method:_data` and `:method:_url` methods.
+
+    Information on all existing image scales and their parameters is maintained
+    in an annotation with key `plone.scale.<field>`. This annotation has a
+    list of tuples. Each tuple describes an image scale and has three components:
+    the scale id, a dictionary with scaling parameters and a dictionary which
+    describes the scaled image. This last dictionary has the following keys:
+
+    * dimensions: A (width, height) tuple with the image dimensions.
+    * mimetype: the MIME type of the image
+    * size: size of the image data in bytes
+
+    The image data of the scaled images is stored in an annotation with
+    `plone.scale.<field>.<id>` as key.
     """
     # Extra implementation note: the list of scales is kept as a list of
-    # (id, scale parameter) tuples. This is not as ideal as a mapping of
-    # parameters to id would be (since parameter->id lookup is the most
-    # common operation), but dicts are not hashable making this impossible.
+    # (id, scaling parameters, scaled image info) tuples. This is not as ideal
+    # as a mapping of parameters to id would be (since parameter->id lookup is
+    # the most common operation), but dicts are not hashable making this
+    # impossible.
 
     implements(IImageScaleStorage)
 
@@ -106,23 +106,22 @@ class BaseAnnotationStorage(UserDict.DictMixin):
     def getScale(self, width=None, height=None, direction=None, create=True):
         parameters=dict(width=width, height=height, direction=direction)
         index=self.annotations.get("plone.scale.%s" % self.fieldname, [])
-        for (id, info) in index:
+        for (id, info, details) in index:
             if info==parameters:
-                return self[id]
+                return self._get(id, details)
 
         if not create:
             return None
 
         (data, format, dimensions)=scaleImage(self._data(), **parameters)
+        details=dict(dimensions=dimensions,
+                     mimetype="image/%s" % format.lower(),
+                     size=len(data))
         id=str(uuid.uuid4())
-        index.append((id, parameters))
-        self.annotations[self._AnnotationKey(id)]=dict(
-                dimensions=dimensions,
-                mimetype="image/%s" % format.lower(),
-                size=len(data),
-                data=data)
+        index.append((id, parameters, details))
+        self.annotations[self._AnnotationKey(id)]=data
 
-        return self[id]
+        return self._get(id, details)
 
 
     def __repr__(self):
@@ -135,15 +134,23 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         return "plone.scale.%s.%s" % (self.fieldname, id)
 
 
-    def __getitem__(self, id):
-        data=self.annotations[self._AnnotationKey(id)]
+    def _get(self, id, details):
         scale=ImageScale()
         scale.id=id
-        scale.dimensions=data["dimensions"]
-        scale.mimetype=data["mimetype"]
-        scale.size=data["size"]
+        scale.dimensions=details["dimensions"]
+        scale.mimetype=details["mimetype"]
+        scale.size=details["size"]
         scale.url=self._url(id)
         return scale
+
+
+    def __getitem__(self, key):
+        index=self.annotations.get("plone.scale.%s" % self.fieldname, [])
+        for (id, info, details) in index:
+            if id==key:
+                return self._get(id, details)
+        else:
+            raise KeyError(key)
 
 
     def __setitem__(self, id, scale):

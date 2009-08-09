@@ -24,9 +24,10 @@ class BaseAnnotationStorageTests(unittest.TestCase):
         from plone.scale.storage import IImageScale
         from zope.interface.verify import verifyObject
         storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname.one"]=dict(
-                dimensions=(100,200), mimetype="image/png",
-                size=76543, data=None)
+        storage.annotations["plone.scale.fieldname"]=[
+                ("one",
+                 dict(width=100, height=200, direction="up"),
+                 dict(dimensions=(100,200), mimetype="image/png", size=76543))]
         scale=storage["one"]
         self.failUnless(verifyObject(IImageScale, scale))
         self.assertEqual(scale.id, "one")
@@ -83,11 +84,10 @@ class BaseAnnotationStorageTests(unittest.TestCase):
     def testGetScaleForExistingScale(self):
         from plone.scale.storage import IImageScale
         storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname.one"]=dict(
-                dimensions=(100,200), mimetype="image/png",
-                size=76543, data=None)
         storage.annotations["plone.scale.fieldname"]=[
-                ("one", dict(width=100, height=200, direction="up"))]
+                ("one",
+                 dict(width=100, height=200, direction="up"),
+                 dict(dimensions=(100,200), mimetype="image/png", size=76543))]
         scale=storage.getScale(width=100, height=200, direction="up")
         self.failUnless(IImageScale.providedBy(scale))
         self.assertEqual(scale.dimensions, (100,200))
