@@ -1,33 +1,37 @@
 @import url('default.css');
 body {
-    background-color: #006339;
-}
- 
-div.document {
-    background-color: #dad3bd;
+    font: 100% Arial, FreeSans, sans-serif;
+    background: White;
+    color: Black;
 }
 
-div.sphinxsidebar h3,h4,h5,li,a {
-    color: #127c56 !important;
+div.document {
+    background-color: #f6f6f6;
+}
+
+div.sphinxsidebar h3,
+div.sphinxsidebar h4,
+div.sphinxsidebar h3 a,
+div.sphinxsidebar h4 a {
+    color: #205c90;
+}
+
+div.sphinxsidebar a,
+div.sphinxsidebar p {
+    color: #205c90;
 }
 
 div.related {
-    color: #dad3bd;
-    background-color: #00744a;
-}
- 
-div.related a {
-    color: #dad3bd;
+    background-color: #329fd7;
 }
 
-div.body h3 {
-    font-size: 120%;
+a:link, a:visited {
+    color: #205c90;
+    text-decoration: none;
 }
 
-div.body h3,
-div.body h4,
-div.body h5,
-div.body h6 {
-    background-color: transparent;
+a:link:hover,
+a:visited:hover {
+    color: #75ad0a;
 }
 
