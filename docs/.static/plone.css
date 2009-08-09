@@ -59,6 +59,10 @@ div.related {
     background-color: #329fd7;
 }
 
+div.related a:hover {
+    color: Black;
+}
+
 a:link, a:visited {
     color: #205c90;
     text-decoration: none;
