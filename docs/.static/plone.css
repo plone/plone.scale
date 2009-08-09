@@ -5,13 +5,42 @@ body {
     color: Black;
 }
 
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 {
+    color: Black;
+    background-color: White;
+    font-weight: bold;
+    line-height: 125%;
+    border: none;
+    font: "Helvetica Neue",Arial,FreeSans,sans-serif;
+}
+
+
 div.document {
+    background-color: White;
+}
+
+div.sphinxsidebar {
     background-color: #f6f6f6;
+    border: 1px solid #eeeeee;
 }
 
 div.sphinxsidebar h3,
+div.sphinxsidebar h3 a {
+    background-color: #76ad17;
+    color: White;
+    padding: 0 0.5em;
+}
+
+div.sphinxsidebar h3 a:hover {
+    color: White;
+}
+
 div.sphinxsidebar h4,
-div.sphinxsidebar h3 a,
 div.sphinxsidebar h4 a {
     color: #205c90;
 }
