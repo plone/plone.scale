@@ -42,10 +42,28 @@ In addition several implementation goals were defined:
   MIME type. This is facilitates cache (and other front-end services)
   configuration.
 
-The API for using plone.scale is envisioned to look like this::
-
-  <img tal:define="scale python:scale(context.image, width=100, direction='down')"
-    tal:attributes="title context/title; width scale/width; height scale/height; src scale/url"
-    alt=""/>
-
 .. _repoze.bitblt: http://pypi.python.org/pypi/repoze.bitblt
+
+
+Usage
+=====
+
+The most common way to use :mod:`plone.scale` is from a HTML template.
+In TAL syntax a typical usage looks like this::
+
+  <img tal:define="scales context/image/@@image-scaling;
+                   thumbnail python:scales.scale(width=64, height=64)"
+       tal:attributes="src thumbnail/url;
+                       width thumbnail/width;
+                       height thumbnail/height" />
+
+This generates a thumbnail with a maximum size of 64x64 pixels. The
+dimensions of the resulting image (which might not be exactly 64x64)
+are set as attributes on the ``img`` tag to speed up browser rendering.
+
+If you prefer Genshi syntax and have the :class:`IImageScaleStorage` interface
+in scope the syntax looks like this::
+
+  <img py:with="thumbnail=IImageScaleStorage(context.image).scale(width=64, heigh=64)"
+       py:attributes="dict(src=thumbnail.url, width=thumbnail.width, height=thumbnail.height" />
+

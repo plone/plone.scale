@@ -15,7 +15,8 @@ class IImageScale(Interface):
     """
 
     id = Attribute("An identifier uniquely identifying this scale")
-    dimensions = Attribute("A (width, height) tuple with the image dimensions.")
+    width = Attribute("The pixel width of the image.")
+    height = Attribute("The pixel height of the image.")
     url = Attribute("Absolute URL for this image.")
     mimetype = Attribute("The MIME-type of the image.")
     size = Attribute("The size of the image data in bytes.")
@@ -26,14 +27,14 @@ class IImageScaleStorage(Interface):
     """This is an adapter for an image which can store, retrieve and generate
     image scales. It provides a dictionary interface to existing image scales
     using the scale id as key. To find or create a scale based on its scaling
-    parameters use the :meth:`getScale` method.
+    parameters use the :meth:`scale` method.
     """
 
     def __init__(image):
         """Adapter constructor."""
 
 
-    def getScale(width=None, height=None, direction=None, create=True):
+    def scale(width=None, height=None, direction=None, create=True):
         """Find a scale based on its parameters. The parameters can be anything
         supported by :meth:`scaleImage`. If an existing scale is found it is
         returned in an :class:`IImageScale` wrapper. If the scale does not exists
@@ -92,7 +93,7 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         return id
 
 
-    def getScale(self, width=None, height=None, direction=None, create=True):
+    def scale(self, width=None, height=None, direction=None, create=True):
         parameters=dict(width=width, height=height, direction=direction)
         index=self.annotations.get("plone.scale.%s" % self.fieldname, [])
         for (id, info, details) in index:
@@ -126,7 +127,8 @@ class BaseAnnotationStorage(UserDict.DictMixin):
     def _get(self, id, details):
         scale=ImageScale()
         scale.id=id
-        scale.dimensions=details["dimensions"]
+        scale.width=details["dimensions"][0]
+        scale.height=details["dimensions"][1]
         scale.mimetype=details["mimetype"]
         scale.size=details["size"]
         scale.url=self._url(id)
@@ -143,7 +145,7 @@ class BaseAnnotationStorage(UserDict.DictMixin):
 
 
     def __setitem__(self, id, scale):
-        raise RuntimeError("New scales have to be created via getScale()")
+        raise RuntimeError("New scales have to be created via scale()")
 
 
     def __delitem__(self, id):
