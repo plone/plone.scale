@@ -36,6 +36,10 @@ In addition several implementation goals were defined:
   the future this would create overly complex URLs and URL parsing.
 
 - no HTML rewriting (such as done by `repoze.bitblt`_) should be required.
+  Rewriting has proven to have too many negative side effects such as
+  not handling unclean markup correctly, lossing DOCTYPEs or switching between
+  HTML and XHTML, all of which can have very undesirable effects. In addition
+  it will have a performance penalty.
 
 - it should be possibly to develop an external storage system which stores
   scaled images externally and returns a URL which bypasses the application
@@ -45,7 +49,7 @@ In addition several implementation goals were defined:
 - minimum number of external dependencies, allowing this package to be
   used in many environments.
 
-- testable without requiring zope.testing. Running `setup.py test` should
+- testable without requiring zope.testing. Running ``setup.py test`` should
   be sufficient.
  
 - URLs for scaled images should have an extension which reflects their
@@ -54,7 +58,6 @@ In addition several implementation goals were defined:
 
 
 .. _repoze.bitblt: http://pypi.python.org/pypi/repoze.bitblt
-.. todolist::
 
 
 Contents
