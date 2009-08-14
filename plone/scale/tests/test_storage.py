@@ -69,7 +69,7 @@ class BaseAnnotationStorageTests(unittest.TestCase):
 
     def testPositiveHasKey(self):
         storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname.one"]=None
+        storage.annotations["plone.scale.one"]=None
         self.assertEqual(storage.has_key("one"), True)
 
     def testDeleteNonExistingItem(self):
@@ -78,12 +78,12 @@ class BaseAnnotationStorageTests(unittest.TestCase):
 
     def testDeleteRemovesItemAndIndex(self):
         storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname"]=[("key", None), ("other", None)]
-        storage.annotations["plone.scale.fieldname.key"]=None
-        storage.annotations["plone.scale.fieldname.other"]=None
-        del storage["key"]
-        self.assertEqual(storage.annotations["plone.scale.fieldname"], [("other", None)])
-        self.failUnless("plone.scale.fieldname.key" not in storage.annotations)
+        storage.annotations["plone.scale.fieldname"]=[("key1", None), ("key2", None)]
+        storage.annotations["plone.scale.key1"]=("fieldname", None)
+        storage.annotations["plone.scale.key2"]=("fieldname", None)
+        del storage["key1"]
+        self.assertEqual(storage.annotations["plone.scale.fieldname"], [("key2", None)])
+        self.failUnless("plone.scale.key1" not in storage.annotations)
 
     def testGetScaleForExistingScale(self):
         from plone.scale.storage import IImageScale
@@ -92,7 +92,7 @@ class BaseAnnotationStorageTests(unittest.TestCase):
                 ("one",
                  dict(width=100, height=200, direction="up"),
                  dict(dimensions=(100,200), mimetype="image/png", size=76543))]
-        scale=storage.scale(width=100, height=200, direction="up")
+        scale=storage.scale("fieldname", width=100, height=200, direction="up")
         self.failUnless(IImageScale.providedBy(scale))
         self.assertEqual(scale.width, 100)
         self.assertEqual(scale.height, 200)
@@ -100,16 +100,33 @@ class BaseAnnotationStorageTests(unittest.TestCase):
 
     def testGetScaleForNonExistingScaleWithoutCreation(self):
         storage=self.createStorage()
-        scale=storage.scale(width=100, height=200, direction="up", create=False)
+        scale=storage.scale("fieldname", width=100, height=200, direction="up", create=False)
         self.failUnless(scale is None)
 
     def testGetScaleForNonExistingScaleWithCreation(self):
+        from plone.scale.tests.test_scale import PNG
+        from plone.scale.storage import IImageData
+        from zope.component import getGlobalSiteManager
+        from zope.component import adapts
+        from zope.interface import implements
+
         storage=self.createStorage()
-        def _data():
-            from plone.scale.tests.test_scale import PNG
-            return PNG
-        storage._data=_data
-        scale=storage.scale(width=100, height=200, direction="up", create=True)
-        self.failUnless(scale is not None)
+        class Context:
+            logo = PNG
+        storage.context=Context()
+
+        class NullAdapter:
+            implements(IImageData)
+            adapts(str)
+            def __init__(self, data):
+                self.data=data
+
+        gsm=getGlobalSiteManager()
+        gsm.registerAdapter(NullAdapter)
+        try:
+            scale=storage.scale("logo", width=100, height=200, direction="up", create=True)
+            self.failUnless(scale is not None)
+        finally:
+            gsm.unregisterAdapter(NullAdapter)
 
 

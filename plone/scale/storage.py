@@ -23,6 +23,15 @@ class IImageScale(Interface):
 
 
 
+class IImageData(Interface):
+    """Simple adapater to extract image data from a field. This is needed
+    to handle different field types such as :class:`zope.app.file.image.Image`
+    and :class:`Products.Archetypes.Fields.ImageField`.
+    """
+    data = Attribute("The raw image data")
+
+
+
 class IImageScaleStorage(Interface):
     """This is an adapter for an image which can store, retrieve and generate
     image scales. It provides a dictionary interface to existing image scales
@@ -82,9 +91,12 @@ class BaseAnnotationStorage(UserDict.DictMixin):
 
     implements(IImageScaleStorage)
 
-    def _data(self):
-        """Return the raw original image data. Scales are generated based on
-        this data. This method must be implemented by derived classes."""
+    def _getField(self, fieldname):
+        """Return the image field of the current context. Scales are generated
+        based on this data. The base implementation assumes images are
+        available as attributes.
+        """
+        return getattr(self.context, fieldname)
 
 
     def _url(self, id):
@@ -93,9 +105,9 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         return id
 
 
-    def scale(self, width=None, height=None, direction=None, create=True):
+    def scale(self, fieldname, width=None, height=None, direction=None, create=True):
         parameters=dict(width=width, height=height, direction=direction)
-        index=self.annotations.get("plone.scale.%s" % self.fieldname, [])
+        index=self.annotations.get("plone.scale.%s" % fieldname, [])
         for (id, info, details) in index:
             if info==parameters:
                 return self._get(id, details)
@@ -103,25 +115,22 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         if not create:
             return None
 
-        (data, format, dimensions)=scaleImage(self._data(), **parameters)
+        image=self._getField(fieldname)
+        data=IImageData(image).data
+        (data, format, dimensions)=scaleImage(data, **parameters)
         details=dict(dimensions=dimensions,
                      mimetype="image/%s" % format.lower(),
                      size=len(data))
         id=str(uuid.uuid4())
         index.append((id, parameters, details))
-        self.annotations[self._AnnotationKey(id)]=data
+        self.annotations[self._AnnotationKey(id)]=(fieldname, data)
 
         return self._get(id, details)
 
 
-    def __repr__(self):
-        return "<%s fieldname=%s>" % (self.__class__.__name__, self.fieldname)
-    __str__ = __repr__
-
-
     def _AnnotationKey(self, id):
         """Determine the annotation key for an image scale with id `id`."""
-        return "plone.scale.%s.%s" % (self.fieldname, id)
+        return "plone.scale.%s" % id
 
 
     def _get(self, id, details):
@@ -150,8 +159,9 @@ class BaseAnnotationStorage(UserDict.DictMixin):
 
     def __delitem__(self, id):
         key=self._AnnotationKey(id)
+        fieldname=self.annotations[key][0]
         del self.annotations[key]
-        index=self.annotations["plone.scale.%s" % self.fieldname]
+        index=self.annotations["plone.scale.%s" % fieldname]
         for i in xrange(len(index)):
             if index[i][0]==id:
                 del index[i]
