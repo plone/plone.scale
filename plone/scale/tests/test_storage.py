@@ -2,10 +2,10 @@ import operator
 import unittest
 
 
-class BaseAnnotationStorageTests(unittest.TestCase):
+class AnnotationStorageTests(unittest.TestCase):
     def createStorage(self):
-        from plone.scale.storage import BaseAnnotationStorage
-        storage=BaseAnnotationStorage()
+        from plone.scale.storage import AnnotationStorage
+        storage=AnnotationStorage()
         storage.fieldname="fieldname"
         storage.annotations={}
         return storage
@@ -13,11 +13,9 @@ class BaseAnnotationStorageTests(unittest.TestCase):
     def testInterface(self):
         from zope.interface.verify import verifyObject
         from plone.scale.storage import IImageScaleStorage
-        from plone.scale.storage import BaseAnnotationStorage
+        from plone.scale.storage import AnnotationStorage
         storage=self.createStorage()
-        if storage.__class__ is not BaseAnnotationStorage:
-            # The base class is missing required methods on purpose
-            self.failUnless(verifyObject(IImageScaleStorage, storage))
+        self.failUnless(verifyObject(IImageScaleStorage, storage))
 
     def testGetItemWithoutAnnotations(self):
         storage=self.createStorage()

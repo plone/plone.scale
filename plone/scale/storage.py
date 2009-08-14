@@ -1,8 +1,10 @@
 import UserDict
 import uuid
+from zope.component import adapts
 from zope.interface import Attribute
 from zope.interface import Interface
 from zope.interface import implements
+from zope.annotation import IAnnotations
 from plone.scale.scale import scaleImage
 
 class IImageScale(Interface):
@@ -60,7 +62,7 @@ class ImageScale(object):
     implements(IImageScale)
 
 
-class BaseAnnotationStorage(UserDict.DictMixin):
+class AnnotationStorage(UserDict.DictMixin):
     """:class:`IImageScaleStorage` implementation using annotations. Image data
     is stored as an annotation on the object container the image. This is
     needed since not all images are themselves annotatable.
@@ -68,7 +70,7 @@ class BaseAnnotationStorage(UserDict.DictMixin):
     This is a base class for adapters. Derived classes need to implement
     a constructor which puts the field name in `self.fieldname` and sets 
     `self.annotations` to the appropriate annotation of the content object
-    and the :meth:`_data` and :meth:`_url` methods.
+    and the :meth:`_getField` and :meth:`_url` methods.
 
     Information on all existing image scales and their parameters is maintained
     in an annotation with key `plone.scale.<field>`. This annotation has a
@@ -91,6 +93,15 @@ class BaseAnnotationStorage(UserDict.DictMixin):
 
     implements(IImageScaleStorage)
 
+    def __init__(self, context):
+        self.context=context
+        self.annotations=IAnnotations(context)
+
+
+    def __repr__(self):
+        return "<%s context=%s>" % (self.__clas__.__name__, self.context)
+    __str__=__repr__
+
     def _getField(self, fieldname):
         """Return the image field of the current context. Scales are generated
         based on this data. The base implementation assumes images are
@@ -103,6 +114,12 @@ class BaseAnnotationStorage(UserDict.DictMixin):
         """Return the absolute URL for a scaled image with a given id. This
         method must be implemented by derived classes."""
         return id
+
+
+    def _wrapImageData(self, fieldname, data, details):
+        """Hook to transform image data into something that can easily be
+        returned to the publication logic."""
+        return data
 
 
     def scale(self, fieldname, width=None, height=None, direction=None, create=True):
@@ -123,7 +140,8 @@ class BaseAnnotationStorage(UserDict.DictMixin):
                      size=len(data))
         id=str(uuid.uuid4())
         index.append((id, parameters, details))
-        self.annotations[self._AnnotationKey(id)]=(fieldname, data)
+        self.annotations[self._AnnotationKey(id)]=\
+                (fieldname, self._wrapImageData(fieldname, data, details))
 
         return self._get(id, details)
 

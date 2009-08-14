@@ -34,6 +34,8 @@ setup(name="plone.scale",
           "PIL",
           "uuid",
           "setuptools",
+          "zope.annotation",
+          "zope.component",
           "zope.interface",
           ]
       )

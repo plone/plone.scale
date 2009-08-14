@@ -28,6 +28,6 @@ Interfaces
 Classes
 --------
 
-.. autoclass:: BaseAnnotationStorage
+.. autoclass:: AnnotationStorage
    :members: _data, _url, _AnnotationKey
 
