@@ -60,6 +60,29 @@ In addition several implementation goals were defined:
 .. _repoze.bitblt: http://pypi.python.org/pypi/repoze.bitblt
 
 
+Usage
+=====
+
+The most common way to use :mod:`plone.scale` is from a HTML template.
+In TAL syntax a typical usage looks like this::
+
+  <img tal:define="scales context/@@image-scaling;
+                   thumbnail python:scales.scale('logo', width=64, height=64)"
+       tal:attributes="src thumbnail/url;
+                       width thumbnail/width;
+                       height thumbnail/height" />
+
+This generates a thumbnail of an image field called *logo* with a maximum size
+of 64x64 pixels. The dimensions of the resulting image (which might not be
+exactly 64x64) are set as attributes on the ``img`` tag to speed up browser
+rendering.
+
+If you prefer Genshi syntax and have the :class:`IImageScaleStorage` interface
+in scope the syntax looks like this::
+
+  <img py:with="thumbnail=IImageScaleStorage(context).scale('logo', width=64, heigh=64)"
+       py:attributes="dict(src=thumbnail.url, width=thumbnail.width, height=thumbnail.height" />
+
 Contents
 ==============
 
