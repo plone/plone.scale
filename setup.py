@@ -34,7 +34,7 @@ setup(name="plone.scale",
           "PIL",
           "setuptools",
           ],
-      extra_require = dict(
+      extras_require = dict(
           storage = [ "zope.annotation",
                       "zope.component",
                       "zope.interface",
