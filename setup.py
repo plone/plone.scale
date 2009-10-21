@@ -32,10 +32,13 @@ setup(name="plone.scale",
       test_suite="plone.scale",
       install_requires=[
           "PIL",
-          "uuid",
           "setuptools",
-          "zope.annotation",
-          "zope.component",
-          "zope.interface",
-          ]
+          ],
+      extra_require = dict(
+          storage = [ "zope.annotation",
+                      "zope.component",
+                      "zope.interface",
+                      "uuid",
+                    ],
+          ),
       )
