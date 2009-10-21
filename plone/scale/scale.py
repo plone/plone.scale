@@ -22,13 +22,18 @@ def scaleImage(image, width=None, height=None, direction="down"):
     can be very important. For logos use `up` scaling, while normal
     photo usage in CMS contexts usually requires `down` scaling.
 
+    The `image` parameter can either be the raw image data (ie a `str`
+    instance) or an open file.
+
     The return value is a tuple with the new image, the image format
     and a size-tuple.
     """
     if width is None and height is None:
         raise ValueError("Either width or height need to be given")
 
-    image=PIL.Image.open(StringIO(image))
+    if isinstance(image, str):
+        image=StringIO(image)
+    image=PIL.Image.open(image)
 
     if image.mode=="1":
         # Convert black&white to grayscale
