@@ -99,7 +99,7 @@ class AnnotationStorage(UserDict.DictMixin):
 
 
     def __repr__(self):
-        return "<%s context=%s>" % (self.__clas__.__name__, self.context)
+        return "<%s context=%s>" % (self.__class__.__name__, self.context)
     __str__=__repr__
 
     def _getField(self, fieldname):
@@ -188,7 +188,7 @@ class AnnotationStorage(UserDict.DictMixin):
 
     def __iter__(self):
         key="plone.scale.%s" % self.fieldname
-        for (id, _) in self.annotations.get(key, []):
+        for (id, info, details) in self.annotations.get(key, []):
             yield id
 
 
