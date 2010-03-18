@@ -1,130 +1,111 @@
-import operator
-import unittest
+from unittest import TestCase
+from operator import itemgetter, setitem, delitem
 
 
-class AnnotationStorageTests(unittest.TestCase):
-    def createStorage(self):
+class AnnotationStorageTests(TestCase):
+
+    @property
+    def storage(self):
         from plone.scale.storage import AnnotationStorage
-        storage=AnnotationStorage()
-        storage.fieldname="fieldname"
-        storage.annotations={}
+        storage = AnnotationStorage(None)
+        storage.modified = lambda: 42
+        storage.storage = {}
         return storage
 
-    def testInterface(self):
-        from zope.interface.verify import verifyObject
-        from plone.scale.storage import IImageScaleStorage
-        from plone.scale.storage import AnnotationStorage
-        storage=self.createStorage()
-        self.failUnless(verifyObject(IImageScaleStorage, storage))
+    def factory(self, **kw):
+        return 'some data', 'png', (42, 23)
 
-    def testGetItemWithoutAnnotations(self):
-        storage=self.createStorage()
-        self.assertRaises(KeyError, operator.itemgetter("key"), storage)
+    def testInterface(self):
+        from plone.scale.storage import IImageScaleStorage
+        storage = self.storage
+        self.failUnless(IImageScaleStorage.providedBy(storage))
+
+    def testScaleForNonExistingScaleWithCreation(self):
+        storage = self.storage
+        scale = storage.scale(factory=self.factory, foo=23, bar=42)
+        self.failUnless('uid' in scale)
+        self.failUnless('key' in scale)
+        self.assertEqual(scale['data'], 'some data')
+        self.assertEqual(scale['width'], 42)
+        self.assertEqual(scale['height'], 23)
+        self.assertEqual(scale['mimetype'], 'image/png')
+
+    def testScaleForNonExistingScaleWithoutCreation(self):
+        storage = self.storage
+        scale = storage.scale(foo=23, bar=42)
+        self.assertEqual(scale, None)
+
+    def testScaleForExistingScale(self):
+        storage = self.storage
+        scale1 = storage.scale(factory=self.factory, foo=23, bar=42)
+        scale2 = storage.scale(factory=self.factory, bar=42, foo=23)
+        self.failUnless(scale1 is scale2)
+        self.assertEqual(len(storage), 2)
+
+    def testScaleForSimilarScales(self):
+        storage = self.storage
+        scale1 = storage.scale(factory=self.factory, foo=23, bar=42)
+        scale2 = storage.scale(factory=self.factory, bar=42, foo=23, hurz='!')
+        self.failIf(scale1 is scale2)
+        self.assertEqual(len(storage), 4)
 
     def testGetItem(self):
-        from plone.scale.storage import IImageScale
-        from zope.interface.verify import verifyObject
-        storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname"]=[
-                ("one",
-                 dict(width=100, height=200, direction="up"),
-                 dict(dimensions=(100,200), mimetype="image/png", size=76543))]
-        scale=storage["one"]
-        self.failUnless(verifyObject(IImageScale, scale))
-        self.assertEqual(scale.id, "one")
-        self.assertEqual(scale.width, 100)
-        self.assertEqual(scale.height, 200)
-        self.assertEqual(scale.mimetype, "image/png")
-        self.assertEqual(scale.size, 76543)
-        self.failUnless(hasattr(scale, "url"), True)
-        self.failUnless(isinstance(scale.url, str))
+        storage = self.storage
+        scale = storage.scale(factory=self.factory, foo=23, bar=42)
+        uid = scale['uid']
+        scale = storage[uid]
+        self.failUnless('uid' in scale)
+        self.failUnless('key' in scale)
+        self.assertEqual(scale['data'], 'some data')
+        self.assertEqual(scale['width'], 42)
+        self.assertEqual(scale['height'], 23)
+        self.assertEqual(scale['mimetype'], 'image/png')
+
+    def testGetUnknownItem(self):
+        storage = self.storage
+        self.assertRaises(KeyError, itemgetter('foo'), storage)
 
     def testSetItemNotAllowed(self):
-        storage=self.createStorage()
-        self.assertRaises(RuntimeError, operator.setitem, storage, "key", None)
+        storage = self.storage
+        self.assertRaises(RuntimeError, setitem, storage, 'key', None)
 
     def testIterateWithoutAnnotations(self):
-        storage=self.createStorage()
+        storage = self.storage
         self.assertEqual(list(storage), [])
 
     def testIterate(self):
-        import types
-        storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname"]=[("one", None), ("two", None)]
-        generator=iter(storage)
-        self.failUnless(isinstance(generator, types.GeneratorType))
-        self.assertEqual(list(generator), ["one", "two"])
+        storage = self.storage
+        storage.storage.update(one=None, two=None)
+        generator = iter(storage)
+        self.assertEqual(set(generator), set(['one', 'two']))
 
     def testKeys(self):
-        storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname"]=[("one", None), ("two", None)]
+        storage = self.storage
+        storage.storage.update(one=None, two=None)
         self.failUnless(isinstance(storage.keys(), list))
-        self.assertEqual(storage.keys(), ["one", "two"])
+        self.assertEqual(set(storage.keys()), set(['one', 'two']))
 
     def testNegativeHasKey(self):
-        storage=self.createStorage()
-        self.assertEqual(storage.has_key("one"), False)
+        storage = self.storage
+        self.assertEqual(storage.has_key('one'), False)
 
     def testPositiveHasKey(self):
-        storage=self.createStorage()
-        storage.annotations["plone.scale.one"]=None
-        self.assertEqual(storage.has_key("one"), True)
+        storage = self.storage
+        storage.storage.update(one=None)
+        self.assertEqual(storage.has_key('one'), True)
 
     def testDeleteNonExistingItem(self):
-        storage=self.createStorage()
-        self.assertRaises(KeyError, operator.delitem, storage, "key")
+        storage = self.storage
+        self.assertRaises(KeyError, delitem, storage, 'foo')
 
     def testDeleteRemovesItemAndIndex(self):
-        storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname"]=[("key1", None), ("key2", None)]
-        storage.annotations["plone.scale.key1"]=("fieldname", None)
-        storage.annotations["plone.scale.key2"]=("fieldname", None)
-        del storage["key1"]
-        self.assertEqual(storage.annotations["plone.scale.fieldname"], [("key2", None)])
-        self.failUnless("plone.scale.key1" not in storage.annotations)
-
-    def testGetScaleForExistingScale(self):
-        from plone.scale.storage import IImageScale
-        storage=self.createStorage()
-        storage.annotations["plone.scale.fieldname"]=[
-                ("one",
-                 dict(width=100, height=200, direction="up"),
-                 dict(dimensions=(100,200), mimetype="image/png", size=76543))]
-        scale=storage.scale("fieldname", width=100, height=200, direction="up")
-        self.failUnless(IImageScale.providedBy(scale))
-        self.assertEqual(scale.width, 100)
-        self.assertEqual(scale.height, 200)
-        self.assertEqual(scale.id, "one")
-
-    def testGetScaleForNonExistingScaleWithoutCreation(self):
-        storage=self.createStorage()
-        scale=storage.scale("fieldname", width=100, height=200, direction="up", create=False)
-        self.failUnless(scale is None)
-
-    def testGetScaleForNonExistingScaleWithCreation(self):
-        from plone.scale.tests.test_scale import PNG
-        from plone.scale.storage import IImageData
-        from zope.component import getGlobalSiteManager
-        from zope.component import adapts
-        from zope.interface import implements
-
-        storage=self.createStorage()
-        class Context:
-            logo = PNG
-        storage.context=Context()
-
-        class NullAdapter:
-            implements(IImageData)
-            adapts(str)
-            def __init__(self, data):
-                self.data=data
-
-        gsm=getGlobalSiteManager()
-        gsm.registerAdapter(NullAdapter)
-        try:
-            scale=storage.scale("logo", width=100, height=200, direction="up", create=True)
-            self.failUnless(scale is not None)
-        finally:
-            gsm.unregisterAdapter(NullAdapter)
+        storage = self.storage
+        scale = storage.scale(factory=self.factory, foo=23, bar=42)
+        self.assertEqual(len(storage), 2)
+        del storage[scale['uid']]
+        self.assertEqual(len(storage), 0)
 
 
+def test_suite():
+    from unittest import defaultTestLoader
+    return defaultTestLoader.loadTestsFromName(__name__)
