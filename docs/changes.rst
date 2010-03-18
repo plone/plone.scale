@@ -4,6 +4,9 @@ Changelog
 1.0 - Unreleased
 ----------------
 
+* Allow to set the quality of the resulting image scales.
+  [witsch]
+
 * Refactor storage adapter for image scales to be less dependent on the
   underlying content type.
   [witsch]

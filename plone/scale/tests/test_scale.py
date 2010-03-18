@@ -62,6 +62,14 @@ class ScalingTests(TestCase):
     def testNoRestrictions(self):
         self.assertRaises(ValueError, scaleImage, PNG, None, None)
 
+    def testQuality(self):
+        img1 = scaleImage(PNG, 84, 103)[0]
+        img2 = scaleImage(PNG, 84, 103, quality=50)[0]
+        img3 = scaleImage(PNG, 84, 103, quality=20)[0]
+        self.assertNotEqual(img1, img2)
+        self.assertNotEqual(img1, img3)
+        self.failUnless(len(img1) > len(img2) > len(img3))
+
 
 def test_suite():
     from unittest import defaultTestLoader

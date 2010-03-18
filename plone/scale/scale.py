@@ -9,7 +9,7 @@ import PIL.ImageFile
 PIL.ImageFile.MAXBLOCK = 1000000
 
 
-def scaleImage(image, width=None, height=None, direction="down"):
+def scaleImage(image, width=None, height=None, direction="down", quality=88):
     """Scale an image to another size.
 
     The generated image is a JPEG image, unless the original is a PNG
@@ -102,7 +102,7 @@ def scaleImage(image, width=None, height=None, direction="down"):
     else:
         format="JPEG"
 
-    image.save(result, format, quality=88, optimize=True)
+    image.save(result, format, quality=quality, optimize=True)
     result.seek(0)
 
     return (result.getvalue(), format, image.size)
