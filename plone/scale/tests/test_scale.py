@@ -70,6 +70,13 @@ class ScalingTests(TestCase):
         self.assertNotEqual(img1, img3)
         self.failUnless(len(img1) > len(img2) > len(img3))
 
+    def testResultBuffer(self):
+        img1 = scaleImage(PNG, 84, 103)[0]
+        result = StringIO()
+        img2 = scaleImage(PNG, 84, 103, result=result)[0]
+        self.assertEqual(result, img2)      # the return value _is_ the buffer
+        self.assertEqual(result.getvalue(), img1)   # but with the same value
+
 
 def test_suite():
     from unittest import defaultTestLoader

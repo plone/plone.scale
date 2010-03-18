@@ -9,7 +9,8 @@ import PIL.ImageFile
 PIL.ImageFile.MAXBLOCK = 1000000
 
 
-def scaleImage(image, width=None, height=None, direction="down", quality=88):
+def scaleImage(image, width=None, height=None, direction="down",
+        quality=88, result=None):
     """Scale an image to another size.
 
     The generated image is a JPEG image, unless the original is a PNG
@@ -25,8 +26,12 @@ def scaleImage(image, width=None, height=None, direction="down", quality=88):
     The `image` parameter can either be the raw image data (ie a `str`
     instance) or an open file.
 
-    The return value is a tuple with the new image, the image format
-    and a size-tuple.
+    The `quality` parameter can be used to set the quality of the
+    resulting image scales.
+
+    The return value is a tuple with the new image, the image format and
+    a size-tuple.  Optionally a file-like object can be given as the
+    `result` parameter, in which the generated image scale will be stored.
     """
     if width is None and height is None:
         raise ValueError("Either width or height need to be given")
@@ -95,15 +100,17 @@ def scaleImage(image, width=None, height=None, direction="down", quality=88):
                 height=new_height
             image=image.crop((left, 0, right, height))
 
-    result=StringIO()
-
     if image_format=="PNG":
         format="PNG"
     else:
         format="JPEG"
 
-    image.save(result, format, quality=quality, optimize=True)
-    result.seek(0)
+    if result is None:
+        result=StringIO()
+        image.save(result, format, quality=quality, optimize=True)
+        result=result.getvalue()
+    else:
+        image.save(result, format, quality=quality, optimize=True)
+        result.seek(0)
 
-    return (result.getvalue(), format, image.size)
-
+    return (result, format, image.size)
