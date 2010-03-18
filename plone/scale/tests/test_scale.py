@@ -63,3 +63,6 @@ class ScalingTests(TestCase):
         self.assertRaises(ValueError, scaleImage, PNG, None, None)
 
 
+def test_suite():
+    from unittest import defaultTestLoader
+    return defaultTestLoader.loadTestsFromName(__name__)
