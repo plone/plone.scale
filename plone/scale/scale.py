@@ -1,4 +1,3 @@
-import sys
 from cStringIO import StringIO
 import PIL.Image
 import PIL.ImageFile
