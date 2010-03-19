@@ -62,6 +62,10 @@ class ScalingTests(TestCase):
     def testNoRestrictions(self):
         self.assertRaises(ValueError, scaleImage, PNG, None, None)
 
+    def testKeepAspectRatio(self):
+        self.assertEqual(scaleImage(PNG, 80, 80, "keep")[2], (65, 80))
+
+
     def testQuality(self):
         img1 = scaleImage(PNG, 84, 103)[0]
         img2 = scaleImage(PNG, 84, 103, quality=50)[0]

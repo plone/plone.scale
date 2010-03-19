@@ -4,6 +4,9 @@ Changelog
 1.0 - Unreleased
 ----------------
 
+* Allow to use PIL's thumbnail algorithm to keep the present aspect ratio.
+  [spamsch, witsch]
+
 * Allow to set the quality of the resulting image scales.
   [witsch]
 

@@ -61,7 +61,7 @@ def scaleImage(image, width=None, height=None, direction="down",
     else:
         scale_width=(float(width)/float(current_size[0]))
 
-    if scale_height==scale_width:
+    if scale_height==scale_width or direction=="keep":
         # The original already has the right aspect ratio, so we only need
         # to scale.
         image.thumbnail((width, height), PIL.Image.ANTIALIAS)
