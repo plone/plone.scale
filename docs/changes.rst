@@ -4,6 +4,10 @@ Changelog
 1.0 - Unreleased
 ----------------
 
+* Add BSD license text following board decision:
+  http://lists.plone.org/pipermail/membership/2009-August/001038.html
+  [elro]
+
 * Allow to use PIL's thumbnail algorithm to keep the present aspect ratio.
   [spamsch, witsch]
 
