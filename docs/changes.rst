@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0 - Unreleased
-----------------
+1.0a2 - April 10th, 2010
+------------------------
 
 * Add BSD license text following board decision:
   http://lists.plone.org/pipermail/membership/2009-August/001038.html
