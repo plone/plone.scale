@@ -5,16 +5,16 @@ except ImportError:
     use_setuptools()
 
 from setuptools import setup, find_packages
-import os
+from os.path import join
 
 version = "1.0"
-
+readme = open("README.txt").read().replace(':class:', '').replace(':mod:', '')
+changes = open(join("docs", "changes.rst")).read()
 
 setup(name="plone.scale",
       version=version,
       description="Image scaling",
-      long_description=open("README.txt").read() + "\n" +
-                       open(os.path.join("docs", "changes.rst")).read(),
+      long_description=readme + "\n" + changes,
       classifiers=[
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
