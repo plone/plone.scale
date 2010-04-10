@@ -1,15 +1,20 @@
-try:
-    import setuptools
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-
-from setuptools import setup, find_packages
+import sys
 from os.path import join
+from setuptools import setup, find_packages
 
 version = "1.0"
 readme = open("README.txt").read().replace(':class:', '').replace(':mod:', '')
 changes = open(join("docs", "changes.rst")).read()
+
+STORAGE_REQUIREMENTS = [
+    "zope.annotation",
+    "zope.component",
+    "zope.interface",
+]
+
+if sys.version_info[:3] < (2, 5, 0):
+    # uuid is only required before Python 2.5
+    STORAGE_REQUIREMENTS.append("uuid")
 
 setup(name="plone.scale",
       version=version,
@@ -17,7 +22,6 @@ setup(name="plone.scale",
       long_description=readme + "\n" + changes,
       classifiers=[
         "Programming Language :: Python",
-        "Topic :: Software Development :: Libraries :: Python Modules",
         ],
       keywords="image scaling",
       author="Wichert Akkerman",
@@ -36,10 +40,6 @@ setup(name="plone.scale",
           "setuptools",
           ],
       extras_require = dict(
-          storage = [ "zope.annotation",
-                      "zope.component",
-                      "zope.interface",
-                      "uuid",
-                    ],
+          storage = STORAGE_REQUIREMENTS,
           ),
       )
