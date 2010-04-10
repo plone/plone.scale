@@ -30,7 +30,9 @@ setup(name="plone.scale",
       zip_safe=True,
       test_suite="plone.scale",
       install_requires=[
-          "PIL",
+          # We can't actually depend on PIL because not everyone can install it
+          # as an egg.
+          #"PIL",
           "setuptools",
           ],
       extras_require = dict(

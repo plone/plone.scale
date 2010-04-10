@@ -4,6 +4,8 @@ Changelog
 1.0 - Unreleased
 ----------------
 
+* Don't declare dependency on PIL.
+  [davisagli]
 
 1.0a2 - April 10th, 2010
 ------------------------
