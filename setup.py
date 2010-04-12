@@ -19,6 +19,11 @@ STORAGE_REQUIREMENTS = [
     "Persistence",
 ]
 
+SPHINX_REQUIREMENTS = [
+    "Sphinx",
+    "repoze.sphinx.autointerface",
+]
+
 if sys.version_info[:3] < (2, 5, 0):
     # uuid is only required before Python 2.5
     STORAGE_REQUIREMENTS.append("uuid")
@@ -48,5 +53,6 @@ setup(name="plone.scale",
           ],
       extras_require = dict(
           storage = STORAGE_REQUIREMENTS,
+          sphinx = STORAGE_REQUIREMENTS + SPHINX_REQUIREMENTS,
           ),
       )
