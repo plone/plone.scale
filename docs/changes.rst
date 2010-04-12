@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.0 - Unreleased
-----------------
+1.0 - April 12th, 2010
+----------------------
 
 * Only pull in the uuid distribution in Python versions before 2.5.
   [hannosch]

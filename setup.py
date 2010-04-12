@@ -8,7 +8,7 @@ except ImportError:
 
 from setuptools import setup, find_packages
 
-version = "1.0a3"
+version = "1.0"
 readme = open("README.txt").read().replace(':class:', '').replace(':mod:', '')
 changes = open(join("docs", "changes.rst")).read()
 
@@ -33,6 +33,7 @@ setup(name="plone.scale",
       description="Image scaling",
       long_description=readme + "\n" + changes,
       classifiers=[
+        "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python",
         ],
       keywords="image scaling",
