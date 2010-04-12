@@ -22,6 +22,10 @@ def scaleImage(image, width=None, height=None, direction="down",
     can be very important. For logos use `up` scaling, while normal
     photo usage in CMS contexts usually requires `down` scaling.
 
+    Alternatively, it's possible to use PIL's thumbnail algorithm to keep
+    the present aspect ratio of the image.  To do so "keep" must be passed
+    as the value of the `direction` parameter.
+
     The `image` parameter can either be the raw image data (ie a `str`
     instance) or an open file.
 
