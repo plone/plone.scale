@@ -16,6 +16,7 @@ STORAGE_REQUIREMENTS = [
     "zope.annotation",
     "zope.component",
     "zope.interface",
+    "Persistence",
 ]
 
 if sys.version_info[:3] < (2, 5, 0):
