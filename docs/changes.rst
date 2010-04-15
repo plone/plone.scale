@@ -4,6 +4,14 @@ Changelog
 1.1 - Unreleased
 ----------------
 
+* Abort if thumbnail behaviour is requested but either width or height is
+  missing. This is nicer than confronting the caller with a PIL exception.
+  [wichert]
+
+* Rename the `keep` direction to `thumbnail` to make its behaviour more
+  intuitive, but accept `keep` for now.
+  [wichert]
+
 
 1.0 - April 12th, 2010
 ----------------------
