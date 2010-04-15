@@ -22,8 +22,10 @@ def scaleImage(image, width=None, height=None, direction="down",
       and scrops the other dimension if needed.
     * `down` scaling starts by scaling the largest dimension to the required
       size and scrops the other dimension if needed.
-    * `keep` scales to the requested dimensions without cropping. It requires
-      both width and height to be specified.
+    * `thumbnail` scales to the requested dimensions without cropping. The
+      resulting image may have a different size than requested. This option
+      requires both width and height to be specified. `keep` is accepted as
+      an alternative spelling for this option, but its use is deprecated.
 
     The `image` parameter can either be the raw image data (ie a `str`
     instance) or an open file.
@@ -35,7 +37,12 @@ def scaleImage(image, width=None, height=None, direction="down",
     a size-tuple.  Optionally a file-like object can be given as the
     `result` parameter, in which the generated image scale will be stored.
     """
-    if width is None and height is None:
+    if direction=="keep":
+        direction="thumbnail"
+
+    if direction=="thumbnail" and not (width and height):
+        raise ValueError("Thumbnailing requires both width and height to be specified")
+    elif width is None and height is None:
         raise ValueError("Either width or height need to be given")
 
     if isinstance(image, str):
@@ -64,7 +71,7 @@ def scaleImage(image, width=None, height=None, direction="down",
     else:
         scale_width=(float(width)/float(current_size[0]))
 
-    if scale_height==scale_width or direction=="keep":
+    if scale_height==scale_width or direction=="thumbnail":
         # The original already has the right aspect ratio, so we only need
         # to scale.
         image.thumbnail((width, height), PIL.Image.ANTIALIAS)
