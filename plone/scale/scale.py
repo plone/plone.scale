@@ -16,15 +16,14 @@ def scaleImage(image, width=None, height=None, direction="down",
     image. This is needed to make sure alpha channel information is
     not lost, which JPEG does not support.
 
-    Scaling can happen in two directions: `up` scaling scales the smallest
-    dimension up to the required size, while `down` scaling starts by
-    scaling the largest dimension to the required size. This differences
-    can be very important. For logos use `up` scaling, while normal
-    photo usage in CMS contexts usually requires `down` scaling.
-
-    Alternatively, it's possible to use PIL's thumbnail algorithm to keep
-    the present aspect ratio of the image.  To do so "keep" must be passed
-    as the value of the `direction` parameter.
+    Three different scaling options are supported:
+    
+    * `up` scaling scales the smallest dimension up to the required size
+      and scrops the other dimension if needed.
+    * `down` scaling starts by scaling the largest dimension to the required
+      size and scrops the other dimension if needed.
+    * `keep` scales to the requested dimensions without cropping. It requires
+      both width and height to be specified.
 
     The `image` parameter can either be the raw image data (ie a `str`
     instance) or an open file.
