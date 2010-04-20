@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.1 - Unreleased
-----------------
+1.1 - April 20th, 2010
+----------------------
 
 * Abort if thumbnail behaviour is requested but either width or height is
   missing. This is nicer than confronting the caller with a PIL exception.
