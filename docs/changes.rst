@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.2 - Unreleased
+1.2 - 2010-07-18
 ----------------
 
 * Update package metadata.
