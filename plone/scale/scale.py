@@ -55,6 +55,9 @@ def scaleImage(image, width=None, height=None, direction="down",
     elif image.mode=="P":
         # Convert palette based images to 3x8bit+alpha
         image=image.convert("RGBA")
+    elif image.mode=="CMYK":
+        # Convert CMYK to RGB, allowing for web previews of print images
+        image=image.convert("RGB")
 
     # When we create a new image during scaling we loose the format
     # information, so remember it here.

@@ -7,7 +7,7 @@ import PIL.Image
 
 PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png")).read()
 GIF = open(os.path.join(TEST_DATA_LOCATION, "logo.gif")).read()
-
+CMYK = open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg")).read()
 
 class ScalingTests(TestCase):
     def testNewSizeReturned(self):
@@ -18,6 +18,12 @@ class ScalingTests(TestCase):
 
     def testScaledImageIsJpeg(self):
         self.assertEqual(scaleImage(GIF, 84, 103, "down")[1] , "JPEG")
+
+    def testScaledCMYKIsRGB(self):
+        (imagedata, format, size)=scaleImage(CMYK, 42, 51, "down")
+        input=StringIO(imagedata)
+        image=PIL.Image.open(input)
+        self.assertEqual(image.mode, "RGB")
 
     def XtestScaledPngImageIsPng(self):
         # This test failes because the sample input file has a format of
