@@ -1,8 +1,13 @@
 Changelog
 =========
 
-1.2.1 - unreleased
+1.3 - unreleased
+----------------
+
+
+1.2.1 - 2010-08-18
 ------------------
+
 * Convert CMYK to RGB, allowing for web previews of print images.
   [tomster]
 
