@@ -1,9 +1,12 @@
 Changelog
 =========
 
-1.3 - unreleased
-----------------
+1.2.2 - 2010-09-28
+------------------
 
+* Re-release to fix bad egg created for 1.2.1.
+  Refs http://dev.plone.org/plone/ticket/11154
+  [witsch]
 
 1.2.1 - 2010-08-18
 ------------------
