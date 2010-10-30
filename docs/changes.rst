@@ -4,6 +4,9 @@ Changelog
 1.3 - unreleased
 ----------------
 
+* Break up `scaleImage`, so that its scaling-related parts can be applied
+  to instances of `PIL.Image` for further processing.
+  [witsch]
 
 1.2.2 - 2010-09-28
 ------------------

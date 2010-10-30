@@ -10,7 +10,47 @@ PIL.ImageFile.MAXBLOCK = 1000000
 
 def scaleImage(image, width=None, height=None, direction="down",
         quality=88, result=None):
-    """Scale an image to another size.
+    """Scale the given image data to another size and return the result
+    as a string or optionally write in to the file-like `result` object.
+
+    The `image` parameter can either be the raw image data (ie a `str`
+    instance) or an open file.
+
+    The `quality` parameter can be used to set the quality of the
+    resulting image scales.
+
+    The return value is a tuple with the new image, the image format and
+    a size-tuple.  Optionally a file-like object can be given as the
+    `result` parameter, in which the generated image scale will be stored.
+
+    The `width`, `height`, `direction` parameters will be passed to
+    :meth:`scalePILImage`, which performs the actual scaling.
+    """
+    if isinstance(image, str):
+        image = StringIO(image)
+    image = PIL.Image.open(image)
+
+    # When we create a new image during scaling we loose the format
+    # information, so remember it here.
+    format = image.format
+    if not format == 'PNG':
+        format = 'JPEG'
+
+    image = scalePILImage(image, width, height, direction)
+
+    if result is None:
+        result=StringIO()
+        image.save(result, format, quality=quality, optimize=True)
+        result=result.getvalue()
+    else:
+        image.save(result, format, quality=quality, optimize=True)
+        result.seek(0)
+
+    return result, format, image.size
+
+
+def scalePILImage(image, width=None, height=None, direction="down"):
+    """Scale a PIL image to another size.
 
     The generated image is a JPEG image, unless the original is a PNG
     image. This is needed to make sure alpha channel information is
@@ -27,15 +67,10 @@ def scaleImage(image, width=None, height=None, direction="down",
       requires both width and height to be specified. `keep` is accepted as
       an alternative spelling for this option, but its use is deprecated.
 
-    The `image` parameter can either be the raw image data (ie a `str`
-    instance) or an open file.
+    The `image` parameter must be an instance of the `PIL.Image` class.
 
-    The `quality` parameter can be used to set the quality of the
-    resulting image scales.
-
-    The return value is a tuple with the new image, the image format and
-    a size-tuple.  Optionally a file-like object can be given as the
-    `result` parameter, in which the generated image scale will be stored.
+    The return value the scaled image in the form of another instance of
+    `PIL.Image`.
     """
     if direction=="keep":
         direction="thumbnail"
@@ -44,10 +79,6 @@ def scaleImage(image, width=None, height=None, direction="down",
         raise ValueError("Thumbnailing requires both width and height to be specified")
     elif width is None and height is None:
         raise ValueError("Either width or height need to be given")
-
-    if isinstance(image, str):
-        image=StringIO(image)
-    image=PIL.Image.open(image)
 
     if image.mode=="1":
         # Convert black&white to grayscale
@@ -58,10 +89,6 @@ def scaleImage(image, width=None, height=None, direction="down",
     elif image.mode=="CMYK":
         # Convert CMYK to RGB, allowing for web previews of print images
         image=image.convert("RGB")
-
-    # When we create a new image during scaling we loose the format
-    # information, so remember it here.
-    image_format=image.format
 
     current_size=image.size
     # Determine scale factor needed to get the right height
@@ -112,17 +139,4 @@ def scaleImage(image, width=None, height=None, direction="down",
                 height=new_height
             image=image.crop((left, 0, right, height))
 
-    if image_format=="PNG":
-        format="PNG"
-    else:
-        format="JPEG"
-
-    if result is None:
-        result=StringIO()
-        image.save(result, format, quality=quality, optimize=True)
-        result=result.getvalue()
-    else:
-        image.save(result, format, quality=quality, optimize=True)
-        result.seek(0)
-
-    return (result, format, image.size)
+    return image
