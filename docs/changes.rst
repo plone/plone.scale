@@ -5,7 +5,7 @@ Changelog
 1.3.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Cropped images are now centralised vertically as well as horizontally [mattss]
 
 
 1.3 (2013-01-17)
