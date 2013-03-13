@@ -136,7 +136,11 @@ def scalePILImage(image, width=None, height=None, direction="down"):
                 left=int((new_width-width)/2.0)
                 right=left+width
             if height is None:
-                height=new_height
-            image=image.crop((left, 0, right, height))
+                top=0
+                bottom=new_height
+            else:
+                top=int((new_height-height)/2.0)
+                bottom=top+height
+            image=image.crop((left, top, right, bottom))
 
     return image
