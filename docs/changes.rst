@@ -5,7 +5,9 @@ Changelog
 1.3.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added a marker interface for scaled image quality.
+  Refs http://dev.plone.org/plone/ticket/13337
+  [khink]
 
 
 1.3.1 (2013-04-06)
