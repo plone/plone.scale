@@ -48,7 +48,7 @@ In addition several implementation goals were defined:
 Usage
 =====
 
-The most common way to use :mod:`plone.scale` is from a HTML template.
+The most common way to use *plone.scale* is from a HTML template.
 In TAL syntax a typical usage looks like this::
 
   <img tal:define="scales context/@@image-scaling;
@@ -62,7 +62,7 @@ of 64x64 pixels. The dimensions of the resulting image (which might not be
 exactly 64x64) are set as attributes on the ``img`` tag to speed up browser
 rendering.
 
-If you prefer Genshi syntax and have the :class:`IImageScaleStorage` interface
+If you prefer Genshi syntax and have the ``IImageScaleStorage`` interface
 in scope the syntax looks like this::
 
   <img py:with="thumbnail=IImageScaleStorage(context).scale('logo', width=64, heigh=64)"
