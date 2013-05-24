@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.2 (unreleased)
+1.3.2 (2013-05-23)
 ------------------
 
 - Added a marker interface for scaled image quality.
