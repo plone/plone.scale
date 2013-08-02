@@ -40,10 +40,10 @@ def scaleImage(image, width=None, height=None, direction="down",
 
     if result is None:
         result=StringIO()
-        image.save(result, format, quality=quality, optimize=True)
+        image.save(result, format, quality=quality, optimize=True, progressive=True)
         result=result.getvalue()
     else:
-        image.save(result, format, quality=quality, optimize=True)
+        image.save(result, format, quality=quality, optimize=True, progressive=True)
         result.seek(0)
 
     return result, format, image.size
