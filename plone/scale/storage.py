@@ -62,6 +62,7 @@ class AnnotationStorage(DictMixin):
         info = storage.get(key)
         modified = self.modified and self.modified()
         if info is not None and modified > info['modified']:
+            del storage[info['uid']]
             info = None     # invalidate when the image was updated
         if info is None and factory:
             result = factory(**parameters)
