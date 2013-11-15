@@ -105,6 +105,18 @@ class AnnotationStorageTests(TestCase):
         del storage[scale['uid']]
         self.assertEqual(len(storage), 0)
 
+    def testCleanUpOldItems(self):
+        storage = self.storage
+        scale_old = storage.scale(factory=self.factory, foo=23, bar=42)
+        next_modified = storage.modified() + 1
+        storage.modified = lambda: next_modified
+        scale_new = storage.scale(factory=self.factory, foo=23, bar=42)
+        self.assertEqual(len(storage), 2)
+        self.assertEqual(scale_new['uid'] in storage, True)
+        self.assertEqual(scale_old['uid'] in storage, False)
+        del storage[scale_new['uid']]
+        self.assertEqual(len(storage), 0)
+
 
 def test_suite():
     from unittest import defaultTestLoader
