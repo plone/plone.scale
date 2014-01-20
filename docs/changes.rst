@@ -5,6 +5,10 @@ Changelog
 1.3.3 (unreleased)
 ------------------
 
+- Discard old image scales if item was modified.
+  Refs https://dev.plone.org/ticket/13791
+  [gforcada]
+
 - Generate Progressive JPEG.
   [kroman0]
 
