@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.3 (unreleased)
+1.3.3 (2014-01-27)
 ------------------
 
 - Discard old image scales if item was modified.

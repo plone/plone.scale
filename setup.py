@@ -8,7 +8,7 @@ except ImportError:
 
 from setuptools import setup, find_packages
 
-version = '1.3.3.dev0'
+version = '1.3.3'
 readme = open("README.rst").read().replace(':class:', '').replace(':mod:', '')
 changes = open(join("docs", "changes.rst")).read()
 
