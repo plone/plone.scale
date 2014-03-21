@@ -5,6 +5,11 @@ Changelog
 1.3.4 (unreleased)
 ------------------
 
+- When a scale is outdated, discard all image scales that are more
+  than a day older than the context.
+  Refs https://dev.plone.org/ticket/13791
+  [maurits]
+
 - Make sure deleting items or clearing a complete storage works.
   Deleting one item would often delete a linked second item, which
   made it hard to remove several items at once.

@@ -5,6 +5,10 @@ from zope.interface import implements
 from zope.annotation import IAnnotations
 from UserDict import DictMixin
 
+# Keep old scales around for this amount of milliseconds.
+# This is one day:
+KEEP_SCALE_MILLIS = 24 * 60 * 60 * 1000
+
 
 class IImageScaleStorage(Interface):
     """ This is an adapter for image content which can store, retrieve and
@@ -62,7 +66,11 @@ class AnnotationStorage(DictMixin):
         info = storage.get(key)
         modified = self.modified and self.modified()
         if info is not None and modified > info['modified']:
-            del storage[info['uid']]
+            # This is a good moment to clear out the cache and remove
+            # all scales older than one day.
+            for hash, value in storage.items():
+                if value['modified'] < modified - KEEP_SCALE_MILLIS:
+                    del storage[hash]
             info = None     # invalidate when the image was updated
         if info is None and factory:
             result = factory(**parameters)
