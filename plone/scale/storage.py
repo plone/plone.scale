@@ -85,7 +85,13 @@ class AnnotationStorage(DictMixin):
     def __delitem__(self, uid):
         storage = self.storage
         info = storage[uid]
-        del storage[info['key']]
+        key = info['key']
+        try:
+            del storage[key]
+        except KeyError:
+            # This key may easily have been removed already,
+            # especially when clearing the storage in one go.
+            pass
         del storage[uid]
 
     def __iter__(self):
@@ -98,3 +104,8 @@ class AnnotationStorage(DictMixin):
         return self.storage.has_key(uid)
 
     __contains__ = has_key
+
+    def clear(self):
+        storage = self.storage
+        for key in storage.keys():
+            del storage[key]

@@ -5,7 +5,10 @@ Changelog
 1.3.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Make sure deleting items or clearing a complete storage works.
+  Deleting one item would often delete a linked second item, which
+  made it hard to remove several items at once.
+  [maurits]
 
 
 1.3.3 (2014-01-27)
