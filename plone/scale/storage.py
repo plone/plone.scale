@@ -50,12 +50,12 @@ class AnnotationStorage(DictMixin):
         name = self.__class__.__name__
         return '<%s context=%r>' % (name, self.context)
 
-    __str__=__repr__
+    __str__ = __repr__
 
     @property
     def storage(self):
         return IAnnotations(self.context).setdefault('plone.scale',
-            PersistentDict())
+                                                     PersistentDict())
 
     def hash(self, **parameters):
         return tuple(sorted(parameters.items()))
@@ -79,8 +79,8 @@ class AnnotationStorage(DictMixin):
                 width, height = dimensions
                 uid = str(uuid4())
                 info = dict(uid=uid, data=data, width=width, height=height,
-                    mimetype='image/%s' % format.lower(), key=key,
-                    modified=modified)
+                            mimetype='image/%s' % format.lower(), key=key,
+                            modified=modified)
                 storage[key] = storage[uid] = info
         return info
 
@@ -104,7 +104,7 @@ class AnnotationStorage(DictMixin):
         return self.storage.keys()
 
     def has_key(self, uid):
-        return self.storage.has_key(uid)
+        return uid in self.storage
 
     __contains__ = has_key
 

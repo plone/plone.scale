@@ -1,5 +1,5 @@
-from unittest import TestCase
 from operator import itemgetter, setitem, delitem
+from unittest import TestCase
 
 
 class AnnotationStorageTests(TestCase):
@@ -87,12 +87,12 @@ class AnnotationStorageTests(TestCase):
 
     def testNegativeHasKey(self):
         storage = self.storage
-        self.assertEqual(storage.has_key('one'), False)
+        self.assertEqual('one' in storage, False)
 
     def testPositiveHasKey(self):
         storage = self.storage
         storage.storage.update(one=None)
-        self.assertEqual(storage.has_key('one'), True)
+        self.assertEqual('one' in storage, True)
 
     def testDeleteNonExistingItem(self):
         storage = self.storage
