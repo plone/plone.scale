@@ -14,7 +14,7 @@
 environments. It supports Zope 2, grok and other systems build on using the
 Zope ToolKit (ZTK).
 
-Several design goals were used when writing this package: 
+Several design goals were used when writing this package:
 
 - image scaling to any width, height, width&height should be supported
   using both up-scaling and down-scaling. Scaling parameters should never
@@ -51,7 +51,7 @@ In addition several implementation goals were defined:
 
 - testable without requiring zope.testing. Running ``setup.py test`` should
   be sufficient.
- 
+
 - URLs for scaled images should have an extension which reflects their
   MIME type. This is facilitates cache (and other front-end services)
   configuration.
