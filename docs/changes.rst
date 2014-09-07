@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.4 (unreleased)
+1.3.4 (2014-09-07)
 ------------------
 
 - When a scale is outdated, discard all image scales that are more
