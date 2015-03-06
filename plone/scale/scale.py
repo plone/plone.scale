@@ -115,7 +115,7 @@ def scalePILImage(image, width=None, height=None, direction="down"):
     if scale_height == scale_width or direction == "thumbnail":
         # The original already has the right aspect ratio, so we only need
         # to scale.
-        if direction == "down":
+        if direction in ("down", "thumbnail"):
             image.thumbnail((width, height), PIL.Image.ANTIALIAS)
         else:
             image = image.resize((width, height), PIL.Image.ANTIALIAS)

@@ -53,6 +53,9 @@ class ScalingTests(TestCase):
     def testSameSizeUpScale(self):
         self.assertEqual(scaleImage(PNG, 84, 103, "up")[2], (84, 103))
 
+    def testDoubleSizeUpScale(self):
+        self.assertEqual(scaleImage(PNG, 168, 206, "up")[2], (168, 206))
+
     def testHalfSizeUpScale(self):
         self.assertEqual(scaleImage(PNG, 42, 51, "up")[2], (42, 51))
 
