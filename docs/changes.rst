@@ -5,7 +5,8 @@ Changelog
 1.3.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- PIL thumbnail does not work for magnifying images (when scaling up).
+  Use resize instead. [sureshvv]
 
 
 1.3.4 (2014-09-07)
