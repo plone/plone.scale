@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.5 (unreleased)
+1.3.5 (2015-03-10)
 ------------------
 
 - PIL thumbnail does not work for magnifying images (when scaling up).
