@@ -60,10 +60,15 @@ class AnnotationStorage(DictMixin):
     def hash(self, **parameters):
         return tuple(sorted(parameters.items()))
 
+    def get_info_by_hash(self, hash):
+        for value in self.storage.values():
+            if value['key'] == hash:
+                return value
+
     def scale(self, factory=None, **parameters):
         key = self.hash(**parameters)
         storage = self.storage
-        info = storage.get(key)
+        info = self.get_info_by_hash(key)
         modified = self.modified and self.modified()
         if info is not None and modified > info['modified']:
             # This is a good moment to clear out the cache and remove
@@ -81,7 +86,7 @@ class AnnotationStorage(DictMixin):
                 info = dict(uid=uid, data=data, width=width, height=height,
                             mimetype='image/%s' % format.lower(), key=key,
                             modified=modified)
-                storage[key] = storage[uid] = info
+                storage[uid] = info
         return info
 
     def __getitem__(self, uid):
@@ -91,11 +96,7 @@ class AnnotationStorage(DictMixin):
         raise RuntimeError('New scales have to be created via scale()')
 
     def __delitem__(self, uid):
-        storage = self.storage
-        info = storage[uid]
-        key = info['key']
-        del storage[key]
-        del storage[uid]
+        del self.storage[uid]
 
     def __iter__(self):
         return iter(self.storage)
@@ -109,6 +110,4 @@ class AnnotationStorage(DictMixin):
     __contains__ = has_key
 
     def clear(self):
-        storage = self.storage
-        for key in storage.keys():
-            del storage[key]
+        self.storage.clear()

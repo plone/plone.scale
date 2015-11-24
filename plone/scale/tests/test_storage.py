@@ -40,14 +40,12 @@ class AnnotationStorageTests(TestCase):
         scale1 = storage.scale(factory=self.factory, foo=23, bar=42)
         scale2 = storage.scale(factory=self.factory, bar=42, foo=23)
         self.failUnless(scale1 is scale2)
-        self.assertEqual(len(storage), 2)
 
     def testScaleForSimilarScales(self):
         storage = self.storage
         scale1 = storage.scale(factory=self.factory, foo=23, bar=42)
         scale2 = storage.scale(factory=self.factory, bar=42, foo=23, hurz='!')
         self.failIf(scale1 is scale2)
-        self.assertEqual(len(storage), 4)
 
     def testGetItem(self):
         storage = self.storage
@@ -101,7 +99,7 @@ class AnnotationStorageTests(TestCase):
     def testDeleteRemovesItemAndIndex(self):
         storage = self.storage
         scale = storage.scale(factory=self.factory, foo=23, bar=42)
-        self.assertEqual(len(storage), 2)
+        self.assertEqual(len(storage), 1)
         del storage[scale['uid']]
         self.assertEqual(len(storage), 0)
 
@@ -111,7 +109,7 @@ class AnnotationStorageTests(TestCase):
         next_modified = storage.modified() + 1
         storage.modified = lambda: next_modified
         scale_new = storage.scale(factory=self.factory, foo=23, bar=42)
-        self.assertEqual(len(storage), 3)
+        self.assertEqual(len(storage), 2)
         self.assertEqual(scale_new['uid'] in storage, True)
         self.assertEqual(scale_old['uid'] in storage, True)
 
@@ -130,7 +128,7 @@ class AnnotationStorageTests(TestCase):
     def testClear(self):
         storage = self.storage
         storage.scale(factory=self.factory, foo=23, bar=42)
-        self.assertEqual(len(storage), 2)
+        self.assertEqual(len(storage), 1)
         storage.clear()
         self.assertEqual(len(storage), 0)
 
