@@ -19,6 +19,10 @@ STORAGE_REQUIREMENTS = [
     "Persistence",
 ]
 
+TESTS_REQUIREMENTS = [
+    "Pillow",
+]
+
 SPHINX_REQUIREMENTS = [
     "Sphinx",
     "repoze.sphinx.autointerface",
@@ -61,5 +65,6 @@ setup(
     extras_require=dict(
         storage=STORAGE_REQUIREMENTS,
         sphinx=STORAGE_REQUIREMENTS + SPHINX_REQUIREMENTS,
+        tests=STORAGE_REQUIREMENTS + TESTS_REQUIREMENTS,
     ),
 )
