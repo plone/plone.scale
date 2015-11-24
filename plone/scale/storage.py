@@ -42,13 +42,13 @@ class IImageScaleStorage(Interface):
 class ScalesDict(PersistentDict):
 
     def raise_conflict(self, saved, new):
-        logger.info('CONFLICT')
-        logger.info('saved\n' + pprint.pformat(saved))
-        logger.info('new\n' + pprint.pformat(new))
+        logger.info('Conflict')
+        logger.debug('saved\n' + pprint.pformat(saved))
+        logger.debug('new\n' + pprint.pformat(new))
         raise ConflictError
 
     def _p_resolveConflict(self, oldState, savedState, newState):
-        logger.info('\nResolve conflict')
+        logger.debug('Resolve conflict')
         old = oldState['data']
         saved = savedState['data']
         new = newState['data']
@@ -69,7 +69,7 @@ class ScalesDict(PersistentDict):
             if ((key in saved) and
                     (old[key]['modified'] == saved[key]['modified'])):
                 # unchanged by saved, deleted by new
-                logger.info('deleted %s' % repr(key))
+                logger.debug('deleted %s' % repr(key))
                 del saved[key]
             else:
                 # modified by saved, deleted by new
@@ -80,7 +80,7 @@ class ScalesDict(PersistentDict):
                 self.raise_conflict(saved[key], new[key])
             else:
                 # not in saved, added by new
-                logger.info('added %s' % repr(key))
+                logger.debug('added %s' % repr(key))
                 saved[key] = new[key]
         for key in modified:
             if key not in saved:
@@ -91,7 +91,7 @@ class ScalesDict(PersistentDict):
                 self.raise_conflict(saved[key], new[key])
             else:
                 # unchanged in saved, modified by new
-                logger.info('modified %s' % repr(key))
+                logger.debug('modified %s' % repr(key))
                 saved[key] = new[key]
         return dict(data=saved)
 
