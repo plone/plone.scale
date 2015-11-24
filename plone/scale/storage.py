@@ -85,15 +85,14 @@ class AnnotationStorage(DictMixin):
         storage = self.storage
         info = self.get_info_by_hash(key)
         if info is not None and self._modified_since(info['modified']):
-            # This is a good moment to clear out the cache and remove
-            # all scales older than one day.
-            for hash, value in storage.items():
-                if value['modified'] < self.modified_time - KEEP_SCALE_MILLIS:
-                    del storage[hash]
-            info = None     # invalidate when the image was updated
+            # invalidate when the image was updated
+            info = None
         if info is None and factory:
             result = factory(**parameters)
             if result is not None:
+                # storage will be modified:
+                # good time to also cleanup
+                self._cleanup()
                 data, format, dimensions = result
                 width, height = dimensions
                 uid = str(uuid4())
@@ -102,6 +101,15 @@ class AnnotationStorage(DictMixin):
                             modified=self.modified_time)
                 storage[uid] = info
         return info
+
+    def _cleanup(self):
+        storage = self.storage
+        modified_time = self.modified_time
+        for key, value in storage.items():
+            # clear cache from scales older than one day
+            if (modified_time and
+                    value['modified'] < modified_time - KEEP_SCALE_MILLIS):
+                del storage[key]
 
     def __getitem__(self, uid):
         return self.storage[uid]
