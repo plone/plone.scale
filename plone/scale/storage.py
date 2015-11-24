@@ -106,6 +106,10 @@ class AnnotationStorage(DictMixin):
         storage = self.storage
         modified_time = self.modified_time
         for key, value in storage.items():
+            # remove info stored by tuple keys
+            # before refactoring
+            if isinstance(key, tuple):
+                del storage[key]
             # clear cache from scales older than one day
             if (modified_time and
                     value['modified'] < modified_time - KEEP_SCALE_MILLIS):
