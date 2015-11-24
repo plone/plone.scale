@@ -85,6 +85,7 @@ class AnnotationStorage(DictMixin):
         storage = self.storage
         info = self.get_info_by_hash(key)
         if info is not None and self._modified_since(info['modified']):
+            del storage[info['uid']]
             # invalidate when the image was updated
             info = None
         if info is None and factory:

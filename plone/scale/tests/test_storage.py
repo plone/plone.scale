@@ -109,9 +109,9 @@ class AnnotationStorageTests(TestCase):
         next_modified = storage.modified() + 1
         storage.modified = lambda: next_modified
         scale_new = storage.scale(factory=self.factory, foo=23, bar=42)
-        self.assertEqual(len(storage), 2)
+        self.assertEqual(len(storage), 1)
         self.assertEqual(scale_new['uid'] in storage, True)
-        self.assertEqual(scale_old['uid'] in storage, True)
+        self.assertEqual(scale_old['uid'] in storage, False)
 
         # When modification time is older than a day, too old scales
         # get purged.
