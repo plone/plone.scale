@@ -46,6 +46,21 @@ class AnnotationStorage(DictMixin):
         self.context = context
         self.modified = modified
 
+    def _modified_since(self, since):
+        if since is None:
+            return False
+        elif self.modified_time is None:
+            return False
+        else:
+            return self.modified_time > since
+
+    @property
+    def modified_time(self):
+        if self.modified is not None:
+            return self.modified()
+        else:
+            return None
+
     def __repr__(self):
         name = self.__class__.__name__
         return '<%s context=%r>' % (name, self.context)
@@ -69,12 +84,11 @@ class AnnotationStorage(DictMixin):
         key = self.hash(**parameters)
         storage = self.storage
         info = self.get_info_by_hash(key)
-        modified = self.modified and self.modified()
-        if info is not None and modified > info['modified']:
+        if info is not None and self._modified_since(info['modified']):
             # This is a good moment to clear out the cache and remove
             # all scales older than one day.
             for hash, value in storage.items():
-                if value['modified'] < modified - KEEP_SCALE_MILLIS:
+                if value['modified'] < self.modified_time - KEEP_SCALE_MILLIS:
                     del storage[hash]
             info = None     # invalidate when the image was updated
         if info is None and factory:
@@ -85,7 +99,7 @@ class AnnotationStorage(DictMixin):
                 uid = str(uuid4())
                 info = dict(uid=uid, data=data, width=width, height=height,
                             mimetype='image/%s' % format.lower(), key=key,
-                            modified=modified)
+                            modified=self.modified_time)
                 storage[uid] = info
         return info
 
