@@ -4,7 +4,11 @@ from zope.interface import Interface
 from zope.interface import implements
 from zope.annotation import IAnnotations
 from UserDict import DictMixin
+from ZODB.POSException import ConflictError
+import logging
+import pprint
 
+logger = logging.getLogger('plone.scale')
 # Keep old scales around for this amount of milliseconds.
 # This is one day:
 KEEP_SCALE_MILLIS = 24 * 60 * 60 * 1000
@@ -33,6 +37,63 @@ class IImageScaleStorage(Interface):
 
     def __getitem__(uid):
         """ Find image scale data based on its uid. """
+
+
+class ScalesDict(PersistentDict):
+
+    def raise_conflict(self, saved, new):
+        logger.info('CONFLICT')
+        logger.info('saved\n' + pprint.pformat(saved))
+        logger.info('new\n' + pprint.pformat(new))
+        raise ConflictError
+
+    def _p_resolveConflict(self, oldState, savedState, newState):
+        logger.info('\nResolve conflict')
+        old = oldState['data']
+        saved = savedState['data']
+        new = newState['data']
+        added = []
+        modified = []
+        deleted = []
+        for key, value in new.items():
+            if key not in old:
+                added.append(key)
+            elif value['modified'] != old[key]['modified']:
+                modified.append(key)
+            # else:
+                # unchanged
+        for key in old:
+            if key not in new:
+                deleted.append(key)
+        for key in deleted:
+            if ((key in saved) and
+                    (old[key]['modified'] == saved[key]['modified'])):
+                # unchanged by saved, deleted by new
+                logger.info('deleted %s' % repr(key))
+                del saved[key]
+            else:
+                # modified by saved, deleted by new
+                self.raise_conflict(saved[key], new[key])
+        for key in added:
+            if key in saved:
+                # added by saved, added by new
+                self.raise_conflict(saved[key], new[key])
+            else:
+                # not in saved, added by new
+                logger.info('added %s' % repr(key))
+                saved[key] = new[key]
+        for key in modified:
+            if key not in saved:
+                # deleted by saved, modified by new
+                self.raise_conflict(saved[key], new[key])
+            elif saved[key]['modified'] != old[key]['modified']:
+                # modified by saved, modified by new
+                self.raise_conflict(saved[key], new[key])
+            else:
+                # unchanged in saved, modified by new
+                logger.info('modified %s' % repr(key))
+                saved[key] = new[key]
+        return dict(data=saved)
 
 
 class AnnotationStorage(DictMixin):
@@ -69,8 +130,17 @@ class AnnotationStorage(DictMixin):
 
     @property
     def storage(self):
-        return IAnnotations(self.context).setdefault('plone.scale',
-                                                     PersistentDict())
+        annotations = IAnnotations(self.context)
+        scales = annotations.setdefault(
+            'plone.scale',
+            ScalesDict()
+        )
+        if not isinstance(scales, ScalesDict):
+            # migrate from PersistentDict to ScalesDict
+            new_scales = ScalesDict(scales)
+            annotations['plone.scale'] = new_scales
+            return new_scales
+        return scales
 
     def hash(self, **parameters):
         return tuple(sorted(parameters.items()))
