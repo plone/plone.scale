@@ -5,7 +5,10 @@ Changelog
 1.3.6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Resolve conflicts raised when accessing multiple scales concurrently
+  [gotcha]
+
+- Refactor scale storage [gotcha]
 
 
 1.3.5 (2015-03-10)
