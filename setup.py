@@ -28,10 +28,6 @@ SPHINX_REQUIREMENTS = [
     "repoze.sphinx.autointerface",
 ]
 
-if sys.version_info[:3] < (2, 5, 0):
-    # uuid is only required before Python 2.5
-    STORAGE_REQUIREMENTS.append("uuid")
-
 setup(
     name="plone.scale",
     version=version,
