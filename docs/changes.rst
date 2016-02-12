@@ -5,6 +5,8 @@ Changelog
 1.4.1 (unreleased)
 ------------------
 
+Fixes:
+
 - Fix KeyError in storage.AnnotationStorage._cleanup when attempting
   to delete the storage for the same key twice.
   [fulv]
