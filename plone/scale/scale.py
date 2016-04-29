@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
 from cStringIO import StringIO
+
 import PIL.Image
 import PIL.ImageFile
+
 
 # Set a larger buffer size. This fixes problems with jpeg decoding.
 # See http://mail.python.org/pipermail/image-sig/1999-August/000816.html for

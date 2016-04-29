@@ -2,16 +2,22 @@ Changelog
 =========
 
 
-1.4.2 (unreleased)
-------------------
+1.5 (unreleased)
+----------------
 
 New:
 
-- *add item here*
+- Use an adapter to lookup the actual factory for scaling.
+  Deprecated passing the factory as named parameter along,
+  because this had not enough flexibility:
+  If addons want to provide alterative methods to scale (i.e. cropping),
+  now a specific adapter can perform the work.
+  [jensens]
 
 Fixes:
 
-- *add item here*
+- Minor housekeeping.
+  [jensens]
 
 
 1.4.1 (2016-02-12)
