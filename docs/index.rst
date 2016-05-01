@@ -63,6 +63,8 @@ In addition several implementation goals were defined:
 Usage
 =====
 
+ATTENTION: Long time outdated information follows.
+
 The most common way to use :mod:`plone.scale` is from a HTML template.
 In TAL syntax a typical usage looks like this::
 

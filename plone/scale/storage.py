@@ -1,12 +1,17 @@
-from uuid import uuid4
+# -*- coding: utf-8 -*-
 from persistent.dict import PersistentDict
-from zope.interface import Interface
-from zope.interface import implements
-from zope.annotation import IAnnotations
+from plone.scale.interfaces import IImageScaleFactory
 from UserDict import DictMixin
+from uuid import uuid4
 from ZODB.POSException import ConflictError
+from zope.annotation import IAnnotations
+from zope.interface import implementer
+from zope.interface import Interface
+
 import logging
 import pprint
+import warnings
+
 
 logger = logging.getLogger('plone.scale')
 # Keep old scales around for this amount of milliseconds.
@@ -96,12 +101,12 @@ class ScalesDict(PersistentDict):
         return dict(data=saved)
 
 
+@implementer(IImageScaleStorage)
 class AnnotationStorage(DictMixin):
     """ An abstract storage for image scale data using annotations and
         implementing :class:`IImageScaleStorage`. Image data is stored as an
         annotation on the object container, i.e. the image. This is needed
         since not all images are themselves annotatable. """
-    implements(IImageScaleStorage)
 
     def __init__(self, context, modified=None):
         self.context = context
@@ -158,19 +163,57 @@ class AnnotationStorage(DictMixin):
             del storage[info['uid']]
             # invalidate when the image was updated
             info = None
-        if info is None and factory:
-            result = factory(**parameters)
-            if result is not None:
-                # storage will be modified:
-                # good time to also cleanup
-                self._cleanup()
-                data, format, dimensions = result
-                width, height = dimensions
-                uid = str(uuid4())
-                info = dict(uid=uid, data=data, width=width, height=height,
-                            mimetype='image/%s' % format.lower(), key=key,
-                            modified=self.modified_time)
-                storage[uid] = info
+        elif info is not None:
+            return info
+
+        scaling_factory = IImageScaleFactory(self.context, None)
+
+        # BBB/Deprecation handling
+        if factory is not None:
+            if scaling_factory is not None:
+                raise ValueError(
+                    'Factory is passed to plone.scale but also an adapter '
+                    'was found. No way to decide which one to execute.'
+                )
+            else:
+                warnings.warn(
+                    'Deprecated usage of factory in plone.scale. Provide an '
+                    'adapter for the factory instead. The kwarg will be '
+                    'dropped with plone.scale 3.0',
+                    DeprecationWarning
+                )
+                result = factory(**parameters)
+        elif scaling_factory is not None:
+            # this is what we want, keep this after deprecaton phase
+            result = scaling_factory(**parameters)
+        else:
+            # adaption error, nor a factory was passed.
+            # BBB behavior here is to return None
+            # nevertheless we warn!
+            warnings.warn(
+                'Could not adapt context to IImageScaleFactory nor a '
+                'deprecated BBB factory callable was provided.'
+                'Assume None return value as it was before.'
+            )
+            return None
+
+        if result is not None:
+            # storage will be modified:
+            # good time to also cleanup
+            self._cleanup()
+            data, format_, dimensions = result
+            width, height = dimensions
+            uid = str(uuid4())
+            info = dict(
+                uid=uid,
+                data=data,
+                width=width,
+                height=height,
+                mimetype='image/{0}'.format(format_.lower()),
+                key=key,
+                modified=self.modified_time,
+            )
+            storage[uid] = info
         return info
 
     def _cleanup(self):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-s
 from zope.interface import Interface
 
 
@@ -11,3 +12,47 @@ class IScaledImageQuality(Interface):
     Products.Archetypes and Products.ATContentTypes (the latter two currently
     by a patch in plone.app.imaging.monkey).
     """
+
+
+class IImageScaleFactory(Interface):
+    """Creates a scale
+    """
+
+    def _call__(
+        fieldname=None,
+        direction='thumbnail',
+        height=None,
+        width=None,
+        **parameters
+    ):
+        """Interface defining an actual scaling operation.
+
+        Arguments are:
+
+        ``context``
+            some object with images on
+
+        ``fieldname``
+            name of the field to scale
+
+        ``direction``
+            is same as PIL direction on scale
+
+        ``width`` and ``height``
+            target size
+
+        ``**parameters``
+            is a dict with optional additional expected keyword arguments
+
+        Expected to return a triple of ``value, format, dimensions``
+        or ``None`` on failure.
+
+        ``value``
+            is expected to be an storeable value
+
+        ``format``
+            is the minor part of the ``image`` mimetype
+
+        ``dimensions``
+            is a tuple (width, height)
+        """

@@ -2,8 +2,10 @@ from cStringIO import StringIO
 from plone.scale.scale import scaleImage
 from plone.scale.tests import TEST_DATA_LOCATION
 from unittest import TestCase
-import PIL.Image
+
 import os.path
+import PIL.Image
+
 
 PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png")).read()
 GIF = open(os.path.join(TEST_DATA_LOCATION, "logo.gif")).read()
