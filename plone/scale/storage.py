@@ -171,9 +171,13 @@ class AnnotationStorage(DictMixin):
         # BBB/Deprecation handling
         if factory is not None:
             if scaling_factory is not None:
-                raise ValueError(
+                warnings.warn(
+                    'Deprecated usage of factory in plone.scale. '
                     'Factory is passed to plone.scale but also an adapter '
-                    'was found. No way to decide which one to execute.'
+                    'was found. No way to really decide which one to execute.'
+                    'To be nice and with a look at backward compatibility the '
+                    'passed one is used.',
+                    DeprecationWarning
                 )
             else:
                 warnings.warn(
@@ -182,7 +186,7 @@ class AnnotationStorage(DictMixin):
                     'dropped with plone.scale 3.0',
                     DeprecationWarning
                 )
-                result = factory(**parameters)
+            result = factory(**parameters)
         elif scaling_factory is not None:
             # this is what we want, keep this after deprecaton phase
             result = scaling_factory(**parameters)
