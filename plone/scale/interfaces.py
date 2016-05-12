@@ -23,6 +23,7 @@ class IImageScaleFactory(Interface):
         direction='thumbnail',
         height=None,
         width=None,
+        scale=None,
         **parameters
     ):
         """Interface defining an actual scaling operation.
@@ -40,6 +41,10 @@ class IImageScaleFactory(Interface):
 
         ``width`` and ``height``
             target size
+
+        ``scale``
+            name of the current scale, if there is one. Can be used to retrieve
+             additional information such as cropping boxes.
 
         ``**parameters``
             is a dict with optional additional expected keyword arguments
