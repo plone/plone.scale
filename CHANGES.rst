@@ -23,6 +23,9 @@ Bug fixes:
 
 New:
 
+- Preserve GIF format for GIF images instead of converting them to JPEG.
+  [thet]
+
 - Use an adapter to lookup the actual factory for scaling.
   Deprecated passing the factory as named parameter along,
   because this had not enough flexibility:

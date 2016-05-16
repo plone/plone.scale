@@ -28,6 +28,10 @@ def scaleImage(image, width=None, height=None, direction="down",
 
     The `width`, `height`, `direction` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
+
+    The generated image is a JPEG image, unless the original is a PNG or GIF
+    image. This is needed to make sure alpha channel information is
+    not lost, which JPEG does not support.
     """
     if isinstance(image, str):
         image = StringIO(image)
@@ -35,9 +39,10 @@ def scaleImage(image, width=None, height=None, direction="down",
 
     # When we create a new image during scaling we loose the format
     # information, so remember it here.
-    format = image.format
-    if not format == 'PNG':
-        format = 'JPEG'
+    format_ = image.format
+    if format_ not in ('PNG', 'GIF'):
+        # Always generate JPEG, except if format is PNG or GIF.
+        format_ = 'JPEG'
 
     image = scalePILImage(image, width, height, direction)
 
@@ -45,7 +50,7 @@ def scaleImage(image, width=None, height=None, direction="down",
         result = StringIO()
         image.save(
             result,
-            format,
+            format_,
             quality=quality,
             optimize=True,
             progressive=True)
@@ -53,21 +58,17 @@ def scaleImage(image, width=None, height=None, direction="down",
     else:
         image.save(
             result,
-            format,
+            format_,
             quality=quality,
             optimize=True,
             progressive=True)
         result.seek(0)
 
-    return result, format, image.size
+    return result, format_, image.size
 
 
 def scalePILImage(image, width=None, height=None, direction="down"):
     """Scale a PIL image to another size.
-
-    The generated image is a JPEG image, unless the original is a PNG
-    image. This is needed to make sure alpha channel information is
-    not lost, which JPEG does not support.
 
     Three different scaling options are supported:
 
