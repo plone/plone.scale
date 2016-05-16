@@ -32,6 +32,9 @@ New:
 
 Fixes:
 
+- Don't scale images up for direction "down" or "thumbnail".
+  [thet]
+
 - Minor housekeeping.
   [jensens]
 

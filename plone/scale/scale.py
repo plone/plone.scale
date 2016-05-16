@@ -115,6 +115,18 @@ def scalePILImage(image, width=None, height=None, direction="down"):
     else:
         scale_width = (float(width) / float(current_size[0]))
 
+    if (scale_height >= 1 or scale_width >= 1)\
+            and direction in ("down", "thumbnail"):
+        # Don't scale up for direction "down" or "thumbnail".
+        # However, for this example scaling calculations after this block fail
+        # badly:
+        # image with size (129, 100)
+        # target boxed size (400, 99999)
+        # we get a scale_width, scale_height (3.10077519379845, scale_height)
+        # and new_width, new_height of (128999, 99999)
+        # that brings down PIL by eating all the available memory.
+        return image
+
     if scale_height == scale_width or direction == "thumbnail":
         # The original already has the right aspect ratio, so we only need
         # to scale.
