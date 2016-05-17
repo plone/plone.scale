@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from cStringIO import StringIO
 from plone.scale.scale import scaleImage
 from plone.scale.tests import TEST_DATA_LOCATION
@@ -9,6 +10,7 @@ import PIL.Image
 
 PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png")).read()
 GIF = open(os.path.join(TEST_DATA_LOCATION, "logo.gif")).read()
+TIFF = open(os.path.join(TEST_DATA_LOCATION, "logo.tiff")).read()
 CMYK = open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg")).read()
 
 
@@ -20,8 +22,14 @@ class ScalingTests(TestCase):
         image = PIL.Image.open(input)
         self.assertEqual(image.size, size)
 
+    def testScaledImageKeepPNG(self):
+        self.assertEqual(scaleImage(PNG, 84, 103, "down")[1], "PNG")
+
+    def testScaledImageKeepGIFto(self):
+        self.assertEqual(scaleImage(GIF, 84, 103, "down")[1], "PNG")
+
     def testScaledImageIsJpeg(self):
-        self.assertEqual(scaleImage(GIF, 84, 103, "down")[1], "JPEG")
+        self.assertEqual(scaleImage(TIFF, 84, 103, "down")[1], "JPEG")
 
     def testScaledCMYKIsRGB(self):
         (imagedata, format, size) = scaleImage(CMYK, 42, 51, "down")
@@ -29,9 +37,7 @@ class ScalingTests(TestCase):
         image = PIL.Image.open(input)
         self.assertEqual(image.mode, "RGB")
 
-    def XtestScaledPngImageIsPng(self):
-        # This test failes because the sample input file has a format of
-        # None according to PIL..
+    def testScaledPngImageIsPng(self):
         self.assertEqual(scaleImage(PNG, 84, 103, "down")[1], "PNG")
 
     def testSameSizeDownScale(self):
@@ -44,13 +50,19 @@ class ScalingTests(TestCase):
         self.assertEqual(scaleImage(PNG, 20, 51, "down")[2], (20, 51))
 
     def testNoStretchingDownScale(self):
-        self.assertEqual(scaleImage(PNG, 200, 103, "down")[2], (200, 103))
+        self.assertEqual(scaleImage(PNG, 200, 103, "down")[2], (84, 103))
 
-    def testRestrictWidthOnlyDownScale(self):
+    def testRestrictWidthOnlyDownScaleNone(self):
         self.assertEqual(scaleImage(PNG, 42, None, "down")[2], (42, 52))
 
-    def testRestrictHeightOnlyDownScale(self):
+    def testRestrictWidthOnlyDownScaleZero(self):
+        self.assertEqual(scaleImage(PNG, 42, 0, "down")[2], (42, 52))
+
+    def testRestrictHeightOnlyDownScaleNone(self):
         self.assertEqual(scaleImage(PNG, None, 51, "down")[2], (42, 51))
+
+    def testRestrictHeightOnlyDownScaleZero(self):
+        self.assertEqual(scaleImage(PNG, 0, 51, "down")[2], (42, 51))
 
     def testSameSizeUpScale(self):
         self.assertEqual(scaleImage(PNG, 84, 103, "up")[2], (84, 103))
@@ -64,17 +76,35 @@ class ScalingTests(TestCase):
     def testNoStretchingUpScale(self):
         self.assertEqual(scaleImage(PNG, 200, 103, "up")[2], (84, 103))
 
-    def testRestrictWidthOnlyUpScale(self):
+    def testRestrictWidthOnlyUpScaleNone(self):
         self.assertEqual(scaleImage(PNG, 42, None, "up")[2], (42, 52))
 
-    def testRestrictHeightOnlyUpScale(self):
+    def testRestrictWidthOnlyUpScaleZero(self):
+        self.assertEqual(scaleImage(PNG, 42, 0, "up")[2], (42, 52))
+
+    def testRestrictHeightOnlyUpScaleNone(self):
         self.assertEqual(scaleImage(PNG, None, 51, "up")[2], (42, 51))
 
-    def testNoRestrictions(self):
+    def testRestrictHeightOnlyUpScaleZero(self):
+        self.assertEqual(scaleImage(PNG, 0, 51, "up")[2], (42, 51))
+
+    def testNoRestrictionsNone(self):
         self.assertRaises(ValueError, scaleImage, PNG, None, None)
 
+    def testNoRestrictionsZero(self):
+        self.assertRaises(ValueError, scaleImage, PNG, 0, 0)
+
     def testKeepAspectRatio(self):
+        self.assertEqual(scaleImage(PNG, 80, 80, "thumbnail")[2], (65, 80))
+
+    def testKeepAspectRatioBBB(self):
         self.assertEqual(scaleImage(PNG, 80, 80, "keep")[2], (65, 80))
+
+    def testThumbnailHeightNone(self):
+        self.assertEqual(scaleImage(PNG, 42, None, "thumbnail")[2], (42, 51))
+
+    def testThumbnailWidthNone(self):
+        self.assertEqual(scaleImage(PNG, None, 51, "thumbnail")[2], (41, 51))
 
     def testQuality(self):
         img1 = scaleImage(CMYK, 84, 103)[0]

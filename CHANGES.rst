@@ -23,8 +23,12 @@ Bug fixes:
 
 New:
 
-- Preserve GIF format for GIF images instead of converting them to JPEG.
-  [thet]
+- Assume a width or height of zero is semantically the same as None already was:
+  Use the other dimension to scale, calculate the missing one.
+  [jensens, thet]
+
+- Scaled GIFs are converted to RGBA PNG images instead of converting them to JPEG.
+  [thet, jensens]
 
 - Use an adapter to lookup the actual factory for scaling.
   Deprecated passing the factory as named parameter along,
@@ -35,10 +39,10 @@ New:
 
 Fixes:
 
-- Don't scale images up for direction "down" or "thumbnail".
+- Don't scale images up for direction "down".
   [thet]
 
-- Minor housekeeping.
+- Major housekeeping.
   [jensens]
 
 
