@@ -2,23 +2,7 @@ Changelog
 =========
 
 
-1.5.1 (unreleased)
-------------------
-
-Breaking changes:
-
-- *add item here*
-
-New features:
-
-- *add item here*
-
-Bug fixes:
-
-- *add item here*
-
-
-1.5.0 (2016-05-18)
+2.0 (unreleased)
 ------------------
 
 New:
@@ -30,6 +14,20 @@ New:
 - Scaled GIFs are converted to RGBA PNG images instead of converting them to JPEG.
   [thet, jensens]
 
+Fixes:
+
+- Don't scale images up for direction "down".
+  [thet]
+
+- Major housekeeping, code refactored in order to reduce complexicty.
+  [jensens]
+
+
+1.5.0 (2016-05-18)
+------------------
+
+New:
+
 - Use an adapter to lookup the actual factory for scaling.
   Deprecated passing the factory as named parameter along,
   because this had not enough flexibility:
@@ -39,10 +37,7 @@ New:
 
 Fixes:
 
-- Don't scale images up for direction "down".
-  [thet]
-
-- Major housekeeping.
+- Minor housekeeping.
   [jensens]
 
 
