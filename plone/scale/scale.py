@@ -3,6 +3,7 @@ from cStringIO import StringIO
 
 import PIL.Image
 import PIL.ImageFile
+import warnings
 
 
 # Set a larger buffer size. This fixes problems with jpeg decoding.
@@ -11,7 +12,7 @@ import PIL.ImageFile
 PIL.ImageFile.MAXBLOCK = 1000000
 
 
-def scaleImage(image, width=None, height=None, direction="down",
+def scaleImage(image, width=None, height=None, direction='down',
                quality=88, result=None):
     """Scale the given image data to another size and return the result
     as a string or optionally write in to the file-like `result` object.
@@ -28,6 +29,10 @@ def scaleImage(image, width=None, height=None, direction="down",
 
     The `width`, `height`, `direction` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
+
+    The generated image is a JPEG image, unless the original is a PNG or GIF
+    image. This is needed to make sure alpha channel information is
+    not lost, which JPEG does not support.
     """
     if isinstance(image, str):
         image = StringIO(image)
@@ -35,64 +40,102 @@ def scaleImage(image, width=None, height=None, direction="down",
 
     # When we create a new image during scaling we loose the format
     # information, so remember it here.
-    format = image.format
-    if not format == 'PNG':
-        format = 'JPEG'
+    format_ = image.format
+    if format_ not in ('PNG', 'GIF'):
+        # Always generate JPEG, except if format is PNG or GIF.
+        format_ = 'JPEG'
+    elif format_ == 'GIF':
+        # GIF scaled looks better if we have 8-bit alpha and no palette
+        format_ = 'PNG'
 
     image = scalePILImage(image, width, height, direction)
 
+    new_result = False
+
     if result is None:
         result = StringIO()
-        image.save(
-            result,
-            format,
-            quality=quality,
-            optimize=True,
-            progressive=True)
+        new_result = True
+
+    image.save(
+        result,
+        format_,
+        quality=quality,
+        optimize=True,
+        progressive=True
+    )
+
+    if new_result:
         result = result.getvalue()
     else:
-        image.save(
-            result,
-            format,
-            quality=quality,
-            optimize=True,
-            progressive=True)
         result.seek(0)
 
-    return result, format, image.size
+    return result, format_, image.size
 
 
-def scalePILImage(image, width=None, height=None, direction="down"):
+def _scale_thumbnail(image, width=None, height=None):
+    """Scale with method "thumbnail".
+
+    Aspect Ratio is kept. Resulting image has to fit in the given box.
+    If target aspect ratio is different, either width or height is smaller
+    than the given target width or height. No cropping!
+    """
+    if width is None and height is None:
+        raise ValueError("Either width or height need to be given.")
+    if width is None:
+        # calculate a width based on a scale:
+        size = image.size
+        width = float(size[0]) / float(size[1]) * height
+    elif height is None:
+        size = image.size
+        height = float(size[1]) / float(size[0]) * width
+    image.thumbnail((width, height), PIL.Image.ANTIALIAS)
+    return image
+
+
+def scalePILImage(image, width=None, height=None, direction='down'):
     """Scale a PIL image to another size.
 
-    The generated image is a JPEG image, unless the original is a PNG
-    image. This is needed to make sure alpha channel information is
-    not lost, which JPEG does not support.
+    This is all about scaling for the display in a web browser.
 
-    Three different scaling options are supported:
+    Either width or height - or both - must be given.
 
-    * `up` scaling scales the smallest dimension up to the required size
-      and scrops the other dimension if needed.
-    * `down` scaling starts by scaling the largest dimension to the required
-      size and scrops the other dimension if needed.
-    * `thumbnail` scales to the requested dimensions without cropping. The
-      resulting image may have a different size than requested. This option
-      requires both width and height to be specified. `keep` is accepted as
-      an alternative spelling for this option, but its use is deprecated.
+    Three different scaling options are supported via `direction`:
+
+    `up`
+        scaling scales the smallest dimension up to the required size
+        and crops the other dimension if needed.
+
+    `down`
+        scaling starts by scaling the largest dimension to the required
+        size and crops the other dimension if needed.
+
+    `thumbnail`
+        scales to the requested dimensions without cropping. Theresulting
+        image may have a different size than requested. This option
+        requires both width and height to be specified.
+
+        `keep` is accepted as an alternative spelling for this option,
+        but its use is deprecated.
 
     The `image` parameter must be an instance of the `PIL.Image` class.
 
     The return value the scaled image in the form of another instance of
     `PIL.Image`.
     """
-    if direction == "keep":
-        direction = "thumbnail"
-
-    if direction == "thumbnail" and not (width and height):
-        raise ValueError(
-            "Thumbnailing requires both width and height to be specified")
-    elif width is None and height is None:
+    # convert zero to None, same sematics: calculate this scale
+    if width == 0:
+        width = None
+    if height == 0:
+        height = None
+    if width is None and height is None:
         raise ValueError("Either width or height need to be given")
+
+    if direction == "keep":
+        warnings.warn(
+            'direction="keep" is deprecated, use "thumbnail" instead',
+            DeprecationWarning
+        )
+        direction = "thumbnail"
 
     if image.mode == "1":
         # Convert black&white to grayscale
@@ -104,63 +147,69 @@ def scalePILImage(image, width=None, height=None, direction="down"):
         # Convert CMYK to RGB, allowing for web previews of print images
         image = image.convert("RGB")
 
-    current_size = image.size
-    # Determine scale factor needed to get the right height
-    if height is None:
-        scale_height = None
-    else:
-        scale_height = (float(height) / float(current_size[1]))
-    if width is None:
-        scale_width = None
-    else:
-        scale_width = (float(width) / float(current_size[0]))
+    # for thumbnail we're done:
+    if direction == 'thumbnail':
+        return _scale_thumbnail(image, width, height)
 
-    if scale_height == scale_width or direction == "thumbnail":
+    # now for up and down scaling
+    # Determine scale factor needed to get the right height
+    factor_height = factor_width = None
+    if height is not None:
+        factor_height = (float(height) / float(image.size[1]))
+    if width is not None:
+        factor_width = (float(width) / float(image.size[0]))
+
+    if (factor_height >= 1 or factor_width >= 1) and direction == 'down':
+        # However, for this example scaling calculations after this block fail
+        # badly:
+        # - image with size (129, 100)
+        # - target boxed size (400, 99999)
+        # - we get a factor_width, factor_height: (3.10077519379845, 249.9975)
+        #   and new_width, new_height of (128999, 99999)
+        #   that brings down PIL by eating all the available memory.
+        return image
+
+    if factor_height == factor_width:
         # The original already has the right aspect ratio, so we only need
         # to scale.
-        if direction in ("down", "thumbnail"):
+        if direction == 'down':
             image.thumbnail((width, height), PIL.Image.ANTIALIAS)
+            return image
+        return image.resize((width, height), PIL.Image.ANTIALIAS)
+
+    # figure out which axis to scale. One of the factors can still be None!
+    # calculate for 'down'
+    use_height = factor_width > factor_height
+    if direction == 'up':  # for 'up': invert
+        use_height = not use_height
+
+    new_width = width
+    new_height = height
+
+    # keep aspect ratio, crop later
+    if (height is None or (use_height and width is not None)):
+        new_height = int(round(image.size[1] * factor_width))
+
+    if (width is None or (height is not None and not use_height)):
+        new_width = int(round(image.size[0] * factor_height))
+
+    image.draft(image.mode, (new_width, new_height))
+    image = image.resize((new_width, new_height), PIL.Image.ANTIALIAS)
+
+    # cropping
+    if (
+        (width is not None and new_width > width) or
+        (height is not None and new_height > height)
+    ):
+        if use_height:
+            left = 0
+            right = new_width
+            top = int((new_height - height) / 2.0)
+            bottom = top + height
         else:
-            image = image.resize((width, height), PIL.Image.ANTIALIAS)
-    else:
-        if direction == "down":
-            if scale_height is None or (
-                    scale_width is not None and scale_width > scale_height):
-                # Width is the smallest dimension (relatively), so scale up
-                # to the desired width
-                new_width = width
-                new_height = int(round(current_size[1] * scale_width))
-            else:
-                new_height = height
-                new_width = int(round(current_size[0] * scale_height))
-        else:
-            if scale_height is None or (
-                    scale_width is not None and scale_width < scale_height):
-                # Width is the largest dimension (relatively), so scale up
-                # to the desired width
-                new_width = width
-                new_height = int(round(current_size[1] * scale_width))
-            else:
-                new_height = height
-                new_width = int(round(current_size[0] * scale_height))
-
-        image.draft(image.mode, (new_width, new_height))
-        image = image.resize((new_width, new_height), PIL.Image.ANTIALIAS)
-
-        if (width is not None and new_width > width) or (
-                height is not None and new_height > height):
-            if width is None:
-                left = 0
-                right = new_width
-            else:
-                left = int((new_width - width) / 2.0)
-                right = left + width
-            if height is None:
-                top = 0
-                bottom = new_height
-            else:
-                top = int((new_height - height) / 2.0)
-                bottom = top + height
-            image = image.crop((left, top, right, bottom))
-
+            left = int((new_width - width) / 2.0)
+            right = left + width
+            top = 0
+            bottom = new_height
+        image = image.crop((left, top, right, bottom))
     return image

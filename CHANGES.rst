@@ -2,20 +2,25 @@ Changelog
 =========
 
 
-1.5.1 (unreleased)
+2.0 (unreleased)
 ------------------
 
-Breaking changes:
+New:
 
-- *add item here*
+- Assume a width or height of zero is semantically the same as None already was:
+  Use the other dimension to scale, calculate the missing one.
+  [jensens, thet]
 
-New features:
+- Scaled GIFs are converted to RGBA PNG images instead of converting them to JPEG.
+  [thet, jensens]
 
-- *add item here*
+Fixes:
 
-Bug fixes:
+- Don't scale images up for direction "down".
+  [thet]
 
-- *add item here*
+- Major housekeeping, code refactored in order to reduce complexicty.
+  [jensens]
 
 
 1.5.0 (2016-05-18)
