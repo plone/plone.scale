@@ -30,7 +30,10 @@ New:
 - Scaled GIFs are converted to RGBA PNG images instead of converting them to JPEG.
   [thet, jensens]
 
-- Convert palette-based with a gray palette to grayscale+alpha images.
+- Convert palette-based images with a gray palette to grayscale+alpha images.
+  [didrix]
+
+- Convert images with 256 colors or less to palette-based images.
   [didrix]
 
 Fixes:

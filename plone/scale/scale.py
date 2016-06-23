@@ -50,6 +50,10 @@ def scaleImage(image, width=None, height=None, direction='down',
 
     image = scalePILImage(image, width, height, direction)
 
+    # convert to palette if possible
+    if format_ == 'PNG' and image.getcolors(maxcolors=256):
+        image = image.convert('P')
+
     new_result = False
 
     if result is None:
