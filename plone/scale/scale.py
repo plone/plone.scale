@@ -141,13 +141,13 @@ def scalePILImage(image, width=None, height=None, direction='down'):
         # Convert black&white to grayscale
         image = image.convert("L")
     elif image.mode == "P":
-        # If palette is grayscale, convert to gray+alpha
-        # Else convert palette based images to 3x8bit+alpha
         palette = image.getpalette()
+        # Convert palette based images to 3x8bit+alpha
+        image = image.convert("RGBA")
+        # If palette is grayscale, convert to gray+alpha
+        # needs to be RGBA first, because of bug in PIL
         if palette[0::3] == palette[1::3] == palette[2::3]:
             image = image.convert("LA")
-        else:
-            image = image.convert("RGBA")
     elif image.mode == "CMYK":
         # Convert CMYK to RGB, allowing for web previews of print images
         image = image.convert("RGB")
