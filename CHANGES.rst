@@ -30,6 +30,9 @@ New:
 - Scaled GIFs are converted to RGBA PNG images instead of converting them to JPEG.
   [thet, jensens]
 
+- Convert palette-based with a gray palette to grayscale+alpha images.
+  [didrix]
+
 Fixes:
 
 - Don't scale images up for direction "down".
