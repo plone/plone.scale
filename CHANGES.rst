@@ -11,7 +11,8 @@ Breaking changes:
 
 New features:
 
-- *add item here*
+- Choose an appropriate image mode in order to reduce file size.
+  [didrix]
 
 Bug fixes:
 
@@ -29,12 +30,6 @@ New:
 
 - Scaled GIFs are converted to RGBA PNG images instead of converting them to JPEG.
   [thet, jensens]
-
-- Convert palette-based images with a gray palette to grayscale+alpha images.
-  [didrix]
-
-- Convert images with 256 colors or less to palette-based images.
-  [didrix]
 
 Fixes:
 
