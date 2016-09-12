@@ -50,6 +50,13 @@ def scaleImage(image, width=None, height=None, direction='down',
 
     image = scalePILImage(image, width, height, direction)
 
+    # convert to simpler mode if possible
+    if image.mode not in ('P', 'L') and image.getcolors(maxcolors=256):
+        if format_ == 'JPEG':
+            image = image.convert('L')
+        elif format_ == 'PNG':
+            image = image.convert('P')
+
     new_result = False
 
     if result is None:
@@ -141,8 +148,13 @@ def scalePILImage(image, width=None, height=None, direction='down'):
         # Convert black&white to grayscale
         image = image.convert("L")
     elif image.mode == "P":
-        # Convert palette based images to 3x8bit+alpha
-        image = image.convert("RGBA")
+        # If palette is grayscale, convert to gray+alpha
+        # Else convert palette based images to 3x8bit+alpha
+        palette = image.getpalette()
+        if palette[0::3] == palette[1::3] == palette[2::3]:
+            image = image.convert("LA")
+        else:
+            image = image.convert("RGBA")
     elif image.mode == "CMYK":
         # Convert CMYK to RGB, allowing for web previews of print images
         image = image.convert("RGB")

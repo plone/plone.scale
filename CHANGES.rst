@@ -11,7 +11,8 @@ Breaking changes:
 
 New features:
 
-- *add item here*
+- Choose an appropriate image mode in order to reduce file size.
+  [didrix]
 
 Bug fixes:
 
