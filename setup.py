@@ -1,9 +1,8 @@
-from os.path import join
 from setuptools import setup, find_packages
 
 version = '1.4.2.dev0'
 readme = open("README.rst").read().replace(':class:', '').replace(':mod:', '')
-changes = open(join("docs", "changes.rst")).read()
+changes = open("CHANGES.rst").read()
 
 STORAGE_REQUIREMENTS = [
     "zope.annotation",
