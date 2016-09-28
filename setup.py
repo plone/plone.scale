@@ -48,7 +48,7 @@ setup(
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['plone'],
     include_package_data=True,
-    zip_safe=True,
+    zip_safe=False,
     test_suite='plone.scale',
     install_requires=[
         # We can't actually depend on PIL because not everyone can install it

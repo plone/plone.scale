@@ -16,7 +16,11 @@ New features:
 
 Bug fixes:
 
-- *add item here*
+- Set ``zip_safe=False`` in ``setup.py``.  Otherwise you cannot run
+  the tests of the released package because the test runner does not
+  find any tests in the egg file.  Note that this is only a problem in
+  zc.buildout 1.x: it uses unzip=False by default.  zc.buildout 2.x no
+  longer has this option and always unzips eggs.  [maurits]
 
 
 2.0 (2016-08-12)
