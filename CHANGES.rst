@@ -16,6 +16,10 @@ New features:
 
 Bug fixes:
 
+- Catch KeyError when deleting non existing scale.  This can happen in corner cases.
+  Fixes `issue 15 <https://github.com/plone/plone.scale/issues/15>`_.
+  [maurits]
+
 - Set ``zip_safe=False`` in ``setup.py``.  Otherwise you cannot run
   the tests of the released package because the test runner does not
   find any tests in the egg file.  Note that this is only a problem in
