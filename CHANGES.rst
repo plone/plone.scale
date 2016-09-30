@@ -11,6 +11,9 @@ New:
 
 Fixes:
 
+- When getting an outdated scale, don't throw it away when there is no
+  factory.  [maurits]
+
 - Avoid TypeErrors when looking for outdated scales.
   Fixes `issue 12 <https://github.com/plone/plone.scale/issues/12>`_.
   [maurits]
