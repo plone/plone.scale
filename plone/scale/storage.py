@@ -167,14 +167,15 @@ class AnnotationStorage(DictMixin):
         key = self.hash(**parameters)
         storage = self.storage
         info = self.get_info_by_hash(key)
-        if info is not None and self._modified_since(info['modified']):
+        scaling_factory = IImageScaleFactory(self.context, None)
+        if (info is not None and
+                (scaling_factory is not None or factory is not None) and
+                self._modified_since(info['modified'])):
             del self[info['uid']]
             # invalidate when the image was updated
             info = None
         elif info is not None:
             return info
-
-        scaling_factory = IImageScaleFactory(self.context, None)
 
         # BBB/Deprecation handling
         if factory is not None:
