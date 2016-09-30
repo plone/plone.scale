@@ -107,13 +107,21 @@ class AnnotationStorage(DictMixin):
         self.context = context
         self.modified = modified
 
-    def _modified_since(self, since):
+    def _modified_since(self, since, offset=0):
         if since is None:
             return False
-        elif self.modified_time is None:
+        modified_time = self.modified_time
+        if modified_time is None:
             return False
-        else:
-            return self.modified_time > since
+        # We expect either a float or an int, but in corner cases it can be
+        # something else entirely.
+        # https://github.com/plone/plone.scale/issues/12
+        if not isinstance(modified_time, (float, int)):
+            return False
+        if not isinstance(since, (float, int)):
+            return False
+        since = since - offset
+        return modified_time > since
 
     @property
     def modified_time(self):
@@ -176,14 +184,19 @@ class AnnotationStorage(DictMixin):
     def _cleanup(self):
         storage = self.storage
         modified_time = self.modified_time
+        if modified_time is None:
+            return
+        if not isinstance(modified_time, (float, int)):
+            # https://github.com/plone/plone.scale/issues/12
+            return
         for key, value in storage.items():
             # remove info stored by tuple keys
             # before refactoring
             if isinstance(key, tuple):
                 del self[key]
             # clear cache from scales older than one day
-            elif (modified_time and
-                    value['modified'] < modified_time - KEEP_SCALE_MILLIS):
+            elif self._modified_since(
+                    value['modified'], offset=KEEP_SCALE_MILLIS):
                 del self[key]
 
     def __getitem__(self, uid):
