@@ -13,6 +13,8 @@ logger = logging.getLogger('plone.scale')
 # This is one day:
 KEEP_SCALE_MILLIS = 24 * 60 * 60 * 1000
 
+number_types = (float, int, long)
+
 
 class IImageScaleStorage(Interface):
     """ This is an adapter for image content which can store, retrieve and
@@ -113,12 +115,12 @@ class AnnotationStorage(DictMixin):
         modified_time = self.modified_time
         if modified_time is None:
             return False
-        # We expect either a float or an int, but in corner cases it can be
+        # We expect a number, but in corner cases it can be
         # something else entirely.
         # https://github.com/plone/plone.scale/issues/12
-        if not isinstance(modified_time, (float, int)):
+        if not isinstance(modified_time, number_types):
             return False
-        if not isinstance(since, (float, int)):
+        if not isinstance(since, number_types):
             return False
         since = since - offset
         return modified_time > since
@@ -187,7 +189,7 @@ class AnnotationStorage(DictMixin):
         modified_time = self.modified_time
         if modified_time is None:
             return
-        if not isinstance(modified_time, (float, int)):
+        if not isinstance(modified_time, number_types):
             # https://github.com/plone/plone.scale/issues/12
             return
         for key, value in storage.items():
