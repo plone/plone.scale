@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from persistent.dict import PersistentDict
 from plone.scale.interfaces import IImageScaleFactory
+from six import integer_types
 from UserDict import DictMixin
 from uuid import uuid4
 from ZODB.POSException import ConflictError
@@ -18,14 +19,10 @@ logger = logging.getLogger('plone.scale')
 # This is one day:
 KEEP_SCALE_MILLIS = 24 * 60 * 60 * 1000
 
-try:
-    long
-except NameError:
-    # Python 3 has no long, only int.
-    number_types = (float, int)
-else:
-    # Python 2
-    number_types = (float, int, long)
+# Number types are float and int, and on Python 2 also long.
+number_types = [float]
+number_types.extend(integer_types)
+number_types = tuple(number_types)
 
 
 class IImageScaleStorage(Interface):

@@ -16,6 +16,9 @@ New features:
 
 Bug fixes:
 
+- Require the ``six`` package so we can more easily check number types.
+  On Python 3 ``long`` has been merged into ``int``.  [maurits]
+
 - When getting an outdated scale, don't throw it away when there is no
   factory.  [maurits]
 
