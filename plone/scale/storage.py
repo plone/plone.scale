@@ -119,6 +119,9 @@ class AnnotationStorage(DictMixin):
         self.modified = modified
 
     def _modified_since(self, since, offset=0):
+        # offset gets subtracted from the main modified time: this allows to
+        # keep scales for a bit longer if needed, even when the main image has
+        # changed.
         if since is None:
             return False
         modified_time = self.modified_time
@@ -131,7 +134,7 @@ class AnnotationStorage(DictMixin):
             return False
         if not isinstance(since, number_types):
             return False
-        since = since - offset
+        modified_time = modified_time - offset
         return modified_time > since
 
     @property
