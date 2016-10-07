@@ -160,7 +160,7 @@ class AnnotationStorage(DictMixin):
         storage = self.storage
         info = self.get_info_by_hash(key)
         if info is not None and self._modified_since(info['modified']):
-            del storage[info['uid']]
+            del self[info['uid']]
             # invalidate when the image was updated
             info = None
         elif info is not None:
@@ -227,11 +227,11 @@ class AnnotationStorage(DictMixin):
             # remove info stored by tuple keys
             # before refactoring
             if isinstance(key, tuple):
-                del storage[key]
+                del self[key]
             # clear cache from scales older than one day
             elif (modified_time and
                     value['modified'] < modified_time - KEEP_SCALE_MILLIS):
-                del storage[key]
+                del self[key]
 
     def __getitem__(self, uid):
         return self.storage[uid]
@@ -240,7 +240,12 @@ class AnnotationStorage(DictMixin):
         raise RuntimeError('New scales have to be created via scale()')
 
     def __delitem__(self, uid):
-        del self.storage[uid]
+        try:
+            del self.storage[uid]
+        except KeyError:
+            # This should not happen, but it apparently can happen in corner
+            # cases.  See https://github.com/plone/plone.scale/issues/15
+            logger.warn('Could not delete key %s from storage.', uid)
 
     def __iter__(self):
         return iter(self.storage)
