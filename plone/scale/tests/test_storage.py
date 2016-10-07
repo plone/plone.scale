@@ -94,7 +94,10 @@ class AnnotationStorageTests(TestCase):
 
     def testDeleteNonExistingItem(self):
         storage = self.storage
-        self.assertRaises(KeyError, delitem, storage, 'foo')
+        # This used to raise a KeyError, but sometimes the underlying storage
+        # can get inconsistent, so it is nicer to accept it.
+        # See https://github.com/plone/plone.scale/issues/15
+        delitem(storage, 'foo')
 
     def testDeleteRemovesItemAndIndex(self):
         storage = self.storage
