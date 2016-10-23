@@ -56,6 +56,7 @@ setup(
         # 'PIL',
         # 'Pillow'
         'setuptools',
+        "six",
     ],
     extras_require=dict(
         test=TESTS_REQUIREMENTS,
