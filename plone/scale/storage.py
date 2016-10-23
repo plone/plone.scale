@@ -13,6 +13,8 @@ logger = logging.getLogger('plone.scale')
 # This is one day:
 KEEP_SCALE_MILLIS = 24 * 60 * 60 * 1000
 
+number_types = (float, int, long)
+
 
 class IImageScaleStorage(Interface):
     """ This is an adapter for image content which can store, retrieve and
@@ -107,13 +109,24 @@ class AnnotationStorage(DictMixin):
         self.context = context
         self.modified = modified
 
-    def _modified_since(self, since):
+    def _modified_since(self, since, offset=0):
+        # offset gets subtracted from the main modified time: this allows to
+        # keep scales for a bit longer if needed, even when the main image has
+        # changed.
         if since is None:
             return False
-        elif self.modified_time is None:
+        modified_time = self.modified_time
+        if modified_time is None:
             return False
-        else:
-            return self.modified_time > since
+        # We expect a number, but in corner cases it can be
+        # something else entirely.
+        # https://github.com/plone/plone.scale/issues/12
+        if not isinstance(modified_time, number_types):
+            return False
+        if not isinstance(since, number_types):
+            return False
+        modified_time = modified_time - offset
+        return modified_time > since
 
     @property
     def modified_time(self):
@@ -154,7 +167,8 @@ class AnnotationStorage(DictMixin):
         key = self.hash(**parameters)
         storage = self.storage
         info = self.get_info_by_hash(key)
-        if info is not None and self._modified_since(info['modified']):
+        if (info is not None and factory and
+                self._modified_since(info['modified'])):
             del self[info['uid']]
             # invalidate when the image was updated
             info = None
@@ -176,14 +190,19 @@ class AnnotationStorage(DictMixin):
     def _cleanup(self):
         storage = self.storage
         modified_time = self.modified_time
+        if modified_time is None:
+            return
+        if not isinstance(modified_time, number_types):
+            # https://github.com/plone/plone.scale/issues/12
+            return
         for key, value in storage.items():
             # remove info stored by tuple keys
             # before refactoring
             if isinstance(key, tuple):
                 del self[key]
             # clear cache from scales older than one day
-            elif (modified_time and
-                    value['modified'] < modified_time - KEEP_SCALE_MILLIS):
+            elif self._modified_since(
+                    value['modified'], offset=KEEP_SCALE_MILLIS):
                 del self[key]
 
     def __getitem__(self, uid):
