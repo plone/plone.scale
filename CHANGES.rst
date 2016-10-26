@@ -5,10 +5,6 @@ Changelog
 1.4.2 (unreleased)
 ------------------
 
-New:
-
-- *add item here*
-
 Fixes:
 
 - When getting an outdated scale, don't throw it away when there is no
