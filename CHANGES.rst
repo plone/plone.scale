@@ -5,10 +5,6 @@ Changelog
 2.0.1 (unreleased)
 ------------------
 
-Breaking changes:
-
-- *add item here*
-
 New features:
 
 - Choose an appropriate image mode in order to reduce file size.
