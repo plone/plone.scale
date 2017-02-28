@@ -15,7 +15,8 @@ New features:
 
 Bug fixes:
 
-- *add item here*
+- Preserve color profile in scaled images.
+  [fschulze]
 
 
 2.1 (2016-11-01)

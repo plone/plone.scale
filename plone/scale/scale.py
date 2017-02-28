@@ -48,6 +48,7 @@ def scaleImage(image, width=None, height=None, direction='down',
         # GIF scaled looks better if we have 8-bit alpha and no palette
         format_ = 'PNG'
 
+    icc_profile = image.info.get('icc_profile')
     image = scalePILImage(image, width, height, direction)
 
     # convert to simpler mode if possible
@@ -68,7 +69,8 @@ def scaleImage(image, width=None, height=None, direction='down',
         format_,
         quality=quality,
         optimize=True,
-        progressive=True
+        progressive=True,
+        icc_profile=icc_profile
     )
 
     if new_result:
