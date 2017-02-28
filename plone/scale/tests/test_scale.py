@@ -12,6 +12,7 @@ PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png")).read()
 GIF = open(os.path.join(TEST_DATA_LOCATION, "logo.gif")).read()
 TIFF = open(os.path.join(TEST_DATA_LOCATION, "logo.tiff")).read()
 CMYK = open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg")).read()
+PROFILE = open(os.path.join(TEST_DATA_LOCATION, "profile.jpg")).read()
 
 
 class ScalingTests(TestCase):
@@ -39,6 +40,12 @@ class ScalingTests(TestCase):
 
     def testScaledPngImageIsPng(self):
         self.assertEqual(scaleImage(PNG, 84, 103, "down")[1], "PNG")
+
+    def testScaledPreservesProfile(self):
+        (imagedata, format, size) = scaleImage(PROFILE, 42, 51, "down")
+        input = StringIO(imagedata)
+        image = PIL.Image.open(input)
+        self.assertIsNotNone(image.info.get('icc_profile'))
 
     def testSameSizeDownScale(self):
         self.assertEqual(scaleImage(PNG, 84, 103, "down")[2], (84, 103))
