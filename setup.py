@@ -9,6 +9,7 @@ changes = open('CHANGES.rst').read()
 STORAGE_REQUIREMENTS = [
     'zope.annotation',
     'zope.component',
+    'zope.configuration',
     'zope.interface',
     'Persistence',
 ]
