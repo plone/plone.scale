@@ -5,7 +5,7 @@ from plone.scale.tests import TEST_DATA_LOCATION
 from unittest import TestCase
 
 import os.path
-import PIL.Image
+import PIL.Image, PIL.ImageDraw
 
 
 PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png")).read()
@@ -46,6 +46,47 @@ class ScalingTests(TestCase):
         input = StringIO(imagedata)
         image = PIL.Image.open(input)
         self.assertIsNotNone(image.info.get('icc_profile'))
+
+    def testScaleWithFewColorsStaysColored(self):
+        (imagedata, format, size) = scaleImage(PROFILE, 16, None, "down")
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(max(image.size), 16)
+        self.assertEqual(image.mode, 'RGB')
+        self.assertEqual(image.format, 'JPEG')
+
+    def testAutomaticGreyscale(self):
+        src = PIL.Image.new("RGB", (256, 256), (255, 255, 255))
+        draw = PIL.ImageDraw.Draw(src)
+        for i in range(0, 256):
+            draw.line(((0, i), (256, i)), fill=(i, i, i))
+        result = StringIO()
+        src.save(result, "JPEG")
+        (imagedata, format, size) = scaleImage(result, 200, None, "down")
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(max(image.size), 200)
+        self.assertEqual(image.mode, 'L')
+        self.assertEqual(image.format, 'JPEG')
+
+    def testAutomaticPalette(self):
+        # get a JPEG with more than 256 colors
+        jpeg = PIL.Image.open(StringIO(PROFILE))
+        self.assertEqual(jpeg.mode, 'RGB')
+        self.assertEqual(jpeg.format, 'JPEG')
+        self.assertIsNone(jpeg.getcolors(maxcolors=256))
+        # convert to PNG
+        dst = StringIO()
+        jpeg.save(dst, "PNG")
+        dst.seek(0)
+        png = PIL.Image.open(dst)
+        self.assertEqual(png.mode, 'RGB')
+        self.assertEqual(png.format, 'PNG')
+        self.assertIsNone(png.getcolors(maxcolors=256))
+        # scale it to a size where we get less than 256 colors
+        (imagedata, format, size) = scaleImage(dst.getvalue(), 24, None, "down")
+        image = PIL.Image.open(StringIO(imagedata))
+        # we should now have an image in palette mode
+        self.assertEqual(image.mode, 'P')
+        self.assertEqual(image.format, 'PNG')
 
     def testSameSizeDownScale(self):
         self.assertEqual(scaleImage(PNG, 84, 103, "down")[2], (84, 103))

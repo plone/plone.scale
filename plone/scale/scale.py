@@ -52,9 +52,12 @@ def scaleImage(image, width=None, height=None, direction='down',
     image = scalePILImage(image, width, height, direction)
 
     # convert to simpler mode if possible
-    if image.mode not in ('P', 'L') and image.getcolors(maxcolors=256):
+    colors = image.getcolors(maxcolors=256)
+    if image.mode not in ('P', 'L') and colors:
         if format_ == 'JPEG':
-            image = image.convert('L')
+            # check if it's all grey
+            if all(rgb[0] == rgb[1] == rgb[2] for c, rgb in colors):
+                image = image.convert('L')
         elif format_ == 'PNG':
             image = image.convert('P')
 

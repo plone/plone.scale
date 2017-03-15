@@ -15,6 +15,10 @@ New features:
 
 Bug fixes:
 
+- Only convert JPEG to greyscale if they actually are and not when the image
+  has less than 256 colors. This bug was introduced in 2.1 with PR #13.
+  [fschulze]
+
 - Preserve color profile in scaled images.
   [fschulze]
 
