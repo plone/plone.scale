@@ -5,14 +5,6 @@ Changelog
 2.1.1 (unreleased)
 ------------------
 
-Breaking changes:
-
-- *add item here*
-
-New features:
-
-- *add item here*
-
 Bug fixes:
 
 - Only convert JPEG to greyscale if they actually are and not when the image
