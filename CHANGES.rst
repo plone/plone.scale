@@ -11,7 +11,8 @@ Breaking changes:
 
 New features:
 
-- *add item here*
+- Python 3 compatibility.
+  [dhavlik]
 
 Bug fixes:
 

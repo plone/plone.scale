@@ -1,9 +1,24 @@
 # -*- coding: utf-8 -*-
-from cStringIO import StringIO
-
 import PIL.Image
 import PIL.ImageFile
+import sys
 import warnings
+
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
+
+
+def none_as_int(the_int):
+    """For python 3 compatibility, to make int vs. none comparison possible
+    without changing the algorithms below.
+
+    This should mimic python2 behaviour."""
+    if the_int is None:
+        return -sys.maxsize
+    return the_int
 
 
 # Set a larger buffer size. This fixes problems with jpeg decoding.
@@ -34,10 +49,9 @@ def scaleImage(image, width=None, height=None, direction='down',
     image. This is needed to make sure alpha channel information is
     not lost, which JPEG does not support.
     """
-    if isinstance(image, str):
+    if isinstance(image, (bytes, str)):
         image = StringIO(image)
     image = PIL.Image.open(image)
-
     # When we create a new image during scaling we loose the format
     # information, so remember it here.
     format_ = image.format
@@ -176,7 +190,8 @@ def scalePILImage(image, width=None, height=None, direction='down'):
     if width is not None:
         factor_width = (float(width) / float(image.size[0]))
 
-    if (factor_height >= 1 or factor_width >= 1) and direction == 'down':
+    if (none_as_int(factor_height) >= 1 or none_as_int(factor_width) >= 1
+            ) and direction == 'down':
         # However, for this example scaling calculations after this block fail
         # badly:
         # - image with size (129, 100)
@@ -196,7 +211,7 @@ def scalePILImage(image, width=None, height=None, direction='down'):
 
     # figure out which axis to scale. One of the factors can still be None!
     # calculate for 'down'
-    use_height = factor_width > factor_height
+    use_height = none_as_int(factor_width) > none_as_int(factor_height)
     if direction == 'up':  # for 'up': invert
         use_height = not use_height
 
