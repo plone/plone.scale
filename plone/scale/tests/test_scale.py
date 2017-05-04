@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
+
 from plone.scale.scale import scaleImage
 from plone.scale.tests import TEST_DATA_LOCATION
 from unittest import TestCase
@@ -8,11 +12,11 @@ import os.path
 import PIL.Image, PIL.ImageDraw
 
 
-PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png")).read()
-GIF = open(os.path.join(TEST_DATA_LOCATION, "logo.gif")).read()
-TIFF = open(os.path.join(TEST_DATA_LOCATION, "logo.tiff")).read()
-CMYK = open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg")).read()
-PROFILE = open(os.path.join(TEST_DATA_LOCATION, "profile.jpg")).read()
+PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png"), 'rb').read()
+GIF = open(os.path.join(TEST_DATA_LOCATION, "logo.gif"), 'rb').read()
+TIFF = open(os.path.join(TEST_DATA_LOCATION, "logo.tiff"), 'rb').read()
+CMYK = open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg"), 'rb').read()
+PROFILE = open(os.path.join(TEST_DATA_LOCATION, "profile.jpg"), 'rb').read()
 
 
 class ScalingTests(TestCase):
