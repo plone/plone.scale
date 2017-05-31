@@ -4,8 +4,13 @@ from operator import itemgetter
 from operator import setitem
 from plone.testing import zca
 from unittest import TestCase
+import zope.annotation.interfaces
+import zope.annotation.attribute
+from zope.interface import implementer
+from zope.component import provideAdapter
 
 
+@implementer(zope.annotation.interfaces.IAttributeAnnotatable)
 class _DummyContext(object):
     pass
 
@@ -16,8 +21,6 @@ class AnnotationStorageTests(TestCase):
 
     def _provide_dummy_scale_adapter(self, result=True):
         from zope.component import adapter
-        from zope.component import provideAdapter
-        from zope.interface import implementer
         from plone.scale.interfaces import IImageScaleFactory
 
         factory = self.factory
@@ -39,9 +42,9 @@ class AnnotationStorageTests(TestCase):
     @property
     def storage(self):
         from plone.scale.storage import AnnotationStorage
+        provideAdapter(zope.annotation.attribute.AttributeAnnotations)
         storage = AnnotationStorage(_DummyContext())
         storage.modified = lambda: 42
-        storage.storage = {}
         return storage
 
     def factory(self, **kw):
@@ -150,14 +153,13 @@ class AnnotationStorageTests(TestCase):
 
     def testIterate(self):
         storage = self.storage
-        storage.storage.update(one=None, two=None)
+        storage.storage.update(dict(one=None, two=None))
         generator = iter(storage)
         self.assertEqual(set(generator), set(['one', 'two']))
 
     def testKeys(self):
         storage = self.storage
-        storage.storage.update(one=None, two=None)
-        self.failUnless(isinstance(storage.keys(), list))
+        storage.storage.update(dict(one=None, two=None))
         self.assertEqual(set(storage.keys()), set(['one', 'two']))
 
     def testNegativeHasKey(self):
@@ -166,7 +168,7 @@ class AnnotationStorageTests(TestCase):
 
     def testPositiveHasKey(self):
         storage = self.storage
-        storage.storage.update(one=None)
+        storage.storage.update(dict(one=None))
         self.assertEqual('one' in storage, True)
 
     def testDeleteNonExistingItem(self):
