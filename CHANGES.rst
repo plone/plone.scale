@@ -2,12 +2,13 @@ Changelog
 =========
 
 
-2.2.1 (unreleased)
-------------------
+3.0 (unreleased)
+----------------
 
 Breaking changes:
 
-- *add item here*
+- Restore scale down behaviour from 1.x series without the huge memory usage.
+  [fschulze]
 
 New features:
 

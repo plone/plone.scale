@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import PIL.Image
 import PIL.ImageFile
+import math
 import sys
 import warnings
 
@@ -190,17 +191,6 @@ def scalePILImage(image, width=None, height=None, direction='down'):
     if width is not None:
         factor_width = (float(width) / float(image.size[0]))
 
-    if (none_as_int(factor_height) >= 1 or none_as_int(factor_width) >= 1
-            ) and direction == 'down':
-        # However, for this example scaling calculations after this block fail
-        # badly:
-        # - image with size (129, 100)
-        # - target boxed size (400, 99999)
-        # - we get a factor_width, factor_height: (3.10077519379845, 249.9975)
-        #   and new_width, new_height of (128999, 99999)
-        #   that brings down PIL by eating all the available memory.
-        return image
-
     if factor_height == factor_width:
         # The original already has the right aspect ratio, so we only need
         # to scale.
@@ -225,14 +215,40 @@ def scalePILImage(image, width=None, height=None, direction='down'):
     if (width is None or (height is not None and not use_height)):
         new_width = int(round(image.size[0] * factor_height))
 
+    crop = (
+        (width is not None and new_width > width) or
+        (height is not None and new_height > height))
+
+    if crop:
+        # crop image before scaling to avoid excessive memory use
+        if use_height:
+            image = image.crop((
+                0,
+                int(math.floor(((new_height - height) / 2.0) / factor_width)),
+                image.size[0],
+                int(math.ceil((((new_height - height) / 2.0) + height) / factor_width))))
+            new_height = int(round(image.size[1] * factor_width))
+        else:
+            image = image.crop((
+                int(math.floor(((new_width - width) / 2.0) / factor_height)),
+                0,
+                int(math.ceil((((new_width - width) / 2.0) + width) / factor_height)),
+                image.size[1]))
+            new_width = int(round(image.size[0] * factor_height))
+
+    if (new_width * new_height) > (8192 * 8192):
+        # The new image would be excessively large and eat up all memory while
+        # scaling, so return the potentially pre cropped image
+        return image
+
     image.draft(image.mode, (new_width, new_height))
     image = image.resize((new_width, new_height), PIL.Image.ANTIALIAS)
 
-    # cropping
-    if (
+    crop = (
         (width is not None and new_width > width) or
-        (height is not None and new_height > height)
-    ):
+        (height is not None and new_height > height))
+
+    if crop:
         if use_height:
             left = 0
             right = new_width
@@ -244,4 +260,5 @@ def scalePILImage(image, width=None, height=None, direction='down'):
             top = 0
             bottom = new_height
         image = image.crop((left, top, right, bottom))
+
     return image
