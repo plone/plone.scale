@@ -5,18 +5,10 @@ Changelog
 2.2 (unreleased)
 ----------------
 
-Breaking changes:
-
-- *add item here*
-
 New features:
 
 - Python 3 compatibility.
   [dhavlik]
-
-Bug fixes:
-
-- *add item here*
 
 
 2.1.2 (2017-05-31)
