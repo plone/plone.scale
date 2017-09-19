@@ -28,8 +28,8 @@ def none_as_int(the_int):
 PIL.ImageFile.MAXBLOCK = 1000000
 
 
-def scaleImage(image, width=None, height=None, direction='down',
-               quality=88, result=None):
+def scaleImage(image, width=None, height=None, mode='contain',
+               quality=88, result=None, direction=None):
     """Scale the given image data to another size and return the result
     as a string or optionally write in to the file-like `result` object.
 
@@ -43,7 +43,7 @@ def scaleImage(image, width=None, height=None, direction='down',
     a size-tuple.  Optionally a file-like object can be given as the
     `result` parameter, in which the generated image scale will be stored.
 
-    The `width`, `height`, `direction` parameters will be passed to
+    The `width`, `height`, `mode` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
 
     The generated image is a JPEG image, unless the original is a PNG or GIF
@@ -64,7 +64,7 @@ def scaleImage(image, width=None, height=None, direction='down',
         format_ = 'PNG'
 
     icc_profile = image.info.get('icc_profile')
-    image = scalePILImage(image, width, height, direction)
+    image = scalePILImage(image, width, height, mode, direction=direction)
 
     # convert to simpler mode if possible
     colors = image.getcolors(maxcolors=256)
@@ -129,30 +129,29 @@ def _scale_thumbnail(image, width=None, height=None):
     return image
 
 
-def scalePILImage(image, width=None, height=None, direction='down'):
+def scalePILImage(image, width=None, height=None, mode='contain', direction=None):
     """Scale a PIL image to another size.
 
     This is all about scaling for the display in a web browser.
 
     Either width or height - or both - must be given.
 
-    Three different scaling options are supported via `direction`:
+    Three different scaling options are supported via `mode` and correspond to
+    the CSS background-size values
+    (see https://developer.mozilla.org/en-US/docs/Web/CSS/background-size):
 
-    `up`
-        scaling scales the smallest dimension up to the required size
-        and crops the other dimension if needed.
-
-    `down`
+    `contain` or `scale-crop-to-fit`
         scaling starts by scaling the largest dimension to the required
         size and crops the other dimension if needed.
 
-    `thumbnail`
-        scales to the requested dimensions without cropping. Theresulting
+    `cover` or `scale-crop-to-fill`
+        scaling scales the smallest dimension up to the required size
+        and crops the other dimension if needed.
+
+    `scale`
+        scales to the requested dimensions without cropping. The resulting
         image may have a different size than requested. This option
         requires both width and height to be specified.
-
-        `keep` is accepted as an alternative spelling for this option,
-        but its use is deprecated.
 
     The `image` parameter must be an instance of the `PIL.Image` class.
 
@@ -167,12 +166,34 @@ def scalePILImage(image, width=None, height=None, direction='down'):
     if width is None and height is None:
         raise ValueError("Either width or height need to be given")
 
-    if direction == "keep":
+    if direction is not None:
         warnings.warn(
-            'direction="keep" is deprecated, use "thumbnail" instead',
-            DeprecationWarning
-        )
-        direction = "thumbnail"
+            "the 'direction' option is deprecated, use 'mode' instead",
+            DeprecationWarning)
+        mode = direction
+    del direction
+
+    if mode == "down":
+        warnings.warn(
+            "the 'down' scaling mode is deprecated, use 'contain' instead",
+            DeprecationWarning)
+        mode = "contain"
+    if mode == "up":
+        warnings.warn(
+            "the 'up' scaling mode is deprecated, use 'cover' instead",
+            DeprecationWarning)
+        mode = "cover"
+    if mode == "thumbnail":
+        warnings.warn(
+            "the 'thumbnail' scaling mode is deprecated, use 'scale' instead",
+            DeprecationWarning)
+        mode = "scale"
+    if mode == "scale-crop-to-fit":
+        mode = "contain"
+    if mode == "scale-crop-to-fill":
+        mode = "cover"
+    if mode not in ('contain', 'cover', 'scale'):
+        raise ValueError("Unknown scale mode '%s'" % mode)
 
     if image.mode == "1":
         # Convert black&white to grayscale
@@ -189,11 +210,11 @@ def scalePILImage(image, width=None, height=None, direction='down'):
         # Convert CMYK to RGB, allowing for web previews of print images
         image = image.convert("RGB")
 
-    # for thumbnail we're done:
-    if direction == 'thumbnail':
+    # for scale we're done:
+    if mode == 'scale':
         return _scale_thumbnail(image, width, height)
 
-    # now for up and down scaling
+    # now for cover and contain scaling
     # Determine scale factor needed to get the right height
     factor_height = factor_width = None
     if height is not None:
@@ -204,15 +225,15 @@ def scalePILImage(image, width=None, height=None, direction='down'):
     if factor_height == factor_width:
         # The original already has the right aspect ratio, so we only need
         # to scale.
-        if direction == 'down':
+        if mode == 'contain':
             image.thumbnail((width, height), PIL.Image.ANTIALIAS)
             return image
         return image.resize((width, height), PIL.Image.ANTIALIAS)
 
     # figure out which axis to scale. One of the factors can still be None!
-    # calculate for 'down'
+    # calculate for 'contain'
     use_height = none_as_int(factor_width) > none_as_int(factor_height)
-    if direction == 'up':  # for 'up': invert
+    if mode == 'cover':  # for 'cover': invert
         use_height = not use_height
 
     new_width = width
