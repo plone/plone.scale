@@ -102,7 +102,27 @@ class ScalingTests(TestCase):
         self.assertEqual(scaleImage(PNG, 20, 51, "down")[2], (20, 51))
 
     def testNoStretchingDownScale(self):
-        self.assertEqual(scaleImage(PNG, 200, 103, "down")[2], (84, 103))
+        self.assertEqual(scaleImage(PNG, 200, 103, "down")[2], (200, 103))
+
+    def testHugeScale(self):
+        # the image will be cropped, but not scaled
+        self.assertEqual(scaleImage(PNG, 400, 99999, "down")[2], (2, 103))
+
+    def testCropPreWideScaleUnspecifiedHeight(self):
+        image = scaleImage(PNG, 400, None, "down")
+        self.assertEqual(image[2], (400, 490))
+
+    def testCropPreWideScale(self):
+        image = scaleImage(PNG, 400, 100, "down")
+        self.assertEqual(image[2], (400, 100))
+
+    def testCropPreTallScaleUnspecifiedWidth(self):
+        image = scaleImage(PNG, None, 400, "down")
+        self.assertEqual(image[2], (326, 400))
+
+    def testCropPreTallScale(self):
+        image = scaleImage(PNG, 100, 400, "down")
+        self.assertEqual(image[2], (100, 400))
 
     def testRestrictWidthOnlyDownScaleNone(self):
         self.assertEqual(scaleImage(PNG, 42, None, "down")[2], (42, 52))
