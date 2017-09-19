@@ -19,6 +19,8 @@ Bug fixes:
 3.0.2 (2018-09-28)
 ------------------
 
+Changes:
+
 Bug fixes:
 
 - Fix cleanup of image scales in py3
