@@ -11,6 +11,7 @@ STORAGE_REQUIREMENTS = [
     'zope.component',
     'zope.configuration',
     'zope.interface',
+    'Persistence',
 ]
 
 TESTS_REQUIREMENTS = [
