@@ -76,6 +76,16 @@ def scaleImage(image, width=None, height=None, direction='down',
         elif format_ == 'PNG':
             image = image.convert('P')
 
+    if image.mode == 'RGBA' and format_ == 'JPEG':
+        extrema = dict(zip(image.getbands(), image.getextrema()))
+        if extrema.get('A') == (255, 255):
+            # no alpha used, just change the mode, which causes the alpha band
+            # to be dropped on save
+            image.mode = "RGB"
+        else:
+            # switch to PNG, which supports alpha
+            format_ = 'PNG'
+
     new_result = False
 
     if result is None:

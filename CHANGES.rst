@@ -12,7 +12,8 @@ Breaking changes:
 
 New features:
 
-- *add item here*
+- Handle TIFF images with alpha channels.
+  [fschulze]
 
 Bug fixes:
 
