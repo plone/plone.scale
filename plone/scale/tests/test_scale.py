@@ -36,6 +36,24 @@ class ScalingTests(TestCase):
     def testScaledImageIsJpeg(self):
         self.assertEqual(scaleImage(TIFF, 84, 103, "down")[1], "JPEG")
 
+    def testAlphaForcesPNG(self):
+        # first image without alpha
+        src = PIL.Image.new("RGBA", (256, 256), (255, 255, 255, 255))
+        for y in range(0, 256):
+            for x in range(0, 256):
+                src.putpixel((x, y), (x, y, 0, 255))
+        result = StringIO()
+        src.save(result, "TIFF")
+        self.assertEqual(scaleImage(result, 84, 103, "down")[1], "JPEG")
+        # now with alpha
+        src = PIL.Image.new("RGBA", (256, 256), (255, 255, 255, 128))
+        result = StringIO()
+        for y in range(0, 256):
+            for x in range(0, 256):
+                src.putpixel((x, y), (x, y, 0, x))
+        src.save(result, "TIFF")
+        self.assertEqual(scaleImage(result, 84, 103, "down")[1], "PNG")
+
     def testScaledCMYKIsRGB(self):
         (imagedata, format, size) = scaleImage(CMYK, 42, 51, "down")
         input = StringIO(imagedata)
