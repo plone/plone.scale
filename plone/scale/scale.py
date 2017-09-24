@@ -188,6 +188,11 @@ def scalePILImage(image, width=None, height=None, mode='contain', direction=None
             "the 'thumbnail' scaling mode is deprecated, use 'scale' instead",
             DeprecationWarning)
         mode = "scale"
+    if mode == "keep":
+        warnings.warn(
+            "the 'keep' scaling mode is deprecated, use 'scale' instead",
+            DeprecationWarning)
+        mode = "scale"
     if mode == "scale-crop-to-fit":
         mode = "contain"
     if mode == "scale-crop-to-fill":
