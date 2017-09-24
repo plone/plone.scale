@@ -243,7 +243,7 @@ class ScalingTests(TestCase):
                 str(w[0].message))
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            scaleImage(PNG, 16, 16, direction="up")
+            scaleImage(PNG, 16, 16, direction="keep")
             self.assertEqual(len(w), 2)
             self.assertIs(w[0].category, DeprecationWarning)
             self.assertIn(
@@ -251,7 +251,7 @@ class ScalingTests(TestCase):
                 str(w[0].message))
             self.assertIs(w[1].category, DeprecationWarning)
             self.assertIn(
-                "the 'up' scaling mode is deprecated",
+                "the 'keep' scaling mode is deprecated",
                 str(w[1].message))
 
 
