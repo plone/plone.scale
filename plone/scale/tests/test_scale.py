@@ -257,7 +257,4 @@ class ScalingTests(TestCase):
 
 def test_suite():
     from unittest import defaultTestLoader
-    from warnings import filterwarnings
-    filterwarnings("error", "the 'direction' option is deprecated")
-    filterwarnings("error", "the '.*' scaling mode is deprecated")
     return defaultTestLoader.loadTestsFromName(__name__)
