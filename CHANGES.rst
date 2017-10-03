@@ -15,10 +15,6 @@ New features:
 - Handle TIFF images with alpha channels.
   [fschulze]
 
-Bug fixes:
-
-- *add item here*
-
 
 2.2 (2017-08-27)
 ----------------
