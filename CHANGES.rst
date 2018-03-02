@@ -15,7 +15,8 @@ New features:
 
 Bug fixes:
 
-- *add item here*
+- Fix conflict resolution code corner case.
+  [gforcada]
 
 
 3.0 (2017-10-02)

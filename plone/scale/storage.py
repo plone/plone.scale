@@ -77,14 +77,14 @@ class ScalesDict(PersistentDict):
             if key not in new:
                 deleted.append(key)
         for key in deleted:
-            if ((key in saved) and
-                    (old[key]['modified'] == saved[key]['modified'])):
-                # unchanged by saved, deleted by new
-                logger.debug('deleted %s' % repr(key))
-                del saved[key]
-            else:
-                # modified by saved, deleted by new
-                self.raise_conflict(saved[key], new[key])
+            if key in saved:
+                if old[key]['modified'] == saved[key]['modified']:
+                    # unchanged by saved, deleted by new
+                    logger.debug('deleted %s' % repr(key))
+                    del saved[key]
+                else:
+                    # modified by saved, deleted by new
+                    self.raise_conflict(saved[key], new[key])
         for key in added:
             if key in saved:
                 # added by saved, added by new
