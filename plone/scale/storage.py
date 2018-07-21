@@ -246,7 +246,7 @@ class AnnotationStorage(MutableMapping):
         if not isinstance(modified_time, number_types):
             # https://github.com/plone/plone.scale/issues/12
             return
-        for key, value in storage.items():
+        for key, value in list(storage.items()):
             # remove info stored by tuple keys
             # before refactoring
             if isinstance(key, tuple):
