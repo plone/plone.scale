@@ -15,7 +15,8 @@ New features:
 
 Bug fixes:
 
-- *add item here*
+- Fix cleanup of image scales in py3
+  [pbauer]
 
 
 3.0.1 (2018-04-03)
