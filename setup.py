@@ -47,7 +47,7 @@ setup(
     keywords='image scaling',
     author='Plone Foundation',
     author_email='plone-developers@lists.sourceforge.net',
-    url='https://pypi.python.org/pypi/plone.scale',
+    url='https://pypi.org/project/plone.scale',
     license='BSD',
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['plone'],
