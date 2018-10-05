@@ -1,22 +1,28 @@
 # -*- coding: utf-8 -*-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
-
 from plone.scale.scale import scaleImage
 from plone.scale.tests import TEST_DATA_LOCATION
 from unittest import TestCase
 
 import os.path
-import PIL.Image, PIL.ImageDraw
+import PIL.Image
+import PIL.ImageDraw
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 
-PNG = open(os.path.join(TEST_DATA_LOCATION, "logo.png"), 'rb').read()
-GIF = open(os.path.join(TEST_DATA_LOCATION, "logo.gif"), 'rb').read()
-TIFF = open(os.path.join(TEST_DATA_LOCATION, "logo.tiff"), 'rb').read()
-CMYK = open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg"), 'rb').read()
-PROFILE = open(os.path.join(TEST_DATA_LOCATION, "profile.jpg"), 'rb').read()
+with open(os.path.join(TEST_DATA_LOCATION, "logo.png"), 'rb') as fio:
+    PNG = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "logo.gif"), 'rb') as fio:
+    GIF = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "logo.tiff"), 'rb') as fio:
+    TIFF = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg"), 'rb') as fio:
+    CMYK = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "profile.jpg"), 'rb') as fio:
+    PROFILE = fio.read()
 
 
 class ScalingTests(TestCase):
@@ -104,7 +110,9 @@ class ScalingTests(TestCase):
         self.assertEqual(png.format, 'PNG')
         self.assertIsNone(png.getcolors(maxcolors=256))
         # scale it to a size where we get less than 256 colors
-        (imagedata, format, size) = scaleImage(dst.getvalue(), 24, None, "down")
+        (imagedata, format, size) = scaleImage(
+            dst.getvalue(), 24, None, "down"
+        )
         image = PIL.Image.open(StringIO(imagedata))
         # we should now have an image in palette mode
         self.assertEqual(image.mode, 'P')
