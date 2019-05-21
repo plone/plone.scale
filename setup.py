@@ -2,7 +2,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
-version = '3.0.2.dev0'
+version = '3.0.4.dev0'
 readme = open('README.rst').read().replace(':class:', '').replace(':mod:', '')
 changes = open('CHANGES.rst').read()
 
@@ -36,6 +36,7 @@ setup(
         'Framework :: Plone :: 5.1',
         'Framework :: Plone :: 5.2',
         'Framework :: Zope2',
+        'Framework :: Zope :: 4',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
@@ -47,9 +48,9 @@ setup(
     keywords='image scaling',
     author='Plone Foundation',
     author_email='plone-developers@lists.sourceforge.net',
-    url='https://pypi.python.org/pypi/plone.scale',
+    url='https://pypi.org/project/plone.scale',
     license='BSD',
-    packages=find_packages(exclude=['ez_setup']),
+    packages=find_packages(),
     namespace_packages=['plone'],
     include_package_data=True,
     zip_safe=False,

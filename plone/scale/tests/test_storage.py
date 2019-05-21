@@ -53,13 +53,13 @@ class AnnotationStorageTests(TestCase):
     def testInterface(self):
         from plone.scale.storage import IImageScaleStorage
         storage = self.storage
-        self.failUnless(IImageScaleStorage.providedBy(storage))
+        self.assertTrue(IImageScaleStorage.providedBy(storage))
 
     def testScaleForNonExistingScaleWithCreationBBB(self):
         storage = self.storage
         scale = storage.scale(factory=self.factory, foo=23, bar=42)
-        self.failUnless('uid' in scale)
-        self.failUnless('key' in scale)
+        self.assertIn('uid', scale)
+        self.assertIn('key', scale)
         self.assertEqual(scale['data'], 'some data')
         self.assertEqual(scale['width'], 42)
         self.assertEqual(scale['height'], 23)
@@ -69,8 +69,8 @@ class AnnotationStorageTests(TestCase):
         self._provide_dummy_scale_adapter()
         storage = self.storage
         scale = storage.scale(foo=23, bar=42)
-        self.failUnless('uid' in scale)
-        self.failUnless('key' in scale)
+        self.assertIn('uid', scale)
+        self.assertIn('key', scale)
         self.assertEqual(scale['data'], 'some data')
         self.assertEqual(scale['width'], 42)
 
@@ -99,20 +99,20 @@ class AnnotationStorageTests(TestCase):
         storage = self.storage
         scale1 = storage.scale(foo=23, bar=42)
         scale2 = storage.scale(bar=42, foo=23)
-        self.failUnless(scale1 is scale2)
+        self.assertIs(scale1, scale2)
 
     def testScaleForSimilarScalesBBB(self):
         storage = self.storage
         scale1 = storage.scale(factory=self.factory, foo=23, bar=42)
         scale2 = storage.scale(factory=self.factory, bar=42, foo=23, hurz='!')
-        self.failIf(scale1 is scale2)
+        self.assertIsNot(scale1, scale2)
 
     def testScaleForSimilarScales(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
         scale1 = storage.scale(foo=23, bar=42)
         scale2 = storage.scale(bar=42, foo=23, hurz='!')
-        self.failIf(scale1 is scale2)
+        self.assertIsNot(scale1, scale2)
 
     def testGetItemBBB(self):
         storage = self.storage
@@ -132,8 +132,8 @@ class AnnotationStorageTests(TestCase):
         scale = storage.scale(foo=23, bar=42)
         uid = scale['uid']
         scale = storage[uid]
-        self.failUnless('uid' in scale)
-        self.failUnless('key' in scale)
+        self.assertIn('uid', scale)
+        self.assertIn('key', scale)
         self.assertEqual(scale['data'], 'some data')
         self.assertEqual(scale['width'], 42)
         self.assertEqual(scale['height'], 23)
@@ -223,8 +223,8 @@ class AnnotationStorageTests(TestCase):
         storage.modified = lambda: next_modified
         scale_new = storage.scale(foo=23, bar=42)
         self.assertEqual(len(storage), 1)
-        self.assertEqual(scale_new['uid'] in storage, True)
-        self.assertEqual(scale_old['uid'] in storage, False)
+        self.assertIn(scale_new['uid'], storage)
+        self.assertNotIn(scale_old['uid'], storage)
 
         # When modification time is older than a day, too old scales
         # get purged.
@@ -232,9 +232,9 @@ class AnnotationStorageTests(TestCase):
         storage.modified = lambda: next_modified
         scale_newer = storage.scale(foo=23, bar=42)
 
-        self.assertEqual(scale_newer['uid'] in storage, True)
-        self.assertEqual(scale_new['uid'] in storage, False)
-        self.assertEqual(scale_old['uid'] in storage, False)
+        self.assertIn(scale_newer['uid'], storage)
+        self.assertNotIn(scale_new['uid'], storage)
+        self.assertNotIn(scale_old['uid'], storage)
         del storage[scale_newer['uid']]
         self.assertEqual(len(storage), 0)
 

@@ -1,17 +1,23 @@
 Changelog
 =========
 
+.. You should *NOT* be adding new change log entries to this file.
+   You should create a file in the news directory instead.
+   For helpful instructions, please see:
+   https://github.com/plone/plone.releaser/blob/master/ADD-A-NEWS-ITEM.rst
 
-3.0.2 (unreleased)
+.. towncrier release notes start
+
+3.0.3 (2018-11-04)
 ------------------
 
-Breaking changes:
+Bug fixes:
 
-- *add item here*
+- reduce warnings in tests [jensens]
 
-New features:
 
-- *add item here*
+3.0.2 (2018-09-28)
+------------------
 
 Changes:
 
