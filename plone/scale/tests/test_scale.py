@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from plone.scale.scale import scaleImage
+from plone.scale.scale import scalePILImage
 from plone.scale.tests import TEST_DATA_LOCATION
 from unittest import TestCase
 
@@ -216,43 +217,57 @@ class ScalingTests(TestCase):
         self.assertEqual(result, img2)      # the return value _is_ the buffer
         self.assertEqual(result.getvalue(), img1)   # but with the same value
 
+    def testAlternativeSpellings(self):
+        """Test alternative and deprecated mode spellings and the old
+        ``direction`` arguments instead of ``mode``.
+        """
+
+        # scale-crop-to-fit
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 5, direction='scale-crop-to-fit')
+        self.assertEqual(img_scaled.size, (10, 5))
+        # down
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 5, direction='down')
+        self.assertEqual(img_scaled.size, (10, 5))
+
+        # Test mode cover
+        # scale-crop-to-fill
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 40, 30, direction='scale-crop-to-fill')
+        self.assertEqual(img_scaled.size, (30, 30))
+        # up
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 40, 30, direction='up')
+        self.assertEqual(img_scaled.size, (30, 30))
+
+        # Test mode scale
+        # keep A
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 20, 10, direction='keep')
+        self.assertEqual(img_scaled.size, (10, 10))
+        # keep B
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 40, 80, direction='keep')
+        self.assertEqual(img_scaled.size, (20, 20))
+        # thumbnail A
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 20, 10, direction='thumbnail')
+        self.assertEqual(img_scaled.size, (10, 10))
+        # thumbnail B
+        img = PIL.Image.new('RGB', (20, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 40, 80, direction='thumbnail')
+        self.assertEqual(img_scaled.size, (20, 20))
+
     def testDeprecations(self):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            scaleImage(PNG, 16, 16, "down")
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, DeprecationWarning)
-            self.assertIn(
-                "the 'down' scaling mode is deprecated",
-                str(w[0].message))
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            scaleImage(PNG, 16, 16, "up")
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, DeprecationWarning)
-            self.assertIn(
-                "the 'up' scaling mode is deprecated",
-                str(w[0].message))
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            scaleImage(PNG, 16, 16, "thumbnail")
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, DeprecationWarning)
-            self.assertIn(
-                "the 'thumbnail' scaling mode is deprecated",
-                str(w[0].message))
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
             scaleImage(PNG, 16, 16, direction="keep")
-            self.assertEqual(len(w), 2)
+            self.assertEqual(len(w), 1)
             self.assertIs(w[0].category, DeprecationWarning)
             self.assertIn(
                 "the 'direction' option is deprecated",
                 str(w[0].message))
-            self.assertIs(w[1].category, DeprecationWarning)
-            self.assertIn(
-                "the 'keep' scaling mode is deprecated",
-                str(w[1].message))
 
 
 def test_suite():
