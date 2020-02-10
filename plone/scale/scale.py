@@ -140,15 +140,18 @@ def scalePILImage(image, width=None, height=None, mode='contain', direction=None
     the CSS background-size values
     (see https://developer.mozilla.org/en-US/docs/Web/CSS/background-size):
 
-    `contain` or `scale-crop-to-fit`
+    `contain`
+        Alternative spellings: `scale-crop-to-fit`, `down`.
         scaling starts by scaling the largest dimension to the required
         size and crops the other dimension if needed.
 
-    `cover` or `scale-crop-to-fill`
+    `cover`
+        Alternative spellings: `scale-crop-to-fill`, `up`.
         scaling scales the smallest dimension up to the required size
         and crops the other dimension if needed.
 
     `scale`
+        Alternative spellings: `keep`, `thumbnail`.
         scales to the requested dimensions without cropping. The resulting
         image may have a different size than requested. This option
         requires both width and height to be specified.
@@ -173,30 +176,13 @@ def scalePILImage(image, width=None, height=None, mode='contain', direction=None
         mode = direction
     del direction
 
-    if mode == "down":
-        warnings.warn(
-            "the 'down' scaling mode is deprecated, use 'contain' instead",
-            DeprecationWarning)
+    if mode in ("scale-crop-to-fit", "down"):
         mode = "contain"
-    if mode == "up":
-        warnings.warn(
-            "the 'up' scaling mode is deprecated, use 'cover' instead",
-            DeprecationWarning)
+    elif mode in ("scale-crop-to-fill", "up"):
         mode = "cover"
-    if mode == "thumbnail":
-        warnings.warn(
-            "the 'thumbnail' scaling mode is deprecated, use 'scale' instead",
-            DeprecationWarning)
+    elif mode in ("keep", "thumbnail"):
         mode = "scale"
-    if mode == "keep":
-        warnings.warn(
-            "the 'keep' scaling mode is deprecated, use 'scale' instead",
-            DeprecationWarning)
-        mode = "scale"
-    if mode == "scale-crop-to-fit":
-        mode = "contain"
-    if mode == "scale-crop-to-fill":
-        mode = "cover"
+
     if mode not in ('contain', 'cover', 'scale'):
         raise ValueError("Unknown scale mode '%s'" % mode)
 
