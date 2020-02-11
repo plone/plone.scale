@@ -260,6 +260,9 @@ class ScalingTests(TestCase):
         self.assertEqual(img_scaled.size, (20, 20))
 
     def testDeprecations(self):
+        import plone.scale.scale
+        # clear warnings registry, so the test actually sees the warning
+        plone.scale.scale.__warningregistry__.clear()
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             scaleImage(PNG, 16, 16, direction="keep")
