@@ -259,6 +259,69 @@ class ScalingTests(TestCase):
         img_scaled = scalePILImage(img, 40, 80, direction='thumbnail')
         self.assertEqual(img_scaled.size, (20, 20))
 
+    def testModes(self):
+        """Test modes to actually behavie like documented.
+        """
+        # Mode contain
+        # v
+        # A
+        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 5, 5, mode='contain')
+        self.assertEqual(img_scaled.size, (2, 5))
+        # B
+        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
+        img_scaled = scalePILImage(img, 5, 5, mode='contain')
+        self.assertEqual(img_scaled.size, (5, 2))
+        # ^
+        # A
+        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 30, 30, mode='contain')
+        self.assertEqual(img_scaled.size, (15, 30))
+        # B
+        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
+        img_scaled = scalePILImage(img, 30, 30, mode='contain')
+        self.assertEqual(img_scaled.size, (30, 15))
+
+        # Mode cover
+        # v
+        # A
+        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 5, 5, mode='cover')
+        self.assertEqual(img_scaled.size, (5, 5))
+        # B
+        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
+        img_scaled = scalePILImage(img, 5, 5, mode='cover')
+        self.assertEqual(img_scaled.size, (5, 5))
+        # ^
+        # A
+        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 30, 30, mode='cover')
+        self.assertEqual(img_scaled.size, (30, 30))
+        # B
+        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
+        img_scaled = scalePILImage(img, 30, 30, mode='cover')
+        self.assertEqual(img_scaled.size, (30, 30))
+
+        # Mode scale
+        # v
+        # A
+        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 5, 5, mode='scale')
+        self.assertEqual(img_scaled.size, (2, 5))
+        # B
+        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
+        img_scaled = scalePILImage(img, 5, 5, mode='scale')
+        self.assertEqual(img_scaled.size, (5, 2))
+        # ^
+        # A
+        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 30, 30, mode='scale')
+        self.assertEqual(img_scaled.size, (15, 30))
+        # B
+        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
+        img_scaled = scalePILImage(img, 30, 30, mode='scale')
+        self.assertEqual(img_scaled.size, (30, 15))
+
     def testDeprecations(self):
         import plone.scale.scale
         # clear warnings registry, so the test actually sees the warning
