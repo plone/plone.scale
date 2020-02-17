@@ -267,40 +267,40 @@ class ScalingTests(TestCase):
         # A
         img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
         img_scaled = scalePILImage(img, 5, 5, mode='contain')
-        self.assertEqual(img_scaled.size, (2, 5))
+        self.assertEqual(img_scaled.size, (5, 5))
         # B
         img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
         img_scaled = scalePILImage(img, 5, 5, mode='contain')
-        self.assertEqual(img_scaled.size, (5, 2))
+        self.assertEqual(img_scaled.size, (5, 5))
         # ^
         # A
         img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
         img_scaled = scalePILImage(img, 30, 30, mode='contain')
-        self.assertEqual(img_scaled.size, (15, 30))
+        self.assertEqual(img_scaled.size, (30, 30))
         # B
         img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
         img_scaled = scalePILImage(img, 30, 30, mode='contain')
-        self.assertEqual(img_scaled.size, (30, 15))
+        self.assertEqual(img_scaled.size, (30, 30))
 
         # Mode cover
         # v
         # A
         img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
         img_scaled = scalePILImage(img, 5, 5, mode='cover')
-        self.assertEqual(img_scaled.size, (5, 5))
+        self.assertEqual(img_scaled.size, (2, 5))
         # B
         img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
         img_scaled = scalePILImage(img, 5, 5, mode='cover')
-        self.assertEqual(img_scaled.size, (5, 5))
+        self.assertEqual(img_scaled.size, (5, 2))
         # ^
         # A
         img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
         img_scaled = scalePILImage(img, 30, 30, mode='cover')
-        self.assertEqual(img_scaled.size, (30, 30))
+        self.assertEqual(img_scaled.size, (15, 30))
         # B
         img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
         img_scaled = scalePILImage(img, 30, 30, mode='cover')
-        self.assertEqual(img_scaled.size, (30, 30))
+        self.assertEqual(img_scaled.size, (30, 15))
 
         # Mode scale
         # v
@@ -316,11 +316,11 @@ class ScalingTests(TestCase):
         # A
         img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
         img_scaled = scalePILImage(img, 30, 30, mode='scale')
-        self.assertEqual(img_scaled.size, (15, 30))
+        self.assertEqual(img_scaled.size, (10, 20))
         # B
         img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
         img_scaled = scalePILImage(img, 30, 30, mode='scale')
-        self.assertEqual(img_scaled.size, (30, 15))
+        self.assertEqual(img_scaled.size, (20, 10))
 
     def testDeprecations(self):
         import plone.scale.scale
