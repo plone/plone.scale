@@ -265,62 +265,62 @@ class ScalingTests(TestCase):
         # Mode contain
         # v
         # A
-        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
-        img_scaled = scalePILImage(img, 5, 5, mode='contain')
-        self.assertEqual(img_scaled.size, (5, 5))
+        img = PIL.Image.new('RGB', (20, 40), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 10, mode='contain')
+        self.assertEqual(img_scaled.size, (10, 10))
         # B
-        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
-        img_scaled = scalePILImage(img, 5, 5, mode='contain')
-        self.assertEqual(img_scaled.size, (5, 5))
+        img = PIL.Image.new('RGB', (40, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 10, mode='contain')
+        self.assertEqual(img_scaled.size, (10, 10))
         # ^
         # A
-        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
-        img_scaled = scalePILImage(img, 30, 30, mode='contain')
-        self.assertEqual(img_scaled.size, (30, 30))
+        img = PIL.Image.new('RGB', (20, 40), (0, 0, 0))
+        img_scaled = scalePILImage(img, 60, 60, mode='contain')
+        self.assertEqual(img_scaled.size, (60, 60))
         # B
-        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
-        img_scaled = scalePILImage(img, 30, 30, mode='contain')
-        self.assertEqual(img_scaled.size, (30, 30))
+        img = PIL.Image.new('RGB', (40, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 60, 60, mode='contain')
+        self.assertEqual(img_scaled.size, (60, 60))
 
         # Mode cover
         # v
         # A
-        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
-        img_scaled = scalePILImage(img, 5, 5, mode='cover')
-        self.assertEqual(img_scaled.size, (2, 5))
+        img = PIL.Image.new('RGB', (20, 40), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 10, mode='cover')
+        self.assertEqual(img_scaled.size, (5, 10))
         # B
-        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
-        img_scaled = scalePILImage(img, 5, 5, mode='cover')
-        self.assertEqual(img_scaled.size, (5, 2))
+        img = PIL.Image.new('RGB', (40, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 10, mode='cover')
+        self.assertEqual(img_scaled.size, (10, 5))
         # ^
         # A
-        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
-        img_scaled = scalePILImage(img, 30, 30, mode='cover')
-        self.assertEqual(img_scaled.size, (15, 30))
+        img = PIL.Image.new('RGB', (20, 40), (0, 0, 0))
+        img_scaled = scalePILImage(img, 60, 60, mode='cover')
+        self.assertEqual(img_scaled.size, (30, 60))
         # B
-        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
-        img_scaled = scalePILImage(img, 30, 30, mode='cover')
-        self.assertEqual(img_scaled.size, (30, 15))
+        img = PIL.Image.new('RGB', (40, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 60, 60, mode='cover')
+        self.assertEqual(img_scaled.size, (60, 30))
 
         # Mode scale
         # v
         # A
-        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
-        img_scaled = scalePILImage(img, 5, 5, mode='scale')
-        self.assertEqual(img_scaled.size, (2, 5))
+        img = PIL.Image.new('RGB', (20, 40), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 10, mode='scale')
+        self.assertEqual(img_scaled.size, (5, 10))
         # B
-        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
-        img_scaled = scalePILImage(img, 5, 5, mode='scale')
-        self.assertEqual(img_scaled.size, (5, 2))
+        img = PIL.Image.new('RGB', (40, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 10, 10, mode='scale')
+        self.assertEqual(img_scaled.size, (10, 5))
         # ^
         # A
-        img = PIL.Image.new('RGB', (10, 20), (0, 0, 0))
-        img_scaled = scalePILImage(img, 30, 30, mode='scale')
-        self.assertEqual(img_scaled.size, (10, 20))
+        img = PIL.Image.new('RGB', (20, 40), (0, 0, 0))
+        img_scaled = scalePILImage(img, 60, 60, mode='scale')
+        self.assertEqual(img_scaled.size, (20, 40))
         # B
-        img = PIL.Image.new('RGB', (20, 10), (0, 0, 0))
-        img_scaled = scalePILImage(img, 30, 30, mode='scale')
-        self.assertEqual(img_scaled.size, (20, 10))
+        img = PIL.Image.new('RGB', (40, 20), (0, 0, 0))
+        img_scaled = scalePILImage(img, 60, 60, mode='scale')
+        self.assertEqual(img_scaled.size, (40, 20))
 
     def testDeprecations(self):
         import plone.scale.scale
