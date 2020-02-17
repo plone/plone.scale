@@ -330,19 +330,20 @@ def scalePILImage(image, width=None, height=None, mode='contain', direction=None
 
     `contain`
         Alternative spellings: `scale-crop-to-fit`, `down`.
-        scaling starts by scaling the largest dimension to the required
+        Starts by scaling the smallest dimension to the required
         size and crops the other dimension if needed.
 
     `cover`
         Alternative spellings: `scale-crop-to-fill`, `up`.
-        scaling scales the smallest dimension up to the required size
+        Starts by scaling the largest dimension up to the required size
         and crops the other dimension if needed.
 
     `scale`
         Alternative spellings: `keep`, `thumbnail`.
-        scales to the requested dimensions without cropping. The resulting
+        Scales to the requested dimensions without cropping. The resulting
         image may have a different size than requested. This option
         requires both width and height to be specified.
+        Does not scale up.
 
     The `image` parameter must be an instance of the `PIL.Image` class.
 
