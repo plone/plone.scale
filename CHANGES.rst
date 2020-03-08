@@ -8,6 +8,31 @@ Changelog
 
 .. towncrier release notes start
 
+3.1.0 (2020-03-08)
+------------------
+
+New features:
+
+
+- The ``mode`` argument replaces the old, now deprecated, ``direction`` argument.
+  The new names are ``contain`` or ``scale-crop-to-fit`` instead of ``down``,
+  ``cover`` or ``scale-crop-to-fill`` instead of ``up``
+  and ``scale`` instead of ``thumbnail``.
+  [fschulze] (#29)
+- Added ``calculate_scaled_dimensions`` function to calculate sizes from bare values without actually scaling an image.
+  [fschulze]
+
+  Added ``MAX_PIXELS`` constant set to ``8192*8192`` to prevent memory overflow while scaling.
+  [fschulze] (#37)
+
+
+Bug fixes:
+
+
+- Fix documentation of scaling modes to match it's behavior.
+  [thet] (#39)
+
+
 3.0.3 (2018-11-04)
 ------------------
 
