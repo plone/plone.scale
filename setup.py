@@ -19,11 +19,6 @@ TESTS_REQUIREMENTS = [
     'plone.testing'
 ]
 
-SPHINX_REQUIREMENTS = [
-    'Sphinx',
-    'repoze.sphinx.autointerface',
-]
-
 setup(
     name='plone.scale',
     version=version,
@@ -68,7 +63,6 @@ setup(
     extras_require=dict(
         test=TESTS_REQUIREMENTS,
         storage=STORAGE_REQUIREMENTS,
-        sphinx=STORAGE_REQUIREMENTS + SPHINX_REQUIREMENTS,
         tests=STORAGE_REQUIREMENTS + TESTS_REQUIREMENTS,
     ),
 )

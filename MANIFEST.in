@@ -1,7 +1,6 @@
 include *.rst
 include pyproject.toml
 
-recursive-include docs *
 recursive-include plone *
 
 global-exclude *pyc
