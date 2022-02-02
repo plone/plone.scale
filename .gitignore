@@ -6,3 +6,5 @@ include/
 .installed.cfg
 develop-eggs/
 parts/
+constraints-*-mxdev.txt
+requirements-*-mxdev.txt
