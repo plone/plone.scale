@@ -1,6 +1,5 @@
 from persistent.dict import PersistentDict
 from plone.scale.interfaces import IImageScaleFactory
-from six import integer_types
 from uuid import uuid4
 from ZODB.POSException import ConflictError
 from zope.annotation import IAnnotations
