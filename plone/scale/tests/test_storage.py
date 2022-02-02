@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from operator import delitem
 from operator import itemgetter
 from operator import setitem
@@ -11,7 +10,7 @@ from zope.component import provideAdapter
 
 
 @implementer(zope.annotation.interfaces.IAttributeAnnotatable)
-class _DummyContext(object):
+class _DummyContext:
     pass
 
 
@@ -27,7 +26,7 @@ class AnnotationStorageTests(TestCase):
 
         @implementer(IImageScaleFactory)
         @adapter(_DummyContext)
-        class DummyISF(object):
+        class DummyISF:
 
             def __init__(self, context):
                 self.context = context
@@ -92,7 +91,7 @@ class AnnotationStorageTests(TestCase):
         storage = self.storage
         scale1 = storage.scale(factory=self.factory, foo=23, bar=42)
         scale2 = storage.scale(factory=self.factory, bar=42, foo=23)
-        self.failUnless(scale1 is scale2)
+        self.assertTrue(scale1 is scale2)
 
     def testScaleForExistingScale(self):
         self._provide_dummy_scale_adapter()
@@ -119,8 +118,8 @@ class AnnotationStorageTests(TestCase):
         scale = storage.scale(factory=self.factory, foo=23, bar=42)
         uid = scale['uid']
         scale = storage[uid]
-        self.failUnless('uid' in scale)
-        self.failUnless('key' in scale)
+        self.assertTrue('uid' in scale)
+        self.assertTrue('key' in scale)
         self.assertEqual(scale['data'], 'some data')
         self.assertEqual(scale['width'], 42)
         self.assertEqual(scale['height'], 23)
@@ -155,12 +154,12 @@ class AnnotationStorageTests(TestCase):
         storage = self.storage
         storage.storage.update(dict(one=None, two=None))
         generator = iter(storage)
-        self.assertEqual(set(generator), set(['one', 'two']))
+        self.assertEqual(set(generator), {'one', 'two'})
 
     def testKeys(self):
         storage = self.storage
         storage.storage.update(dict(one=None, two=None))
-        self.assertEqual(set(storage.keys()), set(['one', 'two']))
+        self.assertEqual(set(storage.keys()), {'one', 'two'})
 
     def testNegativeHasKey(self):
         storage = self.storage

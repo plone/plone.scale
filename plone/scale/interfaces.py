@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-s
 from zope.interface import Interface
 
 

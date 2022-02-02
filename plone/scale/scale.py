@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import PIL.Image
 import PIL.ImageFile
 import math
@@ -153,7 +152,7 @@ def get_scale_mode(mode, direction):
     return mode
 
 
-class ScaledDimensions(object):
+class ScaledDimensions:
     pass
 
 

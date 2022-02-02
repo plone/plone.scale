@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from persistent.dict import PersistentDict
 from plone.scale.interfaces import IImageScaleFactory
 from six import integer_types
@@ -27,7 +26,7 @@ KEEP_SCALE_MILLIS = 24 * 60 * 60 * 1000
 
 # Number types are float and int, and on Python 2 also long.
 number_types = [float]
-number_types.extend(integer_types)
+number_types.extend((int,))
 number_types = tuple(number_types)
 
 
@@ -152,7 +151,7 @@ class AnnotationStorage(MutableMapping):
 
     def __repr__(self):
         name = self.__class__.__name__
-        return '<%s context=%r>' % (name, self.context)
+        return f'<{name} context={self.context!r}>'
 
     __str__ = __repr__
 
@@ -237,7 +236,7 @@ class AnnotationStorage(MutableMapping):
                 data=data,
                 width=width,
                 height=height,
-                mimetype='image/{0}'.format(format_.lower()),
+                mimetype=f'image/{format_.lower()}',
                 key=key,
                 modified=self.modified_time,
             )
