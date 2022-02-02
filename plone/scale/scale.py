@@ -1,6 +1,6 @@
+import math
 import PIL.Image
 import PIL.ImageFile
-import math
 import sys
 import warnings
 

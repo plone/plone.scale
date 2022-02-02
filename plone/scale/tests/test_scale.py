@@ -323,6 +323,7 @@ class ScalingTests(TestCase):
 
     def testDeprecations(self):
         import plone.scale.scale
+
         # clear warnings registry, so the test actually sees the warning
         plone.scale.scale.__warningregistry__.clear()
         with warnings.catch_warnings(record=True) as w:

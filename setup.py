@@ -1,6 +1,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
+
 version = '3.1.3.dev0'
 readme = open('README.rst').read().replace(':class:', '').replace(':mod:', '')
 changes = open('CHANGES.rst').read()

@@ -3,10 +3,11 @@ from operator import itemgetter
 from operator import setitem
 from plone.testing import zca
 from unittest import TestCase
-import zope.annotation.interfaces
-import zope.annotation.attribute
-from zope.interface import implementer
 from zope.component import provideAdapter
+from zope.interface import implementer
+
+import zope.annotation.attribute
+import zope.annotation.interfaces
 
 
 @implementer(zope.annotation.interfaces.IAttributeAnnotatable)
@@ -19,8 +20,8 @@ class AnnotationStorageTests(TestCase):
     layer = zca.UNIT_TESTING
 
     def _provide_dummy_scale_adapter(self, result=True):
-        from zope.component import adapter
         from plone.scale.interfaces import IImageScaleFactory
+        from zope.component import adapter
 
         factory = self.factory
 
