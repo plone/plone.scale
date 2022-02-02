@@ -3,8 +3,10 @@ from setuptools import setup
 
 
 version = "3.1.3.dev0"
-readme = open("README.rst").read()
-changes = open("CHANGES.rst").read()
+with open("README.rst") as myfile:
+    readme = myfile.read()
+with open("CHANGES.rst") as myfile:
+    changes = myfile.read()
 
 STORAGE_REQUIREMENTS = [
     "ZODB",
