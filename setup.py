@@ -3,7 +3,7 @@ from setuptools import setup
 
 
 version = "3.1.3.dev0"
-readme = open("README.rst").read().replace(":class:", "").replace(":mod:", "")
+readme = open("README.rst").read()
 changes = open("CHANGES.rst").read()
 
 STORAGE_REQUIREMENTS = [
