@@ -7,14 +7,18 @@ readme = open("README.rst").read().replace(":class:", "").replace(":mod:", "")
 changes = open("CHANGES.rst").read()
 
 STORAGE_REQUIREMENTS = [
+    "ZODB",
     "zope.annotation",
-    "zope.component",
-    "zope.configuration",
     "zope.interface",
-    "Persistence",
+    "persistent",
 ]
 
-TESTS_REQUIREMENTS = ["plone.testing"]
+# "zope.configuration",
+TEST_REQUIREMENTS = [
+    "zope.component",
+    "zope.configuration",
+    "plone.testing",
+]
 
 setup(
     name="plone.scale",
@@ -54,8 +58,7 @@ setup(
         "setuptools",
     ],
     extras_require=dict(
-        test=TESTS_REQUIREMENTS,
         storage=STORAGE_REQUIREMENTS,
-        tests=STORAGE_REQUIREMENTS + TESTS_REQUIREMENTS,
+        test=STORAGE_REQUIREMENTS + TEST_REQUIREMENTS,
     ),
 )
