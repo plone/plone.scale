@@ -2,62 +2,59 @@ from setuptools import find_packages
 from setuptools import setup
 
 
-version = '3.1.3.dev0'
-readme = open('README.rst').read().replace(':class:', '').replace(':mod:', '')
-changes = open('CHANGES.rst').read()
+version = "3.1.3.dev0"
+readme = open("README.rst").read().replace(":class:", "").replace(":mod:", "")
+changes = open("CHANGES.rst").read()
 
 STORAGE_REQUIREMENTS = [
-    'zope.annotation',
-    'zope.component',
-    'zope.configuration',
-    'zope.interface',
-    'Persistence',
+    "zope.annotation",
+    "zope.component",
+    "zope.configuration",
+    "zope.interface",
+    "Persistence",
 ]
 
-TESTS_REQUIREMENTS = [
-    'Pillow',
-    'plone.testing'
-]
+TESTS_REQUIREMENTS = ["Pillow", "plone.testing"]
 
 setup(
-    name='plone.scale',
+    name="plone.scale",
     version=version,
-    description='Image scaling',
-    long_description=readme + '\n' + changes,
+    description="Image scaling",
+    long_description=readme + "\n" + changes,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-        'Framework :: Plone',
-        'Framework :: Plone :: 5.1',
-        'Framework :: Plone :: 5.2',
-        'Framework :: Plone :: Core',
-        'Framework :: Zope2',
-        'Framework :: Zope :: 4',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Web Environment",
+        "Framework :: Plone",
+        "Framework :: Plone :: 5.1",
+        "Framework :: Plone :: 5.2",
+        "Framework :: Plone :: Core",
+        "Framework :: Zope2",
+        "Framework :: Zope :: 4",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
-    keywords='image scaling',
-    author='Plone Foundation',
-    author_email='plone-developers@lists.sourceforge.net',
-    url='https://pypi.org/project/plone.scale',
-    license='BSD',
+    keywords="image scaling",
+    author="Plone Foundation",
+    author_email="plone-developers@lists.sourceforge.net",
+    url="https://pypi.org/project/plone.scale",
+    license="BSD",
     packages=find_packages(),
-    namespace_packages=['plone'],
+    namespace_packages=["plone"],
     include_package_data=True,
     zip_safe=False,
-    test_suite='plone.scale',
+    test_suite="plone.scale",
     install_requires=[
         # We can't actually depend on PIL because not everyone can install it
         # as an egg.
         # 'PIL',
         # 'Pillow'
-        'setuptools',
+        "setuptools",
         "six",
     ],
     extras_require=dict(
