@@ -14,7 +14,7 @@ STORAGE_REQUIREMENTS = [
     "Persistence",
 ]
 
-TESTS_REQUIREMENTS = ["Pillow", "plone.testing"]
+TESTS_REQUIREMENTS = ["plone.testing"]
 
 setup(
     name="plone.scale",
@@ -50,10 +50,7 @@ setup(
     zip_safe=False,
     test_suite="plone.scale",
     install_requires=[
-        # We can't actually depend on PIL because not everyone can install it
-        # as an egg.
-        # 'PIL',
-        # 'Pillow'
+        "Pillow",
         "setuptools",
     ],
     extras_require=dict(
