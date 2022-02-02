@@ -1,3 +1,4 @@
+from io import BytesIO as StringIO
 from plone.scale.scale import scaleImage
 from plone.scale.scale import scalePILImage
 from plone.scale.tests import TEST_DATA_LOCATION
@@ -7,12 +8,6 @@ import os.path
 import PIL.Image
 import PIL.ImageDraw
 import warnings
-
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
 
 
 with open(os.path.join(TEST_DATA_LOCATION, "logo.png"), "rb") as fio:

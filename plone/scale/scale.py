@@ -1,14 +1,10 @@
+from io import BytesIO as StringIO
+
 import math
 import PIL.Image
 import PIL.ImageFile
 import sys
 import warnings
-
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
 
 
 def none_as_int(the_int):

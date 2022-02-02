@@ -1,3 +1,4 @@
+from collections.abc import MutableMapping
 from persistent.dict import PersistentDict
 from plone.scale.interfaces import IImageScaleFactory
 from uuid import uuid4
@@ -9,14 +10,6 @@ from zope.interface import Interface
 import logging
 import pprint
 import warnings
-
-
-# BBB From python 3.3 it will work and from 3.9 it will be an error
-# the fallback is kept for py2 compatibility
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
 
 
 logger = logging.getLogger("plone.scale")
