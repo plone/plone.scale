@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-s
 from zope.interface import Interface
 
 
@@ -15,12 +14,11 @@ class IScaledImageQuality(Interface):
 
 
 class IImageScaleFactory(Interface):
-    """Creates a scale
-    """
+    """Creates a scale"""
 
     def _call__(
         fieldname=None,
-        direction='thumbnail',
+        direction="thumbnail",
         height=None,
         width=None,
         scale=None,
