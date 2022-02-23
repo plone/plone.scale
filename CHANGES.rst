@@ -8,6 +8,36 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0a1 (2022-02-23)
+--------------------
+
+Breaking changes:
+
+
+- Removed docs directory and sphinx extra.
+  The docs were last updated in 2010, and the maybe still relevant parts already copied to the readme.
+  [maurits] (#44)
+- Removed ``tests`` extra, kept only ``test`` extra and ``storage``.
+  Swapped packages slightly between those two extras.
+  For ``storage`` we depend on ``persistent`` and ``ZODB``.
+  [maurits] (#44)
+- Depend on Pillow.
+  Originally we did not officially depend on it (or PIL) "because not everyone can install it as an egg".
+  It seems time to grow up here.
+  [maurits] (#44)
+- Removed Python 2 support.  Only Python 3.6+ supported now.
+  Still works on Plone 5.2.
+  [maurits] (#44)
+
+
+New features:
+
+
+- Add tox.ini with mxdev.
+  Test with GitHub Actions on Plone 5.2 Py + 3.6-3.8 and Plone 6.0 + Py 3.7-3.10.
+  [maurits] (#44)
+
+
 3.1.2 (2020-09-07)
 ------------------
 
