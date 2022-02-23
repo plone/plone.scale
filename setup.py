@@ -2,7 +2,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 
-version = "4.0.0a1"
+version = "4.0.0a2.dev0"
 with open("README.rst") as myfile:
     readme = myfile.read()
 with open("CHANGES.rst") as myfile:
