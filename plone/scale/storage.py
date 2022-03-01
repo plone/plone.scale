@@ -9,7 +9,6 @@ from zope.interface import Interface
 
 import logging
 import pprint
-import warnings
 
 
 logger = logging.getLogger("plone.scale")
@@ -34,10 +33,11 @@ class IImageScaleStorage(Interface):
         to return a representation of the last modification date, which
         can be used to invalidate stored scale data on update."""
 
-    def scale(factory=None, **parameters):
-        """Find image scale data for the given parameters or create it if
-        a factory was provided.  The parameters will be passed back to
-        the factory method, which is expected to return a tuple
+    def scale(**parameters):
+        """Find image scale data for the given parameters or create it.
+
+        We will look for an IImageScaleFactory for the context, and pass
+        the parameters.  This factory is expected to return a tuple
         containing a representation of the actual image scale data (i.e.
         a string or file-like object) as well as the image's format and
         dimensions.  For convenience, this happens to match the return
@@ -166,55 +166,29 @@ class AnnotationStorage(MutableMapping):
             if value["key"] == hash:
                 return value
 
-    def scale(self, factory=None, **parameters):
+    def scale(self, **parameters):
         key = self.hash(**parameters)
         storage = self.storage
         info = self.get_info_by_hash(key)
         scaling_factory = IImageScaleFactory(self.context, None)
-        if (
-            info is not None
-            and (scaling_factory is not None or factory is not None)
-            and self._modified_since(info["modified"])
-        ):
-            del self[info["uid"]]
-            # invalidate when the image was updated
-            info = None
-        elif info is not None:
+        if scaling_factory is None:
+            # There is nothing more we can do.
+            # If we have info, return it, even if it is outdated.
             return info
-
-        # BBB/Deprecation handling
-        if factory is not None:
-            if scaling_factory is not None:
-                warnings.warn(
-                    "Deprecated usage of factory in plone.scale. "
-                    "Factory is passed to plone.scale but also an adapter "
-                    "was found. No way to really decide which one to execute."
-                    "To be nice and with a look at backward compatibility the "
-                    "passed one is used.",
-                    DeprecationWarning,
-                )
+        # Do we have info and is it up to date?
+        outdated_uid = None
+        if info is not None:
+            if self._modified_since(info["modified"]):
+                # We want to remove this outdated scale info,
+                # but let's keep it until we have calculated the new info.
+                # The assumption here is that it is better to have a slightly
+                # outdated image than no image at all.
+                outdated_uid = info["uid"]
             else:
-                warnings.warn(
-                    "Deprecated usage of factory in plone.scale. Provide an "
-                    "adapter for the factory instead. The kwarg will be "
-                    "dropped with plone.scale 3.0",
-                    DeprecationWarning,
-                )
-            result = factory(**parameters)
-        elif scaling_factory is not None:
-            # this is what we want, keep this after deprecaton phase
-            result = scaling_factory(**parameters)
-        else:
-            # adaption error, nor a factory was passed.
-            # BBB behavior here is to return None
-            # nevertheless we warn!
-            warnings.warn(
-                "Could not adapt context to IImageScaleFactory nor a "
-                "deprecated BBB factory callable was provided."
-                "Assume None return value as it was before."
-            )
-            return None
+                return info
 
+        # There is no info, or it is outdated.  Recreate the scale.
+        result = scaling_factory(**parameters)
         if result is not None:
             # storage will be modified:
             # good time to also cleanup
@@ -231,6 +205,8 @@ class AnnotationStorage(MutableMapping):
                 key=key,
                 modified=self.modified_time,
             )
+            if outdated_uid:
+                del self[outdated_uid]
             storage[uid] = info
         return info
 
