@@ -1,5 +1,0 @@
-Removed deprecated ``factory`` argument from ``scale`` method.
-This is in the ``AnnotationStorage`` class and the ``IImageScaleStorage`` interface.
-This was already scheduled for removal in ``plone.scale`` 3.0, but was kept longer.
-Fixes `issue 47 <https://github.com/plone/plone.scale/issues/47>`_.
-[maurits]

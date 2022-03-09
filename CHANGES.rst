@@ -8,6 +8,19 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0a2 (2022-03-09)
+--------------------
+
+Breaking changes:
+
+
+- Removed deprecated ``factory`` argument from ``scale`` method.
+  This is in the ``AnnotationStorage`` class and the ``IImageScaleStorage`` interface.
+  This was already scheduled for removal in ``plone.scale`` 3.0, but was kept longer.
+  Fixes `issue 47 <https://github.com/plone/plone.scale/issues/47>`_.
+  [maurits] (#47)
+
+
 4.0.0a1 (2022-02-23)
 --------------------
 
