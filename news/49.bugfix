@@ -1,0 +1,3 @@
+Fixed ``DeprecationWarning`` with Pillow 9.1.0 for ``ANTIALIAS``.
+Use ``Resampling.LANCZOS``, falling back to ``ANTIALIAS`` on older Pillows.
+[maurits]
