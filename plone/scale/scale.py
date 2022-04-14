@@ -7,6 +7,13 @@ import sys
 import warnings
 
 
+try:
+    # Pillow 9.1.0+
+    LANCZOS = PIL.Image.Resampling.LANCZOS
+except AttributeError:
+    LANCZOS = PIL.Image.ANTIALIAS
+
+
 def none_as_int(the_int):
     """For python 3 compatibility, to make int vs. none comparison possible
     without changing the algorithms below.
@@ -131,7 +138,7 @@ def _scale_thumbnail(image, width=None, height=None):
 
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
     image = image.resize(
-        (dimensions.target_width, dimensions.target_height), PIL.Image.ANTIALIAS
+        (dimensions.target_width, dimensions.target_height), LANCZOS
     )
     return image
 
@@ -393,11 +400,11 @@ def scalePILImage(image, width=None, height=None, mode="contain", direction=None
         # to scale.
         if mode == "contain":
             image.thumbnail(
-                (dimensions.final_width, dimensions.final_height), PIL.Image.ANTIALIAS
+                (dimensions.final_width, dimensions.final_height), LANCZOS
             )
             return image
         return image.resize(
-            (dimensions.final_width, dimensions.final_height), PIL.Image.ANTIALIAS
+            (dimensions.final_width, dimensions.final_height), LANCZOS
         )
 
     if dimensions.pre_scale_crop:
@@ -412,7 +419,7 @@ def scalePILImage(image, width=None, height=None, mode="contain", direction=None
 
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
     image = image.resize(
-        (dimensions.target_width, dimensions.target_height), PIL.Image.ANTIALIAS
+        (dimensions.target_width, dimensions.target_height), LANCZOS
     )
 
     if dimensions.post_scale_crop:
