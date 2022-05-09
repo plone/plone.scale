@@ -8,6 +8,17 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0a3 (2022-05-09)
+--------------------
+
+Bug fixes:
+
+
+- Fixed ``DeprecationWarning`` with Pillow 9.1.0 for ``ANTIALIAS``.
+  Use ``Resampling.LANCZOS``, falling back to ``ANTIALIAS`` on older Pillows.
+  [maurits] (#49)
+
+
 4.0.0a2 (2022-03-09)
 --------------------
 
