@@ -143,7 +143,7 @@ def _scale_thumbnail(image, width=None, height=None):
     return image
 
 
-def get_scale_mode(mode, direction):
+def get_scale_mode(mode, direction=None):
     if direction is not None:
         warnings.warn(
             "the 'direction' option is deprecated, use 'mode' instead",

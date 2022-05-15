@@ -1,12 +1,15 @@
+from .scale import calculate_scaled_dimensions
+from .scale import get_scale_mode
 from collections.abc import MutableMapping
 from persistent.dict import PersistentDict
 from plone.scale.interfaces import IImageScaleFactory
-from uuid import uuid4
+from time import time
 from ZODB.POSException import ConflictError
 from zope.annotation import IAnnotations
 from zope.interface import implementer
 from zope.interface import Interface
 
+import hashlib
 import logging
 import pprint
 
@@ -161,54 +164,128 @@ class AnnotationStorage(MutableMapping):
     def hash(self, **parameters):
         return tuple(sorted(parameters.items()))
 
+    def unhash(self, hash_key):
+        result = {}
+        for key, value in hash_key:
+            result[key] = value
+        return result
+
     def get_info_by_hash(self, hash):
         for value in self.storage.values():
             if value["key"] == hash:
                 return value
 
-    def scale(self, **parameters):
+    def hash_key(self, **parameters):
         key = self.hash(**parameters)
-        storage = self.storage
-        info = self.get_info_by_hash(key)
+        fieldname = parameters.get("fieldname", "image")
+        dimension = parameters.get("width", parameters.get("scale", "none"))
+        hash_key = hashlib.md5(str(key).encode("utf-8")).hexdigest()
+        return f"{fieldname}-{dimension}-{hash_key}"
+
+    def pre_scale(self, **parameters):
+        # This does *not* create a scale.
+        # It only prepares info.
+        print(f"Pre scale {parameters}")
+        uid = self.hash_key(**parameters)
+        # self.clear()
+        # print(list(self.storage.keys()))
+        info = self.get(uid)
+        if info is not None and not self._modified_since(info["modified"]):
+            print(f"Pre scale returns old {info}")
+            return info
+
+        # There is no info, or it is outdated.  Recreate the scale info.
+        # We need width and height for various reasons.
+        # Start with a basis.
+        width = parameters.get("width")
+        height = parameters.get("height")
+        if "fieldname" in parameters:
+            # We should get this in a different way probably.
+            field = getattr(self.context, parameters["fieldname"], None)
+            if field:
+                orig_width, orig_height = field.getImageSize()
+                mode = get_scale_mode(
+                    parameters.get("direction")
+                    or parameters.get("mode")
+                    or "contain"
+                )
+                width, height = calculate_scaled_dimensions(
+                    orig_width, orig_height, width, height, mode
+                )
+        if not (width and height):
+            width = height = 400
+        key = self.hash(**parameters)
+        info = dict(
+            uid=uid,
+            key=key,
+            modified=int(time() * 1000),
+            # This is a marker to say that this is a not-yet generated scale:
+            placeholder=True,
+            width=width,
+            height=height,
+        )
+        self.storage[uid] = info
+        print(f"Pre scale returns new {info}")
+        return info
+
+    def generate_scale(self, **parameters):
+        print("Generating scale...")
         scaling_factory = IImageScaleFactory(self.context, None)
         if scaling_factory is None:
-            # There is nothing more we can do.
-            # If we have info, return it, even if it is outdated.
-            return info
-        # Do we have info and is it up to date?
-        outdated_uid = None
-        if info is not None:
-            if self._modified_since(info["modified"]):
-                # We want to remove this outdated scale info,
-                # but let's keep it until we have calculated the new info.
-                # The assumption here is that it is better to have a slightly
-                # outdated image than no image at all.
-                outdated_uid = info["uid"]
-            else:
-                return info
-
-        # There is no info, or it is outdated.  Recreate the scale.
+            # There is nothing we can do.
+            return
         result = scaling_factory(**parameters)
-        if result is not None:
-            # storage will be modified:
-            # good time to also cleanup
-            self._cleanup()
-            data, format_, dimensions = result
-            width, height = dimensions
-            uid = str(uuid4())
-            info = dict(
-                uid=uid,
-                data=data,
-                width=width,
-                height=height,
-                mimetype=f"image/{format_.lower()}",
-                key=key,
-                modified=self.modified_time,
-            )
-            if outdated_uid:
-                del self[outdated_uid]
-            storage[uid] = info
+        if result is None:
+            return
+        # storage will be modified:
+        # good time to also cleanup
+        self._cleanup()
+        data, format_, dimensions = result
+        width, height = dimensions
+        uid = self.hash_key(**parameters)
+        key = self.hash(**parameters)
+        info = dict(
+            uid=uid,
+            data=data,
+            width=width,
+            height=height,
+            mimetype=f"image/{format_.lower()}",
+            key=key,
+            modified=int(time() * 1000),
+        )
+        self.storage[uid] = info
+        print(f"Generated scale: {info}")
         return info
+
+    def scale(self, **parameters):
+        print(f"scale called with {parameters}")
+        uid = self.hash_key(**parameters)
+        info = self.get(uid)
+        if info is None:
+            # Might be on old-style uuid4 scale
+            key = self.hash(**parameters)
+            info = self.get_info_by_hash(key)
+        if info is not None and "data" in info and not self._modified_since(info["modified"]):
+            print(f"scale found existing info {info}")
+            return info
+        return self.generate_scale(**parameters)
+
+    def get_or_generate(self, name):
+        print(f"get or generate {name}")
+        info = self.get(name)
+        if info is None:
+            print(f"get or generate {name} not found")
+            return
+        if info is not None and "data" in info and not self._modified_since(info["modified"]):
+            print(f"get or generate {name} found {info}")
+            return info
+        # This scale has not been generated yet.
+        # name is expected to be fieldname-dimension-hash_key,
+        # as generated by the pre_scale method.
+        # hash_key = name.split("-")[-1]
+        # parameters = self.unhash(hash_key)
+        parameters = self.unhash(info["key"])
+        return self.generate_scale(**parameters)
 
     def _cleanup(self):
         storage = self.storage
