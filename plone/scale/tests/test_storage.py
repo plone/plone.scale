@@ -148,6 +148,20 @@ class AnnotationStorageTests(TestCase):
         del storage[scale["uid"]]
         self.assertEqual(len(storage), 0)
 
+    def test_modified_since(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        self.assertEqual(storage.modified(), 42)
+
+        self.assertTrue(storage._modified_since(41))
+        self.assertFalse(storage._modified_since(42))
+        self.assertFalse(storage._modified_since(43))
+
+        self.assertFalse(storage._modified_since(41, offset=1))
+        self.assertTrue(storage._modified_since(40, offset=1))
+        self.assertFalse(storage._modified_since(32, offset=10))
+        self.assertTrue(storage._modified_since(32, offset=9))
+
     def testCleanUpOldItemsForSameParameters(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
