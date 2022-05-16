@@ -148,7 +148,7 @@ class AnnotationStorageTests(TestCase):
         del storage[scale["uid"]]
         self.assertEqual(len(storage), 0)
 
-    def testCleanUpOldItems(self):
+    def testCleanUpOldItemsForSameParameters(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
         scale_old = storage.scale(foo=23, bar=42)
@@ -158,17 +158,32 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(len(storage), 1)
         self.assertIn(scale_new["uid"], storage)
         self.assertNotIn(scale_old["uid"], storage)
+        del storage[scale_new["uid"]]
+        self.assertEqual(len(storage), 0)
+
+    def testCleanUpOldItemsForDifferentParameters(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale_old = storage.scale(foo=23, bar=42)
+        orig_modified = storage.modified()
+        next_modified = orig_modified + 60000
+        storage.modified = lambda: next_modified
+        scale_new = storage.scale(foo=23, bar=50)
+        self.assertEqual(len(storage), 2)
+        self.assertIn(scale_new["uid"], storage)
+        self.assertIn(scale_old["uid"], storage)
 
         # When modification time is older than a day, too old scales
         # get purged.
-        next_modified = storage.modified() + 24 * 60 * 60 * 1000 + 1
+        next_modified = orig_modified + 24 * 60 * 60 * 1000 + 1
         storage.modified = lambda: next_modified
-        scale_newer = storage.scale(foo=23, bar=42)
+        scale_newer = storage.scale(foo=23, bar=70)
 
         self.assertIn(scale_newer["uid"], storage)
-        self.assertNotIn(scale_new["uid"], storage)
+        self.assertIn(scale_new["uid"], storage)
         self.assertNotIn(scale_old["uid"], storage)
         del storage[scale_newer["uid"]]
+        del storage[scale_new["uid"]]
         self.assertEqual(len(storage), 0)
 
     def testClear(self):
