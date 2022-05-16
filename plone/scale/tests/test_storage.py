@@ -200,6 +200,35 @@ class AnnotationStorageTests(TestCase):
         del storage[scale_new["uid"]]
         self.assertEqual(len(storage), 0)
 
+    def testCleanUpOldItemsForDifferentFieldname(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale_image = storage.scale(fieldname="image", bar=42)
+        next_modified = storage.modified() + 60000
+        storage.modified = lambda: next_modified
+        scale_leadimage_old = storage.scale(fieldname="leadimage", bar=50)
+        self.assertEqual(len(storage), 2)
+        self.assertIn(scale_leadimage_old["uid"], storage)
+        self.assertIn(scale_image["uid"], storage)
+
+        # When modification time is older than a day, too old scales
+        # get purged.  But only for the current fieldname.
+        next_modified = storage.modified() + 24 * 60 * 60 * 1000 + 1
+        storage.modified = lambda: next_modified
+        scale_leadimage_new = storage.scale(fieldname="leadimage", bar=70)
+
+        self.assertIn(scale_leadimage_new["uid"], storage)
+        self.assertNotIn(scale_leadimage_old["uid"], storage)
+        self.assertIn(scale_image["uid"], storage)
+
+        # If we manually call cleanup without a fieldname,
+        # all items are checked.
+        storage._cleanup()
+        self.assertIn(scale_leadimage_new["uid"], storage)
+        self.assertNotIn(scale_image["uid"], storage)
+        del storage[scale_leadimage_new["uid"]]
+        self.assertEqual(len(storage), 0)
+
     def testClear(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage

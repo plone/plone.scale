@@ -192,7 +192,8 @@ class AnnotationStorage(MutableMapping):
         if result is not None:
             # storage will be modified:
             # good time to also cleanup
-            self._cleanup()
+            fieldname = parameters.get("fieldname")
+            self._cleanup(fieldname=fieldname)
             data, format_, dimensions = result
             width, height = dimensions
             uid = str(uuid4())
@@ -205,12 +206,14 @@ class AnnotationStorage(MutableMapping):
                 key=key,
                 modified=self.modified_time,
             )
+            if fieldname:
+                info["fieldname"] = fieldname
             if outdated_uid:
                 del self[outdated_uid]
             storage[uid] = info
         return info
 
-    def _cleanup(self):
+    def _cleanup(self, fieldname=None):
         storage = self.storage
         modified_time = self.modified_time
         if modified_time is None:
@@ -223,6 +226,10 @@ class AnnotationStorage(MutableMapping):
             # before refactoring
             if isinstance(key, tuple):
                 del self[key]
+            if fieldname and "fieldname" in value and value["fieldname"] != fieldname:
+                # Leave scales for other fieldnames alone.
+                # self.modified may have nothing to do with that field.
+                continue
             # clear cache from scales older than one day
             elif self._modified_since(value["modified"], offset=KEEP_SCALE_MILLIS):
                 del self[key]
@@ -239,7 +246,7 @@ class AnnotationStorage(MutableMapping):
         except KeyError:
             # This should not happen, but it apparently can happen in corner
             # cases.  See https://github.com/plone/plone.scale/issues/15
-            logger.warn("Could not delete key %s from storage.", uid)
+            logger.warning("Could not delete key %s from storage.", uid)
 
     def __iter__(self):
         return iter(self.storage)
