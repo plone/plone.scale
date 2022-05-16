@@ -13,6 +13,13 @@ try:
 except AttributeError:
     LANCZOS = PIL.Image.ANTIALIAS
 
+# When height is given as one of these values,
+# we do not limit the height, and only look at the width.
+# Note: 2**16 = 65536, which is what you see in several Plone
+# scale definitions.  A different idea was to use -1 here,
+# so let's try have both.
+NO_HEIGHT = (-1, 65536)
+
 
 def none_as_int(the_int):
     """For python 3 compatibility, to make int vs. none comparison possible
@@ -173,7 +180,10 @@ def _calculate_all_dimensions(
     final_width and final_height are the dimensions of the resulting image and
     are always present.
 
-    The other values are required for cropping and scaling."""
+    The other values are required for cropping and scaling.
+    """
+    if height in NO_HEIGHT:
+        height = None
 
     if width is None and height is None:
         raise ValueError("Either width or height need to be given.")
@@ -217,6 +227,9 @@ def _calculate_all_dimensions(
         return dimensions
 
     # now for 'cover' and 'contain' scaling
+    if mode == "contain" and height is None:
+        # For cropping we need a height.
+        height = width
 
     # Determine scale factors needed
     factor_height = factor_width = None

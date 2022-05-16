@@ -132,7 +132,7 @@ class ScalingTests(TestCase):
 
     def testCropPreWideScaleUnspecifiedHeight(self):
         image = scaleImage(PNG, 400, None, "contain")
-        self.assertEqual(image[2], (400, 490))
+        self.assertEqual(image[2], (400, 400))
 
     def testCropPreWideScale(self):
         image = scaleImage(PNG, 400, 100, "contain")
@@ -147,10 +147,10 @@ class ScalingTests(TestCase):
         self.assertEqual(image[2], (100, 400))
 
     def testRestrictWidthOnlyDownScaleNone(self):
-        self.assertEqual(scaleImage(PNG, 42, None, "contain")[2], (42, 52))
+        self.assertEqual(scaleImage(PNG, 42, None, "contain")[2], (42, 42))
 
     def testRestrictWidthOnlyDownScaleZero(self):
-        self.assertEqual(scaleImage(PNG, 42, 0, "contain")[2], (42, 52))
+        self.assertEqual(scaleImage(PNG, 42, 0, "contain")[2], (42, 42))
 
     def testRestrictHeightOnlyDownScaleNone(self):
         self.assertEqual(scaleImage(PNG, None, 51, "contain")[2], (42, 51))
