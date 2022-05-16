@@ -342,13 +342,13 @@ def scalePILImage(image, width=None, height=None, mode="contain", direction=None
 
     `contain`
         Alternative spellings: `scale-crop-to-fit`, `down`.
-        Starts by scaling the smallest dimension to the required
+        Starts by scaling the relatively smallest dimension to the required
         size and crops the other dimension if needed.
 
     `cover`
         Alternative spellings: `scale-crop-to-fill`, `up`.
-        Starts by scaling the largest dimension up to the required size
-        and crops the other dimension if needed.
+        Scales the relatively largest dimension up to the required size.
+        Despite the alternative spelling, I see no cropping happening.
 
     `scale`
         Alternative spellings: `keep`, `thumbnail`.
