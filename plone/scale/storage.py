@@ -215,6 +215,7 @@ class AnnotationStorage(MutableMapping):
         # Start with a basis.
         width = parameters.get("width")
         height = parameters.get("height")
+        mimetype = ""
         if "fieldname" in parameters:
             # We should get this in a different way probably.
             field = getattr(self.context, parameters["fieldname"], None)
@@ -228,6 +229,7 @@ class AnnotationStorage(MutableMapping):
                 width, height = calculate_scaled_dimensions(
                     orig_width, orig_height, width, height, mode
                 )
+                mimetype = field.contentType
         if not (width and height):
             width = height = 400
         key = self.hash(**parameters)
@@ -235,6 +237,7 @@ class AnnotationStorage(MutableMapping):
             uid=uid,
             key=key,
             modified=int(time() * 1000),
+            mimetype=mimetype,
             # This is a marker to say that this is a not-yet generated scale:
             placeholder=True,
             width=width,
