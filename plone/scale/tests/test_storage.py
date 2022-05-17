@@ -151,24 +151,41 @@ class AnnotationStorageTests(TestCase):
     def testCleanUpOldItems(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
+        orig_modified = storage.modified()
+        storage.pre_scale(foo=23, bar=42)
+        self.assertEqual(len(storage), 1)
         scale_old = storage.scale(foo=23, bar=42)
-        next_modified = storage.modified() + 1
+        self.assertEqual(len(storage), 1)
+        storage.pre_scale(foo=23, bar=42)
+        scale_old2 = storage.scale(foo=23, bar=42)
+        self.assertEqual(len(storage), 1)
+        self.assertEqual(scale_old, scale_old2)
+        self.assertIn(scale_old["uid"], storage)
+        next_modified = orig_modified + 10
         storage.modified = lambda: next_modified
         scale_new = storage.scale(foo=23, bar=42)
-        self.assertEqual(len(storage), 1)
+        self.assertEqual(len(storage), 2)
         self.assertIn(scale_new["uid"], storage)
-        self.assertNotIn(scale_old["uid"], storage)
+        self.assertIn(scale_old["uid"], storage)
 
         # When modification time is older than a day, too old scales
         # get purged.
-        next_modified = storage.modified() + 24 * 60 * 60 * 1000 + 1
+        next_modified = orig_modified + 24 * 60 * 60 * 1000 + 1
         storage.modified = lambda: next_modified
         scale_newer = storage.scale(foo=23, bar=42)
 
         self.assertIn(scale_newer["uid"], storage)
+        self.assertIn(scale_new["uid"], storage)
+        self.assertNotIn(scale_old["uid"], storage)
+
+        next_modified = orig_modified + 24 * 60 * 60 * 1000 * 3
+        storage.modified = lambda: next_modified
+        scale_even_newer = storage.scale(foo=23, bar=42)
+        self.assertIn(scale_even_newer["uid"], storage)
+        self.assertNotIn(scale_newer["uid"], storage)
         self.assertNotIn(scale_new["uid"], storage)
         self.assertNotIn(scale_old["uid"], storage)
-        del storage[scale_newer["uid"]]
+        del storage[scale_even_newer["uid"]]
         self.assertEqual(len(storage), 0)
 
     def testClear(self):

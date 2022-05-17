@@ -174,7 +174,9 @@ class AnnotationStorage(MutableMapping):
         return scales
 
     def hash(self, **parameters):
-        return tuple(sorted(parameters.items()))
+        items = list(parameters.items())
+        items.append(("modified", self.modified_time))
+        return tuple(sorted(items))
 
     def unhash(self, hash_key):
         result = {}
@@ -263,7 +265,7 @@ class AnnotationStorage(MutableMapping):
             height=height,
             mimetype=f"image/{format_.lower()}",
             key=key,
-            modified=int(time() * 1000),
+            modified=self.modified_time or int(time() * 1000),
         )
         self.storage[uid] = info
         print(f"Generated scale: {info}")
