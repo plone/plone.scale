@@ -192,7 +192,9 @@ class AnnotationStorage(MutableMapping):
     def hash_key(self, **parameters):
         key = self.hash(**parameters)
         fieldname = parameters.get("fieldname", "image")
-        dimension = parameters.get("width", parameters.get("scale", "none"))
+        dimension = parameters.get("width", parameters.get("scale"))
+        if dimension is None:
+            dimension = 0
         hash_key = hashlib.md5(str(key).encode("utf-8")).hexdigest()
         return f"{fieldname}-{dimension}-{hash_key}"
 

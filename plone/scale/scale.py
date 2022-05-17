@@ -175,13 +175,15 @@ def _calculate_all_dimensions(
 
     The other values are required for cropping and scaling."""
 
-    if width is None and height is None:
-        raise ValueError("Either width or height need to be given.")
-
     if mode not in ("contain", "cover", "scale"):
         raise ValueError("Unknown scale mode '%s'" % mode)
 
     dimensions = ScaledDimensions()
+    dimensions.factor_width = dimensions.factor_height = 1.0
+    if width is None and height is None:
+        dimensions.final_width = dimensions.target_width = original_width
+        dimensions.final_height = dimensions.target_height = original_height
+        return dimensions
 
     if mode == "scale":
         # first store original size, as it is possible that we won't scale at all
