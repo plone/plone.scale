@@ -177,8 +177,7 @@ class AnnotationStorage(MutableMapping):
         return scales
 
     def hash(self, **parameters):
-        items = list(parameters.items())
-        return tuple(sorted(items))
+        return tuple(sorted(parameters.items()))
 
     def unhash(self, hash_key):
         return dict(hash_key)
