@@ -238,8 +238,7 @@ class AnnotationStorage(MutableMapping):
             key=key,
             modified=int(time() * 1000),
             mimetype=mimetype,
-            # This is a marker to say that this is a not-yet generated scale:
-            placeholder=True,
+            data=None,
             width=width,
             height=height,
         )
@@ -287,7 +286,7 @@ class AnnotationStorage(MutableMapping):
             # Might be on old-style uuid4 scale
             key = self.hash(**parameters)
             info = self.get_info_by_hash(key)
-        if info is not None and "data" in info and not self._modified_since(info["modified"]):
+        if info is not None and info.get("data") is not None and not self._modified_since(info["modified"]):
             print(f"scale found existing info {info}")
             return info
         return self.generate_scale(**parameters)
@@ -298,7 +297,7 @@ class AnnotationStorage(MutableMapping):
         if info is None:
             print(f"get or generate {name} not found")
             return
-        if info is not None and "data" in info and not self._modified_since(info["modified"]):
+        if info is not None and info.get("data") is not None and not self._modified_since(info["modified"]):
             print(f"get or generate {name} found {info}")
             return info
         # This scale has not been generated yet.
