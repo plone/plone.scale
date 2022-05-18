@@ -202,13 +202,13 @@ class AnnotationStorage(MutableMapping):
     def pre_scale(self, **parameters):
         # This does *not* create a scale.
         # It only prepares info.
-        print(f"Pre scale {parameters}")
+        logger.debug(f"Pre scale {parameters}")
         uid = self.hash_key(**parameters)
         # self.clear()
-        # print(list(self.storage.keys()))
+        # logger.debug(list(self.storage.keys()))
         info = self.get(uid)
         if info is not None and not self._modified_since(info["modified"]):
-            print(f"Pre scale returns old {info}")
+            logger.debug(f"Pre scale returns old {info}")
             return info
 
         # There is no info, or it is outdated.  Recreate the scale info.
@@ -244,11 +244,11 @@ class AnnotationStorage(MutableMapping):
             height=height,
         )
         self.storage[uid] = info
-        print(f"Pre scale returns new {info}")
+        logger.debug(f"Pre scale returns new {info}")
         return info
 
     def generate_scale(self, **parameters):
-        print("Generating scale...")
+        logger.debug("Generating scale...")
         scaling_factory = IImageScaleFactory(self.context, None)
         if scaling_factory is None:
             # There is nothing we can do.
@@ -276,11 +276,11 @@ class AnnotationStorage(MutableMapping):
         if fieldname:
             info["fieldname"] = fieldname
         self.storage[uid] = info
-        print(f"Generated scale: {info}")
+        logger.debug(f"Generated scale: {info}")
         return info
 
     def scale(self, **parameters):
-        print(f"scale called with {parameters}")
+        logger.debug(f"scale called with {parameters}")
         uid = self.hash_key(**parameters)
         info = self.get(uid)
         if info is None:
@@ -288,21 +288,21 @@ class AnnotationStorage(MutableMapping):
             key = self.hash(**parameters)
             info = self.get_info_by_hash(key)
         if info is not None and info.get("data") is not None and not self._modified_since(info["modified"]):
-            print(f"scale found existing info {info}")
+            logger.debug(f"scale found existing info {info}")
             return info
         return self.generate_scale(**parameters)
 
     def get_or_generate(self, name):
-        print(f"get or generate {name}")
+        logger.debug(f"get or generate {name}")
         info = self.get(name)
         if info is None:
-            print(f"get or generate {name} not found")
+            logger.debug(f"get or generate {name} not found")
             return
         if info is not None and info.get("data") is not None:
             # We could check 'self._modified_since(info["modified"])'.
             # But in fact we do not care if this scale is outdated.
             # A cached page may point to this, and the browser requests it now.
-            print(f"get or generate {name} found {info}")
+            logger.debug(f"get or generate {name} found {info}")
             return info
         # This scale has not been generated yet.
         # Get the parameters used when pre-registering this scale.
