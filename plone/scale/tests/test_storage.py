@@ -74,6 +74,72 @@ class AnnotationStorageTests(TestCase):
         scale = storage.scale(foo=23, bar=42)
         self.assertEqual(scale, None)
 
+    def testPreScaleNoWidthAndHeight(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        # It is actually pretty silly to not pass a width and height.
+        # We default to 400 then, unless the factory does something different,
+        # which our dummy scale adapter does.
+        # But that is not called when using pre_scale.
+        scale = storage.pre_scale(foo=23, bar=42)
+        self.assertIn("uid", scale)
+        self.assertIn("key", scale)
+        self.assertEqual(scale["data"], None)
+        self.assertEqual(scale["width"], 400)
+        self.assertEqual(scale["height"], 400)
+        # Since in these tests we do not have a real image,
+        # we have no proper mimetype either.
+        self.assertEqual(scale["mimetype"], "")
+
+    def testPreScaleForNonExistingScale(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.pre_scale(width=50, height=80)
+        self.assertIn("uid", scale)
+        self.assertIn("key", scale)
+        self.assertEqual(scale["data"], None)
+        self.assertEqual(scale["width"], 50)
+        self.assertEqual(scale["height"], 80)
+        self.assertEqual(scale["mimetype"], "")
+        # Request the same pre scale.
+        scale2 = storage.pre_scale(width=50, height=80)
+        self.assertEqual(scale2["uid"], scale["uid"])
+        self.assertEqual(scale2, scale)
+        # This will really generate the scale.
+        new_scale = storage.scale(width=50, height=80)
+        self.assertEqual(new_scale["uid"], scale["uid"])
+        self.assertIn("key", new_scale)
+        self.assertEqual(new_scale["data"], "some data")
+        # Our dummy adapter is silly and does not do anything with
+        # the requested width and height.
+        self.assertEqual(new_scale["width"], 42)
+        self.assertEqual(new_scale["height"], 23)
+        self.assertEqual(new_scale["mimetype"], "image/png")
+
+    def test_get_or_generate(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        self.assertIsNone(storage.get("random"))
+        self.assertIsNone(storage.get_or_generate("random"))
+        scale = storage.pre_scale(width=50, height=80)
+        uid = scale["uid"]
+        self.assertTrue(uid)
+        # 'get' gets the pre generated placeholder info
+        placeholder = storage.get(uid)
+        self.assertEqual(placeholder["uid"], uid)
+        self.assertIsNone(placeholder["data"])
+        self.assertEqual(placeholder["width"], 50)
+        self.assertEqual(placeholder["height"], 80)
+        self.assertEqual(placeholder["mimetype"], "")
+        # 'get_or_generate' gets the pre generated placeholder info
+        # and generates the scale.
+        real = storage.get_or_generate(uid)
+        self.assertEqual(real["uid"], uid)
+        self.assertEqual(real["data"], "some data")
+        self.assertEqual(real["width"], 42)
+        self.assertEqual(real["height"], 23)
+        self.assertEqual(real["mimetype"], "image/png")
+
     def testScaleForExistingScale(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
