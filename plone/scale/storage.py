@@ -194,6 +194,9 @@ class AnnotationStorage(MutableMapping):
         if dimension is None:
             dimension = 0
         hash_key = hashlib.md5(str(key).encode("utf-8")).hexdigest()
+        # We return a uid that is recognizable when you inspect a url in html or
+        # on the network tab: you immediately see for which field this is and what
+        # the width is.  This helps during debugging/testing.
         return f"{fieldname}-{dimension}-{hash_key}"
 
     def pre_scale(self, **parameters):
