@@ -182,6 +182,9 @@ class AnnotationStorage(MutableMapping):
         result = {}
         for key, value in hash_key:
             result[key] = value
+        # Remove the "modified" parameter that we added in the hash method.
+        # We must have only the original parameters.
+        result.pop("modified", None)
         return result
 
     def get_info_by_hash(self, hash):
