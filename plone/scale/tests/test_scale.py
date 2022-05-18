@@ -127,8 +127,17 @@ class ScalingTests(TestCase):
         self.assertEqual(scaleImage(PNG, 200, 103, "contain")[2], (200, 103))
 
     def testHugeScale(self):
-        # the image will be cropped, but not scaled
-        self.assertEqual(scaleImage(PNG, 400, 99999, "contain")[2], (2, 103))
+        # The image will be cropped, but not scaled.
+        # If such a ridiculous height is given, we only look at the width.
+        self.assertEqual(scaleImage(PNG, 400, 99999, "contain")[2], (400, 400))
+
+    def testZeroHeightScale(self):
+        # In this case we only look at the width.
+        self.assertEqual(scaleImage(PNG, 400, 0, "contain")[2], (400, 400))
+
+    def testNegativeHeightScale(self):
+        # In this case we only look at the width.
+        self.assertEqual(scaleImage(PNG, 400, -1, "contain")[2], (400, 400))
 
     def testCropPreWideScaleUnspecifiedHeight(self):
         image = scaleImage(PNG, 400, None, "contain")

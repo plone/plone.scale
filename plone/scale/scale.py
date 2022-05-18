@@ -13,12 +13,14 @@ try:
 except AttributeError:
     LANCZOS = PIL.Image.ANTIALIAS
 
-# When height is given as one of these values,
-# we do not limit the height, and only look at the width.
-# Note: 2**16 = 65536, which is what you see in several Plone
-# scale definitions.  A different idea was to use -1 here,
-# so let's try have both.
-NO_HEIGHT = (-1, 65536)
+# When height is higher than this we do not limit the height, but only the width.
+# Otherwise cropping does not make sense, and in a Pillow you may get an error.
+# In a Pillow traceback I saw 65500 as maximum.
+# Several Plone scale definitions have 65536 (2**16).
+# So pick a number slightly lower for good measure.
+# A different idea was to use -1 here, so we support this:
+# a height of 0 or less is ignored.
+MAX_HEIGHT = 65000
 
 
 def none_as_int(the_int):
@@ -182,7 +184,7 @@ def _calculate_all_dimensions(
 
     The other values are required for cropping and scaling.
     """
-    if height in NO_HEIGHT:
+    if height is not None and (height >= MAX_HEIGHT or height <= 0):
         height = None
 
     if width is None and height is None:
