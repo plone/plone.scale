@@ -13,6 +13,15 @@ try:
 except AttributeError:
     LANCZOS = PIL.Image.ANTIALIAS
 
+# When height is higher than this we do not limit the height, but only the width.
+# Otherwise cropping does not make sense, and in a Pillow you may get an error.
+# In a Pillow traceback I saw 65500 as maximum.
+# Several Plone scale definitions have 65536 (2**16).
+# So pick a number slightly lower for good measure.
+# A different idea was to use -1 here, so we support this:
+# a height of 0 or less is ignored.
+MAX_HEIGHT = 65000
+
 
 def none_as_int(the_int):
     """For python 3 compatibility, to make int vs. none comparison possible
@@ -173,7 +182,10 @@ def _calculate_all_dimensions(
     final_width and final_height are the dimensions of the resulting image and
     are always present.
 
-    The other values are required for cropping and scaling."""
+    The other values are required for cropping and scaling.
+    """
+    if height is not None and (height >= MAX_HEIGHT or height <= 0):
+        height = None
 
     if width is None and height is None:
         raise ValueError("Either width or height need to be given.")
@@ -217,6 +229,9 @@ def _calculate_all_dimensions(
         return dimensions
 
     # now for 'cover' and 'contain' scaling
+    if mode == "contain" and height is None:
+        # For cropping we need a height.
+        height = width
 
     # Determine scale factors needed
     factor_height = factor_width = None
@@ -342,13 +357,13 @@ def scalePILImage(image, width=None, height=None, mode="contain", direction=None
 
     `contain`
         Alternative spellings: `scale-crop-to-fit`, `down`.
-        Starts by scaling the smallest dimension to the required
+        Starts by scaling the relatively smallest dimension to the required
         size and crops the other dimension if needed.
 
     `cover`
         Alternative spellings: `scale-crop-to-fill`, `up`.
-        Starts by scaling the largest dimension up to the required size
-        and crops the other dimension if needed.
+        Scales the relatively largest dimension up to the required size.
+        Despite the alternative spelling, I see no cropping happening.
 
     `scale`
         Alternative spellings: `keep`, `thumbnail`.

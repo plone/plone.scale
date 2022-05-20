@@ -1,9 +1,11 @@
 from io import BytesIO as StringIO
+from plone.scale.scale import calculate_scaled_dimensions
 from plone.scale.scale import scaleImage
 from plone.scale.scale import scalePILImage
 from plone.scale.tests import TEST_DATA_LOCATION
 from unittest import TestCase
 
+import functools
 import os.path
 import PIL.Image
 import PIL.ImageDraw
@@ -125,12 +127,21 @@ class ScalingTests(TestCase):
         self.assertEqual(scaleImage(PNG, 200, 103, "contain")[2], (200, 103))
 
     def testHugeScale(self):
-        # the image will be cropped, but not scaled
-        self.assertEqual(scaleImage(PNG, 400, 99999, "contain")[2], (2, 103))
+        # The image will be cropped, but not scaled.
+        # If such a ridiculous height is given, we only look at the width.
+        self.assertEqual(scaleImage(PNG, 400, 99999, "contain")[2], (400, 400))
+
+    def testZeroHeightScale(self):
+        # In this case we only look at the width.
+        self.assertEqual(scaleImage(PNG, 400, 0, "contain")[2], (400, 400))
+
+    def testNegativeHeightScale(self):
+        # In this case we only look at the width.
+        self.assertEqual(scaleImage(PNG, 400, -1, "contain")[2], (400, 400))
 
     def testCropPreWideScaleUnspecifiedHeight(self):
         image = scaleImage(PNG, 400, None, "contain")
-        self.assertEqual(image[2], (400, 490))
+        self.assertEqual(image[2], (400, 400))
 
     def testCropPreWideScale(self):
         image = scaleImage(PNG, 400, 100, "contain")
@@ -145,10 +156,10 @@ class ScalingTests(TestCase):
         self.assertEqual(image[2], (100, 400))
 
     def testRestrictWidthOnlyDownScaleNone(self):
-        self.assertEqual(scaleImage(PNG, 42, None, "contain")[2], (42, 52))
+        self.assertEqual(scaleImage(PNG, 42, None, "contain")[2], (42, 42))
 
     def testRestrictWidthOnlyDownScaleZero(self):
-        self.assertEqual(scaleImage(PNG, 42, 0, "contain")[2], (42, 52))
+        self.assertEqual(scaleImage(PNG, 42, 0, "contain")[2], (42, 42))
 
     def testRestrictHeightOnlyDownScaleNone(self):
         self.assertEqual(scaleImage(PNG, None, 51, "contain")[2], (42, 51))
@@ -325,6 +336,62 @@ class ScalingTests(TestCase):
             self.assertEqual(len(w), 1)
             self.assertIs(w[0].category, DeprecationWarning)
             self.assertIn("the 'direction' option is deprecated", str(w[0].message))
+
+    def test_calculate_scaled_dimensions_contain(self):
+        """Test the calculate_scaled_dimensions function.
+
+        You pass it:
+
+            original_width, original_height, width, height
+
+        Plus an optional mode, by default "contain"`.
+        Alternative spellings: `scale-crop-to-fit`, `down`.
+        """
+        calc = calculate_scaled_dimensions
+        self.assertEqual(calc(1, 1, 1, 1), (1, 1))
+        self.assertEqual(calc(10, 10, 1, 1), (1, 1))
+        self.assertEqual(calc(1, 1, 10, 10), (10, 10))
+        self.assertEqual(calc(10, 20, 10, 10), (10, 10))
+        # Try the new preview scale.
+        # This is defined as width 400 and a very large height.
+        # That does not work at all for cropping.
+        self.assertEqual(calc(10, 20, 400, 65536), (400, 400))
+        self.assertEqual(calc(600, 300, 400, 65536), (400, 400))
+        self.assertEqual(calc(600, 1200, 400, 65536), (400, 400))
+
+    def test_calculate_scaled_dimensions_cover(self):
+        """Test calculate_scaled_dimensions function with mode "cover".
+
+        Alternative spellings: `scale-crop-to-fill`, `up`.
+        Despite what you may think, this does not crop.
+        """
+        calc = functools.partial(calculate_scaled_dimensions, mode="cover")
+        self.assertEqual(calc(1, 1, 1, 1), (1, 1))
+        self.assertEqual(calc(10, 10, 1, 1), (1, 1))
+        # Mode "cover" scales up:
+        self.assertEqual(calc(1, 1, 10, 10), (10, 10))
+        # If any cropping would happen, the next answer would be (10, 10):
+        self.assertEqual(calc(10, 20, 10, 10), (5, 10))
+        # Try the new preview scale:
+        self.assertEqual(calc(10, 20, 400, 65536), (400, 800))
+        self.assertEqual(calc(600, 300, 400, 65536), (400, 200))
+        self.assertEqual(calc(600, 1200, 400, 65536), (400, 800))
+
+    def test_calculate_scaled_dimensions_scale(self):
+        """Test calculate_scaled_dimensions function with mode "scale".
+
+        Alternative spellings: `keep`, `thumbnail`.
+        """
+        calc = functools.partial(calculate_scaled_dimensions, mode="scale")
+        self.assertEqual(calc(1, 1, 1, 1), (1, 1))
+        self.assertEqual(calc(10, 10, 1, 1), (1, 1))
+        # Mode "scale" only scales down, not up:
+        self.assertEqual(calc(1, 1, 10, 10), (1, 1))
+        self.assertEqual(calc(10, 20, 10, 10), (5, 10))
+        # Try the new preview scale:
+        self.assertEqual(calc(10, 20, 400, 65536), (10, 20))
+        self.assertEqual(calc(600, 300, 400, 65536), (400, 200))
+        self.assertEqual(calc(600, 1200, 400, 65536), (400, 800))
 
 
 def test_suite():
