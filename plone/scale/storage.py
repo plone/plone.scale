@@ -188,6 +188,8 @@ class AnnotationStorage(MutableMapping):
                 return value
 
     def hash_key(self, **parameters):
+        if "modified" in parameters:
+            del parameters["modified"]
         key = self.hash(modified=self.modified_time, **parameters)
         fieldname = parameters.get("fieldname", "image")
         dimension = parameters.get("width", parameters.get("scale"))
