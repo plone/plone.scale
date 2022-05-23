@@ -59,3 +59,9 @@ class IImageScaleFactory(Interface):
         ``dimensions``
             is a tuple (width, height)
         """
+
+    def get_original_value():
+        """Get the image value.
+
+        In most cases this will be a NamedBlobImage field.
+        """

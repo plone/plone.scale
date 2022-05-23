@@ -36,6 +36,9 @@ class AnnotationStorageTests(TestCase):
                     return factory()
                 return None
 
+            def get_original_value(self):
+                return result
+
         provideAdapter(DummyISF)
 
     @property
@@ -115,6 +118,15 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(new_scale["width"], 42)
         self.assertEqual(new_scale["height"], 23)
         self.assertEqual(new_scale["mimetype"], "image/png")
+
+    def testPreScaleForNonExistingField(self):
+        self._provide_dummy_scale_adapter(None)
+        storage = self.storage
+        scale = storage.pre_scale(width=50, height=80)
+        self.assertIsNone(scale)
+        # scale does the same.
+        new_scale = storage.scale(width=50, height=80)
+        self.assertIsNone(new_scale)
 
     def test_get_or_generate(self):
         self._provide_dummy_scale_adapter()

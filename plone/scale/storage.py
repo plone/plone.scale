@@ -213,6 +213,14 @@ class AnnotationStorage(MutableMapping):
             logger.debug(f"Pre scale returns old {info}")
             return info
 
+        scaling_factory = IImageScaleFactory(self.context, None)
+        if scaling_factory is None:
+            # There is nothing we can do.
+            return
+        if scaling_factory.get_original_value() is None:
+            # Either an empty field, or the field does not exist.
+            return
+
         # There is no info, or it is outdated.  Recreate the scale info.
         # We need width and height for various reasons.
         # Start with a basis.
