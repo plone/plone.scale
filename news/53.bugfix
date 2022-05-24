@@ -1,0 +1,4 @@
+Fix cropping when the height is not limited.
+Create a square then.
+Not limited means: 65000 or larger, or zero or lower.
+[maurits]
