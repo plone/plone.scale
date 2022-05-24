@@ -217,7 +217,8 @@ class AnnotationStorage(MutableMapping):
         if scaling_factory is None:
             # There is nothing we can do.
             return
-        if scaling_factory.get_original_value() is None:
+        fieldname = parameters.get("fieldname", None)
+        if scaling_factory.get_original_value(fieldname=fieldname) is None:
             # Either an empty field, or the field does not exist.
             return
 
