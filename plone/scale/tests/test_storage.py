@@ -36,7 +36,7 @@ class AnnotationStorageTests(TestCase):
                     return factory()
                 return None
 
-            def get_original_value(self):
+            def get_original_value(self, fieldname=None):
                 return result
 
         provideAdapter(DummyISF)
