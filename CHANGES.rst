@@ -8,6 +8,20 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0a4 (2022-05-26)
+--------------------
+
+Bug fixes:
+
+
+- Fix cropping when the height is not limited.
+  Create a square then.
+  Not limited means: 65000 or larger, or zero or lower.
+  [maurits] (#53)
+- Fix cleanup of scales: only throw away outdated scales of the same field.
+  [maurits] (#55)
+
+
 4.0.0a3 (2022-05-09)
 --------------------
 

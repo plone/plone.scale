@@ -1,2 +1,0 @@
-Fix cleanup of scales: only throw away outdated scales of the same field.
-[maurits]
