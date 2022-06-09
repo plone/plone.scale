@@ -171,7 +171,13 @@ def get_scale_mode(mode, direction=None):
 
 
 class ScaledDimensions:
-    pass
+
+    def __init__(self, original_width=0, original_height=0):
+        self.final_width = self.target_width = original_width
+        self.final_height = self.target_height = original_height
+        self.factor_width = self.factor_height = 1.0
+        self.post_scale_crop = False
+        self.pre_scale_crop = False
 
 
 def _calculate_all_dimensions(
@@ -190,18 +196,14 @@ def _calculate_all_dimensions(
     if mode not in ("contain", "cover", "scale"):
         raise ValueError("Unknown scale mode '%s'" % mode)
 
-    dimensions = ScaledDimensions()
-    dimensions.factor_width = dimensions.factor_height = 1.0
+    dimensions = ScaledDimensions(
+        original_width=original_width,
+        original_height=original_height,
+    )
     if width is None and height is None:
-        dimensions.final_width = dimensions.target_width = original_width
-        dimensions.final_height = dimensions.target_height = original_height
         return dimensions
 
     if mode == "scale":
-        # first store original size, as it is possible that we won't scale at all
-        dimensions.final_width = original_width
-        dimensions.final_height = original_height
-
         # calculate missing sizes
         if width is None:
             width = float(original_width) / float(original_height) * height
