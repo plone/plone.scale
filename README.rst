@@ -49,22 +49,24 @@ Usage
 =====
 
 The most common way to use *plone.scale* is from a HTML template.
-In TAL syntax a typical usage looks like this::
+In TAL syntax a typical usage looks like this, assuming you have hooked up an ``image-scaling`` view::
 
   <img tal:define="scales context/@@image-scaling;
-                   thumbnail python:scales.scale('logo', width=64, height=64)"
+                   thumbnail python:scales.pre_scale('logo', width=64, height=64)"
        tal:attributes="src thumbnail/url;
                        width thumbnail/width;
                        height thumbnail/height" />
 
+With the ``pre_scale`` method, no scaling with Pillow actually happens yet.
+If you call the ``scale`` method instead, the scaling does happen.
 This generates a thumbnail of an image field called *logo* with a maximum size
 of 64x64 pixels. The dimensions of the resulting image (which might not be
 exactly 64x64) are set as attributes on the ``img`` tag to speed up browser
 rendering.
+Visiting the url will generate the scale if this has not happened yet.
 
 If you prefer Genshi syntax and have the ``IImageScaleStorage`` interface
 in scope the syntax looks like this::
 
-  <img py:with="thumbnail=IImageScaleStorage(context).scale('logo', width=64, heigh=64)"
+  <img py:with="thumbnail=IImageScaleStorage(context).pre_scale('logo', width=64, heigh=64)"
        py:attributes="dict(src=thumbnail.url, width=thumbnail.width, height=thumbnail.height" />
-
