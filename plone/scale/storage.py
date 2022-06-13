@@ -13,6 +13,7 @@ import hashlib
 import logging
 import pprint
 
+
 try:
     from plone.protect.utils import safeWrite
 except ImportError:
