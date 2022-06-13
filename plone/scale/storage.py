@@ -13,6 +13,10 @@ import hashlib
 import logging
 import pprint
 
+try:
+    from plone.protect.utils import safeWrite
+except ImportError:
+    safeWrite = None
 
 logger = logging.getLogger("plone.scale")
 # Keep old scales around for this amount of milliseconds.
@@ -168,11 +172,17 @@ class AnnotationStorage(MutableMapping):
     @property
     def storage(self):
         annotations = IAnnotations(self.context)
-        scales = annotations.setdefault("plone.scale", ScalesDict())
+        if "plone.scale" not in annotations:
+            annotations["plone.scale"] = ScalesDict()
+            if safeWrite is not None:
+                safeWrite(self.context)
+        scales = annotations["plone.scale"]
         if not isinstance(scales, ScalesDict):
             # migrate from PersistentDict to ScalesDict
             new_scales = ScalesDict(scales)
             annotations["plone.scale"] = new_scales
+            if safeWrite is not None:
+                safeWrite(self.context)
             return new_scales
         return scales
 
