@@ -13,6 +13,7 @@ import hashlib
 import logging
 import pprint
 
+
 try:
     from plone.protect.utils import safeWrite
 except ImportError:
@@ -244,9 +245,7 @@ class AnnotationStorage(MutableMapping):
             if field:
                 orig_width, orig_height = field.getImageSize()
                 mode = get_scale_mode(
-                    parameters.get("direction")
-                    or parameters.get("mode")
-                    or "contain"
+                    parameters.get("direction") or parameters.get("mode") or "contain"
                 )
                 width, height = calculate_scaled_dimensions(
                     orig_width, orig_height, width, height, mode
@@ -308,7 +307,11 @@ class AnnotationStorage(MutableMapping):
             # Might be on old-style uuid4 scale
             key = self.hash(**parameters)
             info = self.get_info_by_hash(key)
-        if info is not None and info.get("data") is not None and not self._modified_since(info["modified"]):
+        if (
+            info is not None
+            and info.get("data") is not None
+            and not self._modified_since(info["modified"])
+        ):
             logger.debug(f"scale found existing info {info}")
             return info
         return self.generate_scale(**parameters)

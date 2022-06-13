@@ -146,9 +146,7 @@ def _scale_thumbnail(image, width=None, height=None):
         return image
 
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
-    image = image.resize(
-        (dimensions.target_width, dimensions.target_height), LANCZOS
-    )
+    image = image.resize((dimensions.target_width, dimensions.target_height), LANCZOS)
     return image
 
 
@@ -171,7 +169,6 @@ def get_scale_mode(mode, direction=None):
 
 
 class ScaledDimensions:
-
     def __init__(self, original_width=0, original_height=0):
         self.final_width = self.target_width = original_width
         self.final_height = self.target_height = original_height
@@ -418,13 +415,9 @@ def scalePILImage(image, width=None, height=None, mode="contain", direction=None
         # The original already has the right aspect ratio, so we only need
         # to scale.
         if mode == "contain":
-            image.thumbnail(
-                (dimensions.final_width, dimensions.final_height), LANCZOS
-            )
+            image.thumbnail((dimensions.final_width, dimensions.final_height), LANCZOS)
             return image
-        return image.resize(
-            (dimensions.final_width, dimensions.final_height), LANCZOS
-        )
+        return image.resize((dimensions.final_width, dimensions.final_height), LANCZOS)
 
     if dimensions.pre_scale_crop:
         # crop image before scaling to avoid excessive memory use
@@ -437,9 +430,7 @@ def scalePILImage(image, width=None, height=None, mode="contain", direction=None
         return image
 
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
-    image = image.resize(
-        (dimensions.target_width, dimensions.target_height), LANCZOS
-    )
+    image = image.resize((dimensions.target_width, dimensions.target_height), LANCZOS)
 
     if dimensions.post_scale_crop:
         # crop off remains due to rounding before scaling
