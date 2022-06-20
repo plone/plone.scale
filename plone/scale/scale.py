@@ -13,6 +13,8 @@ try:
 except AttributeError:
     LANCZOS = PIL.Image.ANTIALIAS
 
+WEBP_SUPPORT = ".webp" in PIL.Image.registered_extensions()
+
 # When height is higher than this we do not limit the height, but only the width.
 # Otherwise cropping does not make sense, and in a Pillow you may get an error.
 # In a Pillow traceback I saw 65500 as maximum.
@@ -78,7 +80,7 @@ def scaleImage(
     format_ = image.format
     if format_ not in ("PNG", "GIF"):
         # Always generate JPEG, except if format is PNG or GIF.
-        format_ = "JPEG"
+        format_ = WEBP_SUPPORT and "WEBP" or "JPEG"
     elif format_ == "GIF":
         # GIF scaled looks better if we have 8-bit alpha and no palette
         format_ = "PNG"
