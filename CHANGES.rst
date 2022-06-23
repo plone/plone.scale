@@ -8,6 +8,29 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0b1 (2022-06-23)
+--------------------
+
+New features:
+
+
+- Pre scale: store non-random uid to prepare space for a scale.
+  You call ``pre_scale`` to pre-register the scale with a unique id
+  without actually doing any scaling with Pillow.
+  When you later call the ``scale`` method, the scale is generated.
+  You can still call ``scale`` directly without first calling ``pre_scale``.
+  [maurits] (#57)
+- Mark as plone.protect's safeWrite AnnotationStorage.
+  Precondition for https://github.com/plone/plone.namedfile/pull/117.
+  [mamico] (#58)
+
+
+Bug fixes:
+
+
+- Minor cleanup: isort, black.  [maurits] (#59)
+
+
 4.0.0a4 (2022-05-26)
 --------------------
 
