@@ -267,7 +267,7 @@ class AnnotationStorage(MutableMapping):
         logger.debug(f"Pre scale returns new {info}")
         return info
 
-    def generate_scale(self, **parameters):
+    def generate_scale(self, uid=None, **parameters):
         logger.debug("Generating scale...")
         scaling_factory = IImageScaleFactory(self.context, None)
         if scaling_factory is None:
@@ -282,7 +282,8 @@ class AnnotationStorage(MutableMapping):
         self._cleanup(fieldname=fieldname)
         data, format_, dimensions = result
         width, height = dimensions
-        uid = self.hash_key(**parameters)
+        if uid is None:
+            uid = self.hash_key(**parameters)
         key = self.hash(**parameters)
         info = dict(
             uid=uid,
@@ -331,7 +332,7 @@ class AnnotationStorage(MutableMapping):
         # This scale has not been generated yet.
         # Get the parameters used when pre-registering this scale.
         parameters = self.unhash(info["key"])
-        return self.generate_scale(**parameters)
+        return self.generate_scale(uid=name, **parameters)
 
     def _cleanup(self, fieldname=None):
         storage = self.storage
