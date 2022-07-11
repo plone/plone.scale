@@ -152,6 +152,19 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(real["height"], 23)
         self.assertEqual(real["mimetype"], "image/png")
 
+    def test_get_or_generate__stable_uid(self):
+        # When get_or_generate actually generates the scale,
+        # it should store it with the same uid that was used
+        # to find the placeholder info, even if the field
+        # has been modified or a modified time is not available
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.pre_scale(width=50, height=80)
+        uid = scale["uid"]
+        storage.modified = lambda: 100
+        real = storage.get_or_generate(uid)
+        self.assertEqual(real["uid"], uid)
+
     def testScaleForExistingScale(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
