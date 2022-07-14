@@ -229,7 +229,8 @@ class AnnotationStorage(MutableMapping):
             # There is nothing we can do.
             return
         fieldname = parameters.get("fieldname", None)
-        if scaling_factory.get_original_value(fieldname=fieldname) is None:
+        field = scaling_factory.get_original_value(fieldname=fieldname)
+        if field is None:
             # Either an empty field, or the field does not exist.
             return
 
@@ -238,21 +239,14 @@ class AnnotationStorage(MutableMapping):
         # Start with a basis.
         width = parameters.get("width")
         height = parameters.get("height")
-        mimetype = ""
-        if "fieldname" in parameters:
-            # We should get this in a different way probably.
-            field = getattr(self.context, parameters["fieldname"], None)
-            if field:
-                orig_width, orig_height = field.getImageSize()
-                mode = get_scale_mode(
-                    parameters.get("direction") or parameters.get("mode") or "contain"
-                )
-                width, height = calculate_scaled_dimensions(
-                    orig_width, orig_height, width, height, mode
-                )
-                mimetype = field.contentType
-        if not (width and height):
-            width = height = 400
+        orig_width, orig_height = field.getImageSize()
+        mode = get_scale_mode(
+            parameters.get("direction") or parameters.get("mode") or "contain"
+        )
+        width, height = calculate_scaled_dimensions(
+            orig_width, orig_height, width, height, mode
+        )
+        mimetype = field.contentType
         key = self.hash(**parameters)
         info = dict(
             uid=uid,
