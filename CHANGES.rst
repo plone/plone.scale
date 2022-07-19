@@ -8,6 +8,16 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0b3 (2022-07-19)
+--------------------
+
+Bug fixes:
+
+
+- Fixed getting original data for a tile.
+  [maurits] (#64)
+
+
 4.0.0b2 (2022-07-14)
 --------------------
 
