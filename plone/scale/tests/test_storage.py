@@ -10,6 +10,17 @@ import zope.annotation.attribute
 import zope.annotation.interfaces
 
 
+_marker = object()
+
+
+class DummyImage:
+    contentType = "image/jpeg"
+
+    def getImageSize(self):
+        # width, height
+        return 60, 40
+
+
 @implementer(zope.annotation.interfaces.IAttributeAnnotatable)
 class _DummyContext:
     pass
@@ -19,10 +30,12 @@ class AnnotationStorageTests(TestCase):
 
     layer = zca.UNIT_TESTING
 
-    def _provide_dummy_scale_adapter(self, result=True):
+    def _provide_dummy_scale_adapter(self, result=_marker):
         from plone.scale.interfaces import IImageScaleFactory
         from zope.component import adapter
 
+        if result is _marker:
+            result = DummyImage()
         factory = self.factory
 
         @implementer(IImageScaleFactory)
@@ -81,18 +94,15 @@ class AnnotationStorageTests(TestCase):
         self._provide_dummy_scale_adapter()
         storage = self.storage
         # It is actually pretty silly to not pass a width and height.
-        # We default to 400 then, unless the factory does something different,
-        # which our dummy scale adapter does.
-        # But that is not called when using pre_scale.
+        # We get the original width and height then.
         scale = storage.pre_scale(foo=23, bar=42)
         self.assertIn("uid", scale)
         self.assertIn("key", scale)
         self.assertEqual(scale["data"], None)
-        self.assertEqual(scale["width"], 400)
-        self.assertEqual(scale["height"], 400)
-        # Since in these tests we do not have a real image,
-        # we have no proper mimetype either.
-        self.assertEqual(scale["mimetype"], "")
+        # We get the values from the DummyImage class.
+        self.assertEqual(scale["width"], 60)
+        self.assertEqual(scale["height"], 40)
+        self.assertEqual(scale["mimetype"], "image/jpeg")
 
     def testPreScaleForNonExistingScale(self):
         self._provide_dummy_scale_adapter()
@@ -103,7 +113,7 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(scale["data"], None)
         self.assertEqual(scale["width"], 50)
         self.assertEqual(scale["height"], 80)
-        self.assertEqual(scale["mimetype"], "")
+        self.assertEqual(scale["mimetype"], "image/jpeg")
         # Request the same pre scale.
         scale2 = storage.pre_scale(width=50, height=80)
         self.assertEqual(scale2["uid"], scale["uid"])
@@ -142,7 +152,7 @@ class AnnotationStorageTests(TestCase):
         self.assertIsNone(placeholder["data"])
         self.assertEqual(placeholder["width"], 50)
         self.assertEqual(placeholder["height"], 80)
-        self.assertEqual(placeholder["mimetype"], "")
+        self.assertEqual(placeholder["mimetype"], "image/jpeg")
         # 'get_or_generate' gets the pre generated placeholder info
         # and generates the scale.
         real = storage.get_or_generate(uid)
