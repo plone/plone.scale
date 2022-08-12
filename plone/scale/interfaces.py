@@ -12,9 +12,9 @@ class IScaledImageQuality(Interface):
 class IImageScaleFactory(Interface):
     """Creates a scale"""
 
-    def _call__(
+    def __call__(
         fieldname=None,
-        direction="thumbnail",
+        mode="scale",
         height=None,
         width=None,
         scale=None,
@@ -30,8 +30,10 @@ class IImageScaleFactory(Interface):
         ``fieldname``
             name of the field to scale
 
-        ``direction``
-            is same as PIL direction on scale
+        ``mode``
+            See ``scalePILImage`` for the values that should be accepted.
+            This used to be called "direction", which may still be accepted,
+            but is deprecated.
 
         ``width`` and ``height``
             target size

@@ -226,6 +226,7 @@ class ScalingTests(TestCase):
         ``direction`` arguments instead of ``mode``.
         """
 
+        # Test mode contain.  This can do cropping.
         # scale-crop-to-fit
         img = PIL.Image.new("RGB", (20, 20), (0, 0, 0))
         img_scaled = scalePILImage(img, 10, 5, direction="scale-crop-to-fit")
@@ -335,19 +336,19 @@ class ScalingTests(TestCase):
             scaleImage(PNG, 16, 16, direction="keep")
             self.assertEqual(len(w), 1)
             self.assertIs(w[0].category, DeprecationWarning)
-            self.assertIn("the 'direction' option is deprecated", str(w[0].message))
+            self.assertIn("The 'direction' option is deprecated", str(w[0].message))
 
     def test_calculate_scaled_dimensions_contain(self):
-        """Test the calculate_scaled_dimensions function.
+        """Test the calculate_scaled_dimensions function with mode "contain".
 
         You pass it:
 
             original_width, original_height, width, height
 
-        Plus an optional mode, by default "contain"`.
+        Plus an optional mode, by default "scale"`.
         Alternative spellings: `scale-crop-to-fit`, `down`.
         """
-        calc = calculate_scaled_dimensions
+        calc = functools.partial(calculate_scaled_dimensions, mode="contain")
         self.assertEqual(calc(1, 1, 1, 1), (1, 1))
         self.assertEqual(calc(10, 10, 1, 1), (1, 1))
         self.assertEqual(calc(1, 1, 10, 10), (10, 10))
@@ -381,8 +382,10 @@ class ScalingTests(TestCase):
         """Test calculate_scaled_dimensions function with mode "scale".
 
         Alternative spellings: `keep`, `thumbnail`.
+        "scale" is the default
         """
-        calc = functools.partial(calculate_scaled_dimensions, mode="scale")
+        # calc = functools.partial(calculate_scaled_dimensions, mode="scale")
+        calc = calculate_scaled_dimensions
         self.assertEqual(calc(1, 1, 1, 1), (1, 1))
         self.assertEqual(calc(10, 10, 1, 1), (1, 1))
         # Mode "scale" only scales down, not up:

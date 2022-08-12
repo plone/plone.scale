@@ -112,7 +112,9 @@ class AnnotationStorageTests(TestCase):
         self.assertIn("key", scale)
         self.assertEqual(scale["data"], None)
         self.assertEqual(scale["width"], 50)
-        self.assertEqual(scale["height"], 80)
+        # Note: the original image is 60x40.
+        # By default we scale without cropping, so you do not get height 80.
+        self.assertEqual(scale["height"], 33)
         self.assertEqual(scale["mimetype"], "image/jpeg")
         # Request the same pre scale.
         scale2 = storage.pre_scale(width=50, height=80)
@@ -128,6 +130,15 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(new_scale["width"], 42)
         self.assertEqual(new_scale["height"], 23)
         self.assertEqual(new_scale["mimetype"], "image/png")
+
+        # Try cropping as well.
+        scale = storage.pre_scale(width=50, height=80, mode="contain")
+        self.assertIn("uid", scale)
+        self.assertIn("key", scale)
+        self.assertEqual(scale["data"], None)
+        self.assertEqual(scale["width"], 50)
+        self.assertEqual(scale["height"], 80)
+        self.assertEqual(scale["mimetype"], "image/jpeg")
 
     def testPreScaleForNonExistingField(self):
         self._provide_dummy_scale_adapter(None)
@@ -151,7 +162,7 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(placeholder["uid"], uid)
         self.assertIsNone(placeholder["data"])
         self.assertEqual(placeholder["width"], 50)
-        self.assertEqual(placeholder["height"], 80)
+        self.assertEqual(placeholder["height"], 33)
         self.assertEqual(placeholder["mimetype"], "image/jpeg")
         # 'get_or_generate' gets the pre generated placeholder info
         # and generates the scale.
