@@ -1,6 +1,7 @@
-from io import BytesIO as StringIO
+from lxml import etree
 
 import math
+import io
 import PIL.Image
 import PIL.ImageFile
 import PIL.ImageSequence
@@ -75,7 +76,7 @@ def scaleImage(
     not lost, which JPEG does not support.
     """
     if isinstance(image, (bytes, str)):
-        image = StringIO(image)
+        image = io.BytesIO(image)
 
     animated_kwargs = {}
     with PIL.Image.open(image) as img:
@@ -130,7 +131,7 @@ def scaleImage(
 
     new_result = False
     if result is None:
-        result = StringIO()
+        result = io.BytesIO()
         new_result = True
 
     image.save(
@@ -493,3 +494,115 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
         image = image.crop(dimensions.post_scale_crop)
 
     return image
+
+
+def _contain_svg_image(root, target_width: int, target_height: int):
+    """Scale SVG viewbox, modifies tree in place.
+
+    Starts by scaling the relatively smallest dimension to the required size and crops the other dimension if needed.
+    """
+    viewbox = root.attrib.get("viewBox", "").split(" ")
+    if len(viewbox) != 4:
+        return root
+
+    try:
+        viewbox = [int(float(x)) for x in viewbox]
+    except ValueError:
+        return target_width, target_height
+    viewbox_width = viewbox[2]
+    viewbox_height = viewbox[3]
+    if not viewbox_width or not viewbox_height:
+        return target_width, target_height
+
+    # if we have a max height set, make it square
+    if target_width == 65536:
+        target_width = target_height
+    elif target_height == 65536:
+        target_height = target_width
+
+    target_ratio = target_width / target_height
+    view_box_ratio = viewbox_width / viewbox_height
+    if target_ratio < view_box_ratio:
+        # narrow down the viewbox width to the same ratio as the target
+        width = (target_ratio / view_box_ratio) * viewbox_width
+        margin = (viewbox_width - width) / 2
+        viewbox[0] = round(viewbox[0] + margin)
+        viewbox[2] = round(width)
+    else:
+        # narrow down the viewbox height to the same ratio as the target
+        height = (view_box_ratio / target_ratio) * viewbox_height
+        margin = (viewbox_height - height) / 2
+        viewbox[1] = round(viewbox[1] + margin)
+        viewbox[3] = round(height)
+    root.attrib["viewBox"] = " ".join([str(x) for x in viewbox])
+    return target_width, target_height
+
+
+def scale_svg_image(
+    image: str,
+    target_width: None | int,
+    target_height: None | int,
+    mode: str = "contain",
+) -> tuple[bytes, tuple[int, int]]:
+    """Scale and crop a SVG image to another display size.
+
+    This is all about scaling for the display in a web browser.
+
+    Either width or height - or both - must be given.
+
+    Three different scaling options are supported via `mode` and correspond to
+    the CSS background-size values
+    (see https://developer.mozilla.org/en-US/docs/Web/CSS/background-size):
+
+    `contain`
+        Alternative spellings: `scale-crop-to-fit`, `down`.
+        Starts by scaling the relatively smallest dimension to the required
+        size and crops the other dimension if needed.
+
+    `cover`
+        Alternative spellings: `scale-crop-to-fill`, `up`.
+        Scales the relatively largest dimension up to the required size.
+        Despite the alternative spelling, I see no cropping happening.
+
+    `scale`
+        Alternative spellings: `keep`, `thumbnail`.
+        Scales to the requested dimensions without cropping. The resulting
+        image may have a different size than requested. This option
+        requires both width and height to be specified.
+        Does scale up.
+
+    The `image` parameter must be bytes of the SVG, utf-8 encoded.
+
+    The return value the scaled bytes in the form of another instance of
+    `PIL.Image`.
+    """
+    target_size = target_width, target_height
+    mode = get_scale_mode(mode)
+    tree = etree.parse(image)
+    root = tree.getroot()
+    try:
+        source_width, source_height = int(float(root.attrib["width"])), int(float(root.attrib["height"]))
+    except (KeyError, ValueError):
+        data = image.read()
+        if isinstance(data, str):
+            return data.encode("utf-8")
+        return data
+
+    source_aspectratio = source_width / source_height
+    target_aspectratio = target_width / target_height
+    if mode in ["scale", "cover"]:
+        # check if new width is larger than the one we get with aspect ratio
+        # if we scale on height
+        if source_width * target_aspectratio < target_width:
+            # keep height, new width
+            target_width = target_height * source_aspectratio
+        else:
+            target_height = target_width / source_aspectratio
+        target_size = target_width, target_height
+    elif mode == "contain":
+        target_width, target_height = _contain_svg_image(root, target_width, target_height)
+
+    root.attrib["width"] = str(target_width)
+    root.attrib["height"] = str(target_height)
+
+    return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (target_width, target_height)
