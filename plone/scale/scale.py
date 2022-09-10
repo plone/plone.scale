@@ -6,6 +6,7 @@ import PIL.Image
 import PIL.ImageFile
 import PIL.ImageSequence
 import sys
+import typing
 import warnings
 
 
@@ -540,8 +541,8 @@ def _contain_svg_image(root, target_width: int, target_height: int):
 
 def scale_svg_image(
     image: str,
-    target_width: None | int,
-    target_height: None | int,
+    target_width: typing.Union[None, int],
+    target_height: typing.Union[None, int],
     mode: str = "contain",
 ) -> tuple[bytes, tuple[int, int]]:
     """Scale and crop a SVG image to another display size.
