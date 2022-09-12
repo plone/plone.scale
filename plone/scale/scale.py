@@ -544,7 +544,7 @@ def scale_svg_image(
     target_width: typing.Union[None, int],
     target_height: typing.Union[None, int],
     mode: str = "contain",
-) -> tuple[bytes, tuple[int, int]]:
+) -> typing.Tuple[bytes, typing.Tuple[int, int]]:
     """Scale and crop a SVG image to another display size.
 
     This is all about scaling for the display in a web browser.
