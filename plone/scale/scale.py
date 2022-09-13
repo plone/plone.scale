@@ -5,6 +5,7 @@ import io
 import PIL.Image
 import PIL.ImageFile
 import PIL.ImageSequence
+import re
 import sys
 import typing
 import warnings
@@ -25,6 +26,7 @@ except AttributeError:
 # a height of 0 or less is ignored.
 MAX_HEIGHT = 65000
 
+FLOAT_RE = re.compile(r"(?:\d*\.\d+|\d+)")
 
 def none_as_int(the_int):
     """For python 3 compatibility, to make int vs. none comparison possible
@@ -540,7 +542,7 @@ def _contain_svg_image(root, target_width: int, target_height: int):
 
 
 def scale_svg_image(
-    image: str,
+    image: io.StringIO,
     target_width: typing.Union[None, int],
     target_height: typing.Union[None, int],
     mode: str = "contain",
@@ -577,13 +579,23 @@ def scale_svg_image(
     The return value the scaled bytes in the form of another instance of
     `PIL.Image`.
     """
-    target_size = target_width, target_height
     mode = get_scale_mode(mode)
     tree = etree.parse(image)
     root = tree.getroot()
+    source_width, source_height = root.attrib.get("width", ""), root.attrib.get("height", "")
+
+    # strip units from width and height
+    match = FLOAT_RE.match(source_width)
+    if match:
+        source_width = match.group(0)
+    match = FLOAT_RE.match(source_height)
+    if match:
+        source_height = match.group(0)
+
+    # to float
     try:
-        source_width, source_height = int(float(root.attrib["width"])), int(float(root.attrib["height"]))
-    except (KeyError, ValueError):
+        source_width, source_height = float(source_width), float(source_height)
+    except ValueError:
         data = image.read()
         if isinstance(data, str):
             return data.encode("utf-8")
@@ -599,11 +611,10 @@ def scale_svg_image(
             target_width = target_height * source_aspectratio
         else:
             target_height = target_width / source_aspectratio
-        target_size = target_width, target_height
     elif mode == "contain":
         target_width, target_height = _contain_svg_image(root, target_width, target_height)
 
-    root.attrib["width"] = str(target_width)
-    root.attrib["height"] = str(target_height)
+    root.attrib["width"] = str(int(target_width))
+    root.attrib["height"] = str(int(target_height))
 
     return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (target_width, target_height)
