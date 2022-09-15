@@ -2,6 +2,7 @@ from lxml import etree
 
 import math
 import io
+import logging
 import PIL.Image
 import PIL.ImageFile
 import PIL.ImageSequence
@@ -16,6 +17,8 @@ try:
     LANCZOS = PIL.Image.Resampling.LANCZOS
 except AttributeError:
     LANCZOS = PIL.Image.ANTIALIAS
+
+logger = logging.getLogger(__name__)
 
 # When height is higher than this we do not limit the height, but only the width.
 # Otherwise cropping does not make sense, and in a Pillow you may get an error.
@@ -596,10 +599,11 @@ def scale_svg_image(
     try:
         source_width, source_height = float(source_width), float(source_height)
     except ValueError:
+        logger.exception("Can not convert source dimensions")
         data = image.read()
         if isinstance(data, str):
-            return data.encode("utf-8")
-        return data
+            return data.encode("utf-8"), (target_width, target_height)
+        return data, (target_width, target_height)
 
     source_aspectratio = source_width / source_height
     target_aspectratio = target_width / target_height
