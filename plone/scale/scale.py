@@ -599,11 +599,11 @@ def scale_svg_image(
     try:
         source_width, source_height = float(source_width), float(source_height)
     except ValueError:
-        logger.exception("Can not convert source dimensions")
+        logger.exception(f"Can not convert source dimensions: '{source_width}':'{source_height}'")
         data = image.read()
         if isinstance(data, str):
-            return data.encode("utf-8"), (target_width, target_height)
-        return data, (target_width, target_height)
+            return data.encode("utf-8"), (int(target_width), int(target_height))
+        return data, (int(target_width), int(target_height))
 
     source_aspectratio = source_width / source_height
     target_aspectratio = target_width / target_height
@@ -621,4 +621,4 @@ def scale_svg_image(
     root.attrib["width"] = str(int(target_width))
     root.attrib["height"] = str(int(target_height))
 
-    return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (target_width, target_height)
+    return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (int(target_width), int(target_height))
