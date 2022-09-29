@@ -45,7 +45,7 @@ def scaleImage(
     image,
     width=None,
     height=None,
-    mode="contain",
+    mode="scale",
     quality=88,
     result=None,
     direction=None,
@@ -153,17 +153,17 @@ def _scale_thumbnail(image, width=None, height=None):
 def get_scale_mode(mode, direction=None):
     if direction is not None:
         warnings.warn(
-            "the 'direction' option is deprecated, use 'mode' instead",
+            "The 'direction' option is deprecated, use 'mode' instead.",
             DeprecationWarning,
         )
         mode = direction
 
-    if mode in ("scale-crop-to-fit", "down"):
-        mode = "contain"
-    elif mode in ("scale-crop-to-fill", "up"):
-        mode = "cover"
-    elif mode in ("keep", "thumbnail"):
-        mode = "scale"
+    if mode in ("scale", "keep", "thumbnail", None):
+        return "scale"
+    if mode in ("contain", "scale-crop-to-fit", "down"):
+        return "contain"
+    if mode in ("cover", "scale-crop-to-fill", "up"):
+        return "cover"
 
     return mode
 
@@ -178,7 +178,7 @@ class ScaledDimensions:
 
 
 def _calculate_all_dimensions(
-    original_width, original_height, width, height, mode="contain"
+    original_width, original_height, width, height, mode="scale"
 ):
     """Calculate all dimensions we need for scaling.
 
@@ -334,7 +334,7 @@ def _calculate_all_dimensions(
 
 
 def calculate_scaled_dimensions(
-    original_width, original_height, width, height, mode="contain"
+    original_width, original_height, width, height, mode="scale"
 ):
     """Calculate the scaled image dimensions from the originals using the
     same logic as scalePILImage"""
@@ -345,7 +345,7 @@ def calculate_scaled_dimensions(
     return (dimensions.final_width, dimensions.final_height)
 
 
-def scalePILImage(image, width=None, height=None, mode="contain", direction=None):
+def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
     """Scale a PIL image to another size.
 
     This is all about scaling for the display in a web browser.
