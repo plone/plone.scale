@@ -57,6 +57,7 @@ setup(
     test_suite="plone.scale",
     install_requires=[
         "Pillow",
+        "lxml",
         "setuptools",
     ],
     extras_require=dict(
