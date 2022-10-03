@@ -8,6 +8,27 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0b4 (2022-10-03)
+--------------------
+
+Breaking changes:
+
+
+- No longer test Plone 5.2 on 3.6 and Plone 6.0 on 3.7.
+  [maurits] (#3637)
+
+
+Bug fixes:
+
+
+- Use "scale" mode as default.
+  This cleans up more confusion between mode and direction.
+  See also `plone.namedfile issue 102 <https://github.com/plone/plone.namedfile/issues/102>`_.
+  Previously our definition of the ``IImageScaleFactory`` interface had the deprecated ``direction="thumbnail"``.
+  Other parts used ``mode="contain"`` by default, which does cropping, where in Plone we are used to simple scaling almost everywhere.
+  [maurits] (#102)
+
+
 4.0.0b3 (2022-07-19)
 --------------------
 
