@@ -22,6 +22,10 @@ with open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg"), "rb") as fio:
     CMYK = fio.read()
 with open(os.path.join(TEST_DATA_LOCATION, "profile.jpg"), "rb") as fio:
     PROFILE = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "animated.gif"), "rb") as fio:
+    ANIGIF = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "animated2.gif"), "rb") as fio:
+    ANIGIF2 = fio.read()
 
 
 class ScalingTests(TestCase):
@@ -39,6 +43,12 @@ class ScalingTests(TestCase):
 
     def testScaledImageIsJpeg(self):
         self.assertEqual(scaleImage(TIFF, 84, 103, "contain")[1], "JPEG")
+
+    def testScaledAnigifKeepGIF(self):
+        self.assertEqual(scaleImage(ANIGIF, 84, 103, "contain")[1], "GIF")
+
+    def testScaledAnigifKeepGIF2(self):
+        self.assertEqual(scaleImage(ANIGIF2, 84, 103, "contain")[1], "GIF")
 
     def testAlphaForcesPNG(self):
         # first image without alpha
@@ -338,6 +348,20 @@ class ScalingTests(TestCase):
             self.assertIs(w[0].category, DeprecationWarning)
             self.assertIn("The 'direction' option is deprecated", str(w[0].message))
 
+    def testDeprecationsAni(self):
+        import plone.scale.scale
+
+        # clear warnings registry, so the test actually sees the warning
+        plone.scale.scale.__warningregistry__.clear()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            print('NEXT...')
+            scaleImage(ANIGIF, 16, 16, direction="keep")
+            self.assertEqual(len(w), 6)
+            for item in w:
+                self.assertIs(item.category, DeprecationWarning)
+                self.assertIn("The 'direction' option is deprecated", str(item.message))
+
     def test_calculate_scaled_dimensions_contain(self):
         """Test the calculate_scaled_dimensions function with mode "contain".
 
@@ -395,6 +419,24 @@ class ScalingTests(TestCase):
         self.assertEqual(calc(10, 20, 400, 65536), (10, 20))
         self.assertEqual(calc(600, 300, 400, 65536), (400, 200))
         self.assertEqual(calc(600, 1200, 400, 65536), (400, 800))
+
+    def testAnimatedGifContainsAllFrames(self):
+        image = scaleImage(ANIGIF, 84, 103, "contain")[0]
+        with PIL.Image.open(StringIO(image)) as img:
+            frames = [frame for frame in PIL.ImageSequence.Iterator(img)]
+            self.assertEqual(len(frames), 6)
+            for frame in frames:
+                self.assertEqual(frame.width, 84)
+                self.assertEqual(frame.height, 103)
+
+    def testAnimatedGifContainsAllFrames2(self):
+        image = scaleImage(ANIGIF2, 84, 103, "contain")[0]
+        with PIL.Image.open(StringIO(image)) as img:
+            frames = [frame for frame in PIL.ImageSequence.Iterator(img)]
+            self.assertEqual(len(frames), 35)
+            for frame in frames:
+                self.assertEqual(frame.width, 84)
+                self.assertEqual(frame.height, 103)
 
 
 def test_suite():
