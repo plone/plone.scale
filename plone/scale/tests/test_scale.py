@@ -355,7 +355,6 @@ class ScalingTests(TestCase):
         plone.scale.scale.__warningregistry__.clear()
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            print('NEXT...')
             scaleImage(ANIGIF, 16, 16, direction="keep")
             self.assertEqual(len(w), 6)
             for item in w:
