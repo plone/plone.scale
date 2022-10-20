@@ -2,6 +2,7 @@ from io import BytesIO as StringIO
 
 import math
 import PIL.Image
+import PIL.ImageSequence
 import PIL.ImageFile
 import sys
 import warnings
@@ -72,18 +73,90 @@ def scaleImage(
     """
     if isinstance(image, (bytes, str)):
         image = StringIO(image)
-    image = PIL.Image.open(image)
-    # When we create a new image during scaling we loose the format
-    # information, so remember it here.
-    format_ = image.format
-    if format_ not in ("PNG", "GIF"):
-        # Always generate JPEG, except if format is PNG or GIF.
-        format_ = "JPEG"
-    elif format_ == "GIF":
-        # GIF scaled looks better if we have 8-bit alpha and no palette
-        format_ = "PNG"
 
-    icc_profile = image.info.get("icc_profile")
+    animated_kwargs = {}
+    with PIL.Image.open(image) as img:
+        icc_profile = img.info.get("icc_profile")
+        # When we create a new image during scaling we loose the format
+        # information, so remember it here.
+        format_ = img.format
+        if format_ == "GIF":
+            # Attempt to process multiple frames, to support animated GIFs
+            append_images = []
+            for frame in PIL.ImageSequence.Iterator(img):
+                # We ignore the returned format_ as it won't get optimized
+                # in case of a GIF. This ensures that the format remains
+                # constant across all frames.
+                scaled_frame, _dummy_format_ = scaleSingleFrame(
+                    frame,
+                    width=width,
+                    height=height,
+                    mode=mode,
+                    format_=format_,
+                    quality=quality,
+                    direction=direction,
+                )
+                append_images.append(scaled_frame)
+
+            # The first image is the basis for save
+            # All other images than the first will be added as a save parameter
+            image = append_images.pop(0)
+            if len(append_images) > 0:
+                # Saving as a multi page image
+                animated_kwargs['save_all'] = True
+                animated_kwargs['append_images'] = append_images
+            else:
+                # GIF scaled looks better if we have 8-bit alpha and no palette,
+                # but it only works for single frame, so don't do this for animated GIFs.
+                format_ = "PNG"
+
+        else:
+            # All other formats only process a single frame
+            if format_ not in ("PNG", "GIF"):
+                # Always generate JPEG, except if format is PNG or GIF.
+                format_ = "JPEG"
+            image, format_ = scaleSingleFrame(
+                img,
+                width=width,
+                height=height,
+                mode=mode,
+                format_=format_,
+                quality=quality,
+                direction=direction,
+            )
+
+    new_result = False
+    if result is None:
+        result = StringIO()
+        new_result = True
+
+    image.save(
+        result,
+        format_,
+        quality=quality,
+        optimize=True,
+        progressive=True,
+        icc_profile=icc_profile,
+        **animated_kwargs,
+    )
+
+    if new_result:
+        result = result.getvalue()
+    else:
+        result.seek(0)
+
+    return result, format_, image.size
+
+
+def scaleSingleFrame(
+    image,
+    width,
+    height,
+    mode,
+    format_,
+    quality,
+    direction,
+):
     image = scalePILImage(image, width, height, mode, direction=direction)
 
     # convert to simpler mode if possible
@@ -93,7 +166,7 @@ def scaleImage(
             # check if it's all grey
             if all(rgb[0] == rgb[1] == rgb[2] for c, rgb in colors):
                 image = image.convert("L")
-        elif format_ == "PNG":
+        elif format_ in ("PNG", "GIF"):
             image = image.convert("P")
 
     if image.mode == "RGBA" and format_ == "JPEG":
@@ -106,27 +179,7 @@ def scaleImage(
             # switch to PNG, which supports alpha
             format_ = "PNG"
 
-    new_result = False
-
-    if result is None:
-        result = StringIO()
-        new_result = True
-
-    image.save(
-        result,
-        format_,
-        quality=quality,
-        optimize=True,
-        progressive=True,
-        icc_profile=icc_profile,
-    )
-
-    if new_result:
-        result = result.getvalue()
-    else:
-        result.seek(0)
-
-    return result, format_, image.size
+    return image, format_
 
 
 def _scale_thumbnail(image, width=None, height=None):
