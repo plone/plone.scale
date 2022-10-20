@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.0b5 (2022-10-20)
+--------------------
+
+New features:
+
+
+- Add support for animated GIFs @reebalazs (#69)
+
+
 4.0.0b4 (2022-10-03)
 --------------------
 
