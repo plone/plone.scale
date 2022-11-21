@@ -327,6 +327,9 @@ class AnnotationStorage(MutableMapping):
         # This scale has not been generated yet.
         # Get the parameters used when pre-registering this scale.
         parameters = self.unhash(info["key"])
+        if info is not None:
+            logger.debug(f"want original image")
+            parameters["want_original"] = True
         return self.generate_scale(uid=name, **parameters)
 
     def _cleanup(self, fieldname=None):

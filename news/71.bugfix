@@ -1,0 +1,1 @@
+Prevent multiple db writes for images which do not have a scale given (original image) [MrTango]
