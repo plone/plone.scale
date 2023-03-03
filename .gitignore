@@ -4,6 +4,7 @@ bin/
 lib/
 include/
 .installed.cfg
+.tox
 develop-eggs/
 parts/
 constraints-*-mxdev.txt
