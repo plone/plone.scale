@@ -336,7 +336,7 @@ New:
 - Use an adapter to lookup the actual factory for scaling.
   Deprecated passing the factory as named parameter along,
   because this had not enough flexibility:
-  If addons want to provide alterative methods to scale (i.e. cropping),
+  If addons want to provide alternative methods to scale (i.e. cropping),
   now a specific adapter can perform the work.
   [jensens]
 

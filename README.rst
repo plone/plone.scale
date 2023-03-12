@@ -68,5 +68,5 @@ Visiting the url will generate the scale if this has not happened yet.
 If you prefer Genshi syntax and have the ``IImageScaleStorage`` interface
 in scope the syntax looks like this::
 
-  <img py:with="thumbnail=IImageScaleStorage(context).pre_scale('logo', width=64, heigh=64)"
+  <img py:with="thumbnail=IImageScaleStorage(context).pre_scale('logo', width=64, height=64)"
        py:attributes="dict(src=thumbnail.url, width=thumbnail.width, height=thumbnail.height" />

@@ -431,7 +431,7 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
     The return value the scaled image in the form of another instance of
     `PIL.Image`.
     """
-    # convert zero to None, same sematics: calculate this scale
+    # convert zero to None, same semantics: calculate this scale
     if width == 0:
         width = None
     if height == 0:

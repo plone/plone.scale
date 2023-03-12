@@ -44,7 +44,7 @@ class IImageScaleFactory(Interface):
         or ``None`` on failure.
 
         ``value``
-            is expected to be an storeable value
+            is expected to be an storable value
 
         ``format``
             is the minor part of the ``image`` mimetype
