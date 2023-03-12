@@ -2,8 +2,8 @@ from io import BytesIO as StringIO
 
 import math
 import PIL.Image
-import PIL.ImageSequence
 import PIL.ImageFile
+import PIL.ImageSequence
 import sys
 import warnings
 
