@@ -13,12 +13,7 @@ class IImageScaleFactory(Interface):
     """Creates a scale"""
 
     def __call__(
-        fieldname=None,
-        mode="scale",
-        height=None,
-        width=None,
-        scale=None,
-        **parameters
+        fieldname=None, mode="scale", height=None, width=None, scale=None, **parameters
     ):
         """Interface defining an actual scaling operation.
 

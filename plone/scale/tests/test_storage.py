@@ -27,7 +27,6 @@ class _DummyContext:
 
 
 class AnnotationStorageTests(TestCase):
-
     layer = zca.UNIT_TESTING
 
     def _provide_dummy_scale_adapter(self, result=_marker):

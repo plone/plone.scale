@@ -103,8 +103,8 @@ def scaleImage(
             image = append_images.pop(0)
             if len(append_images) > 0:
                 # Saving as a multi page image
-                animated_kwargs['save_all'] = True
-                animated_kwargs['append_images'] = append_images
+                animated_kwargs["save_all"] = True
+                animated_kwargs["append_images"] = append_images
             else:
                 # GIF scaled looks better if we have 8-bit alpha and no palette,
                 # but it only works for single frame, so don't do this for animated GIFs.
