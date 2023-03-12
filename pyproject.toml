@@ -60,3 +60,5 @@ Zope = [
   'Products.CMFDynamicViewFTI', 'zope.deprecation',
 ]
 python-dateutil = ['dateutil']
+Pillow = ['PIL']
+ignore-packages = ['plone.protect', 'persistent']
