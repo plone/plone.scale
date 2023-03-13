@@ -240,10 +240,7 @@ class AnnotationStorage(MutableMapping):
         width = parameters.get("width")
         height = parameters.get("height")
         orig_width, orig_height = value.getImageSize()
-        mode = get_scale_mode(
-            parameters.get("mode"),
-            parameters.get("direction")
-        )
+        mode = get_scale_mode(parameters.get("mode"), parameters.get("direction"))
         width, height = calculate_scaled_dimensions(
             orig_width, orig_height, width, height, mode
         )

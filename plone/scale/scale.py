@@ -2,8 +2,8 @@ from io import BytesIO as StringIO
 
 import math
 import PIL.Image
-import PIL.ImageSequence
 import PIL.ImageFile
+import PIL.ImageSequence
 import sys
 import warnings
 
@@ -103,8 +103,8 @@ def scaleImage(
             image = append_images.pop(0)
             if len(append_images) > 0:
                 # Saving as a multi page image
-                animated_kwargs['save_all'] = True
-                animated_kwargs['append_images'] = append_images
+                animated_kwargs["save_all"] = True
+                animated_kwargs["append_images"] = append_images
             else:
                 # GIF scaled looks better if we have 8-bit alpha and no palette,
                 # but it only works for single frame, so don't do this for animated GIFs.
@@ -431,7 +431,7 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
     The return value the scaled image in the form of another instance of
     `PIL.Image`.
     """
-    # convert zero to None, same sematics: calculate this scale
+    # convert zero to None, same semantics: calculate this scale
     if width == 0:
         width = None
     if height == 0:

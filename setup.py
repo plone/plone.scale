@@ -15,7 +15,6 @@ STORAGE_REQUIREMENTS = [
     "persistent",
 ]
 
-# "zope.configuration",
 TEST_REQUIREMENTS = [
     "zope.component",
     "zope.configuration",
@@ -59,6 +58,7 @@ setup(
     install_requires=[
         "Pillow",
         "setuptools",
+        "zope.annotation",
     ],
     extras_require=dict(
         storage=STORAGE_REQUIREMENTS,

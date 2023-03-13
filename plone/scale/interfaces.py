@@ -13,12 +13,7 @@ class IImageScaleFactory(Interface):
     """Creates a scale"""
 
     def __call__(
-        fieldname=None,
-        mode="scale",
-        height=None,
-        width=None,
-        scale=None,
-        **parameters
+        fieldname=None, mode="scale", height=None, width=None, scale=None, **parameters
     ):
         """Interface defining an actual scaling operation.
 
@@ -49,7 +44,7 @@ class IImageScaleFactory(Interface):
         or ``None`` on failure.
 
         ``value``
-            is expected to be an storeable value
+            is expected to be an storable value
 
         ``format``
             is the minor part of the ``image`` mimetype
