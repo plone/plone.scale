@@ -262,16 +262,15 @@ def _calculate_all_dimensions(
             width = float(original_width) / float(original_height) * height
         elif height is None:
             height = float(original_height) / float(original_width) * width
-
         # keep aspect ratio of original
         target_width = original_width
         target_height = original_height
         if target_width > width:
             target_height = int(max(target_height * width / target_width, 1))
-            target_width = int(width)
+            target_width = int(width) or 1
         if target_height > height:
             target_width = int(max(target_width * height / target_height, 1))
-            target_height = int(height)
+            target_height = int(height) or 1
 
         dimensions.target_width = target_width
         dimensions.target_height = target_height
