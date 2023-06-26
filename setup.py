@@ -18,8 +18,7 @@ STORAGE_REQUIREMENTS = [
 
 TEST_REQUIREMENTS = [
     "zope.component",
-    "zope.configuration",
-    "plone.testing",
+    "plone.testing[test]",
 ]
 
 setup(
