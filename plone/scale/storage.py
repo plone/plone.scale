@@ -104,7 +104,7 @@ class ScalesDict(PersistentDict):
                     del saved[key]
                 else:
                     # modified by saved, deleted by new
-                    self.raise_conflict(saved[key], new[key])
+                    self.raise_conflict(saved[key], key)
         for key in added:
             if key in saved:
                 # added by saved, added by new
@@ -116,7 +116,7 @@ class ScalesDict(PersistentDict):
         for key in modified:
             if key not in saved:
                 # deleted by saved, modified by new
-                self.raise_conflict(saved[key], new[key])
+                self.raise_conflict(key, new[key])
             elif saved[key]["modified"] != old[key]["modified"]:
                 # modified by saved, modified by new
                 self.raise_conflict(saved[key], new[key])
