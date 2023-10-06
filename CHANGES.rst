@@ -8,6 +8,22 @@ Changelog
 
 .. towncrier release notes start
 
+4.0.2 (2023-10-07)
+------------------
+
+Bug fixes:
+
+
+- Fix KeyError in ScalesDict conflict resolution. @davisagli (#84)
+
+
+Internal:
+
+
+- Update configuration files.
+  [plone devs] (cfffba8c)
+
+
 4.0.1 (2023-03-14)
 ------------------
 
