@@ -92,7 +92,7 @@ class ScalingTests(TestCase):
         self.assertEqual(image.mode, "RGB")
         self.assertEqual(image.format, "JPEG")
 
-    def testScaledWeb(self):
+    def testScaledWebp(self):
         (imagedata, format, size) = scaleImage(PROFILE_WEBP, 120, 120)
         self.assertEqual(format, "WEBP")
         self.assertEqual(size, (120, 120))
