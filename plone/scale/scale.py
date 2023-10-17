@@ -112,7 +112,7 @@ def scaleImage(
 
         else:
             # All other formats only process a single frame
-            if format_ not in ("PNG", "GIF"):
+            if format_ not in ("PNG", "GIF", "WEBP"):
                 # Always generate JPEG, except if format is PNG or GIF.
                 format_ = "JPEG"
             image, format_ = scaleSingleFrame(
