@@ -1,1 +1,1 @@
-avoid to convert webp to jpeg @mamico
+Keep scaled WEBP images in WEBP format instead of converting to JPEG. @mamico
