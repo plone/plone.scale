@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+4.1.0 (2023-10-25)
+------------------
+
+New features:
+
+
+- Keep scaled WEBP images in WEBP format instead of converting to JPEG. @mamico (#85)
+
+
 4.0.2 (2023-10-07)
 ------------------
 
