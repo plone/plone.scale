@@ -174,7 +174,7 @@ def scaleSingleFrame(
         if extrema.get("A") == (255, 255):
             # no alpha used, just change the mode, which causes the alpha band
             # to be dropped on save
-            image.mode = "RGB"
+            image = image.convert("RGB")
         else:
             # switch to PNG, which supports alpha
             format_ = "PNG"
