@@ -8,6 +8,18 @@ Changelog
 
 .. towncrier release notes start
 
+4.1.1 (2024-01-31)
+------------------
+
+Bug fixes:
+
+
+- Fix incompatibility with Pillow 10.1+.
+  Instead of setting ``image.mode``, we call ``image.convert``.
+  This works in Pillow 9 and 10.
+  [maurits] (#89)
+
+
 4.1.0 (2023-10-25)
 ------------------
 

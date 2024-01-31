@@ -1,4 +1,0 @@
-Fix incompatibility with Pillow 10.1+.
-Instead of setting ``image.mode``, we call ``image.convert``.
-This works in Pillow 9 and 10.
-[maurits]
