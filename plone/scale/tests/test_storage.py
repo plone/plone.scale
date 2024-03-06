@@ -199,6 +199,24 @@ class AnnotationStorageTests(TestCase):
         scale2 = storage.scale(bar=42, foo=23, hurz="!")
         self.assertIsNot(scale1, scale2)
 
+    def test_pre_scale_with_and_without_scale_same_uid(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        uid1 = storage.pre_scale(fieldname="image", height=32, width=32)["uid"]
+        uid2 = storage.pre_scale(fieldname="image", height=32, width=32, scale="icon")[
+            "uid"
+        ]
+        self.assertEqual(uid1, uid2)
+
+    def test_scale_with_and_without_scale_same_uid(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        uid1 = storage.scale(fieldname="image", height=32, width=32)["uid"]
+        uid2 = storage.scale(fieldname="image", height=32, width=32, scale="icon")[
+            "uid"
+        ]
+        self.assertEqual(uid1, uid2)
+
     def testGetItem(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
