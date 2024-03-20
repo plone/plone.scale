@@ -217,6 +217,14 @@ class AnnotationStorageTests(TestCase):
         ]
         self.assertEqual(uid1, uid2)
 
+    def test_scale_without_height_width(self):
+        # Ensures that the scale will only be removed from the hash key
+        # if we have width and height.
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        uid = storage.scale(fieldname="image", scale="icon")["uid"]
+        self.assertEqual(uid, "image-icon-b6e2a135d96703b73688a0d91f741a65")
+
     def testGetItem(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage

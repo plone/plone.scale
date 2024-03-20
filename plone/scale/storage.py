@@ -205,7 +205,11 @@ class AnnotationStorage(MutableMapping):
         dimension = parameters.get("width", parameters.get("scale"))
         if dimension is None:
             dimension = 0
-        if "scale" in parameters:
+        if (
+            "scale" in parameters
+            and parameters.get("width")
+            and parameters.get("height")
+        ):
             del parameters["scale"]
         key = self.hash(modified=self.modified_time, **parameters)
         hash_key = hashlib.md5(str(key).encode("utf-8")).hexdigest()
