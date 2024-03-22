@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+4.1.2 (2024-03-22)
+------------------
+
+Bug fixes:
+
+
+- If width and height are given, ignore the scale parameter when determining the unique id of a scale. @wesleybl (#92)
+
+
 4.1.1 (2024-01-31)
 ------------------
 
