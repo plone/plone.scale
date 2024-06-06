@@ -11,8 +11,6 @@ long_description = (
 
 STORAGE_REQUIREMENTS = [
     "ZODB",
-    "zope.annotation",
-    "zope.interface",
     "persistent",
 ]
 
@@ -59,6 +57,7 @@ setup(
         "Pillow",
         "setuptools",
         "zope.annotation",
+        "zope.interface",
     ],
     extras_require=dict(
         storage=STORAGE_REQUIREMENTS,
