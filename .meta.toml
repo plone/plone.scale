@@ -9,4 +9,4 @@ commit-id = "a89af8f2"
 dependencies_mappings = [
     "Pillow = ['PIL']",
     ]
-dependencies_ignores = "['plone.protect', 'persistent',]"
+dependencies_ignores = "['plone.protect', 'persistent', 'ZODB']"

@@ -119,7 +119,7 @@ Zope = [
   'Products.CMFCore', 'Products.CMFDynamicViewFTI',
 ]
 python-dateutil = ['dateutil']
-ignore-packages = ['plone.protect', 'persistent',]
+ignore-packages = ['plone.protect', 'persistent', 'ZODB']
 Pillow = ['PIL']
 
 ##
