@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+4.1.3 (2024-06-13)
+------------------
+
+Bug fixes:
+
+
+- Set PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True to try to load damaged images. @davisagli (#14)
+
+
 4.1.2 (2024-03-22)
 ------------------
 

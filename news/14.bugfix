@@ -1,1 +1,0 @@
-Set PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True to try to load damaged images. @davisagli
