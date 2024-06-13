@@ -39,6 +39,9 @@ def none_as_int(the_int):
 # details.
 PIL.ImageFile.MAXBLOCK = 1000000
 
+# Try to load images even if they're truncated or have a failing CRC.
+PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 MAX_PIXELS = 8192 * 8192
 
 
