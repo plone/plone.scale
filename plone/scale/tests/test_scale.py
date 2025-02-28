@@ -28,6 +28,8 @@ with open(os.path.join(TEST_DATA_LOCATION, "animated.gif"), "rb") as fio:
     ANIGIF = fio.read()
 with open(os.path.join(TEST_DATA_LOCATION, "animated2.gif"), "rb") as fio:
     ANIGIF2 = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "greyscale_image.png"), "rb") as fio:
+    GREYSCALE_IMG = fio.read()
 
 
 class ScalingTests(TestCase):
@@ -113,6 +115,40 @@ class ScalingTests(TestCase):
         self.assertEqual(max(image.size), 200)
         self.assertEqual(image.mode, "L")
         self.assertEqual(image.format, "JPEG")
+
+    def testMaintainLAModeForPalettePNG(self):
+        """Test that a palette (P) mode PNG with transparency maintains alpha channel."""
+        # Open the image using the project's pattern
+
+        # Verify the original image is in P mode
+        original_image = PIL.Image.open(StringIO(GREYSCALE_IMG))
+        self.assertEqual(original_image.mode, "P", "Test image should start in P mode")
+
+        # Scale the image
+        scaled_data, format_, size = scaleImage(GREYSCALE_IMG, 100, None, "contain")
+
+        # Open the scaled result and check properties
+        scaled_image = PIL.Image.open(StringIO(scaled_data))
+
+        # Check the image is not all black (not losing transparency)
+        histogram = scaled_image.histogram()
+        self.assertFalse(
+            histogram[0] > sum(histogram[1:]),
+            "Scaled image appears to be mostly black, which indicates alpha information was lost",
+        )
+
+        # Verify transparency is maintained in some form
+        self.assertEqual(
+            scaled_image.mode,
+            "LA",
+            f"Expected image to maintain transparency with LA mode, but mode is {scaled_image.mode}",
+        )
+
+        # Check size constraints were followed
+        self.assertLessEqual(max(scaled_image.size), 100)
+
+        # Check format maintained
+        self.assertEqual(scaled_image.format, "PNG")
 
     def testAutomaticPalette(self):
         # get a JPEG with more than 256 colors
