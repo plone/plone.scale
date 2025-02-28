@@ -8,6 +8,61 @@ Changelog
 
 .. towncrier release notes start
 
+4.1.3 (2024-06-13)
+------------------
+
+Bug fixes:
+
+
+- Set PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True to try to load damaged images. @davisagli (#14)
+
+
+4.1.2 (2024-03-22)
+------------------
+
+Bug fixes:
+
+
+- If width and height are given, ignore the scale parameter when determining the unique id of a scale. @wesleybl (#92)
+
+
+4.1.1 (2024-01-31)
+------------------
+
+Bug fixes:
+
+
+- Fix incompatibility with Pillow 10.1+.
+  Instead of setting ``image.mode``, we call ``image.convert``.
+  This works in Pillow 9 and 10.
+  [maurits] (#89)
+
+
+4.1.0 (2023-10-25)
+------------------
+
+New features:
+
+
+- Keep scaled WEBP images in WEBP format instead of converting to JPEG. @mamico (#85)
+
+
+4.0.2 (2023-10-07)
+------------------
+
+Bug fixes:
+
+
+- Fix KeyError in ScalesDict conflict resolution. @davisagli (#84)
+
+
+Internal:
+
+
+- Update configuration files.
+  [plone devs] (cfffba8c)
+
+
 4.0.1 (2023-03-14)
 ------------------
 

@@ -22,6 +22,8 @@ with open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg"), "rb") as fio:
     CMYK = fio.read()
 with open(os.path.join(TEST_DATA_LOCATION, "profile.jpg"), "rb") as fio:
     PROFILE = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "profile.webp"), "rb") as fio:
+    PROFILE_WEBP = fio.read()
 with open(os.path.join(TEST_DATA_LOCATION, "animated.gif"), "rb") as fio:
     ANIGIF = fio.read()
 with open(os.path.join(TEST_DATA_LOCATION, "animated2.gif"), "rb") as fio:
@@ -89,6 +91,15 @@ class ScalingTests(TestCase):
         self.assertEqual(max(image.size), 16)
         self.assertEqual(image.mode, "RGB")
         self.assertEqual(image.format, "JPEG")
+
+    def testScaledWebp(self):
+        (imagedata, format, size) = scaleImage(PROFILE_WEBP, 120, 120)
+        self.assertEqual(format, "WEBP")
+        self.assertEqual(size, (120, 120))
+        self.assertTrue(len(imagedata) < len(PROFILE_WEBP))
+        input = StringIO(imagedata)
+        image = PIL.Image.open(input)
+        self.assertIsNotNone(image.info.get("icc_profile"))
 
     def testAutomaticGreyscale(self):
         src = PIL.Image.new("RGB", (256, 256), (255, 255, 255))
