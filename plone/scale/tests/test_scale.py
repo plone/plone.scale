@@ -138,11 +138,7 @@ class ScalingTests(TestCase):
         )
 
         # Verify transparency is maintained in some form
-        has_transparency = (
-            scaled_image.mode == "LA"
-            or scaled_image.mode == "RGBA"
-            or (scaled_image.mode == "P" and "transparency" in scaled_image.info)
-        )
+        has_transparency = scaled_image.mode == "LA"
         self.assertTrue(
             has_transparency,
             f"Expected image to maintain transparency, but mode is {scaled_image.mode}",
