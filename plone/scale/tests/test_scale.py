@@ -456,13 +456,13 @@ class ScalingTests(TestCase):
         img_scaled = scalePILImage(img, 1, 100, mode="scale")
         self.assertGreaterEqual(img_scaled.size[0], 1)  # Width should be at least 1
         self.assertGreaterEqual(img_scaled.size[1], 1)  # Height should be at least 1
-        
+
         # Create a very tall image and scale to a tiny height
         img = PIL.Image.new("RGB", (10, 1000), (0, 0, 0))
         img_scaled = scalePILImage(img, 100, 1, mode="scale")
         self.assertGreaterEqual(img_scaled.size[0], 1)  # Width should be at least 1
         self.assertGreaterEqual(img_scaled.size[1], 1)  # Height should be at least 1
-        
+
         # Edge case: try scaling a 1x1 image to less than 1 pixel
         img = PIL.Image.new("RGB", (1, 1), (0, 0, 0))
         img_scaled = scalePILImage(img, 1, 1, mode="scale")
@@ -472,20 +472,21 @@ class ScalingTests(TestCase):
     def testCalculateMinimumDimensions(self):
         """Test that _calculate_all_dimensions ensures dimensions are at least 1 pixel."""
         from plone.scale.scale import _calculate_all_dimensions
-        
+
         # Test with extreme aspect ratios
         dimensions = _calculate_all_dimensions(1000, 10, 1, 100, "scale")
         self.assertGreaterEqual(dimensions.target_width, 1)
         self.assertGreaterEqual(dimensions.target_height, 1)
-        
+
         dimensions = _calculate_all_dimensions(10, 1000, 100, 1, "scale")
         self.assertGreaterEqual(dimensions.target_width, 1)
         self.assertGreaterEqual(dimensions.target_height, 1)
-        
+
         # Test with very small dimensions input
         dimensions = _calculate_all_dimensions(1, 1, 1, 1, "scale")
         self.assertGreaterEqual(dimensions.target_width, 1)
         self.assertGreaterEqual(dimensions.target_height, 1)
+
 
 def test_suite():
     from unittest import defaultTestLoader
