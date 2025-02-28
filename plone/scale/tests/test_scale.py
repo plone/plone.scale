@@ -138,10 +138,10 @@ class ScalingTests(TestCase):
         )
 
         # Verify transparency is maintained in some form
-        has_transparency = scaled_image.mode == "LA"
-        self.assertTrue(
-            has_transparency,
-            f"Expected image to maintain transparency, but mode is {scaled_image.mode}",
+        self.assertEqual(
+            scaled_image.mode,
+            "LA",
+            f"Expected image to maintain transparency with LA mode, but mode is {scaled_image.mode}",
         )
 
         # Check size constraints were followed
