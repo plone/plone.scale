@@ -39,9 +39,6 @@ def none_as_int(the_int):
 # details.
 PIL.ImageFile.MAXBLOCK = 1000000
 
-# Try to load images even if they're truncated or have a failing CRC.
-PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
-
 MAX_PIXELS = 8192 * 8192
 
 
@@ -70,8 +67,8 @@ def scaleImage(
     The `width`, `height`, `mode` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
 
-    The generated image is a JPEG image, unless the original is a WEBP, PNG
-    or GIF image. This is needed to make sure alpha channel information is
+    The generated image is a JPEG image, unless the original is a PNG or GIF
+    image. This is needed to make sure alpha channel information is
     not lost, which JPEG does not support.
     """
     if isinstance(image, (bytes, str)):
@@ -115,8 +112,8 @@ def scaleImage(
 
         else:
             # All other formats only process a single frame
-            if format_ not in ("PNG", "GIF", "WEBP"):
-                # Always generate JPEG, except if format is WEBP, PNG or GIF.
+            if format_ not in ("PNG", "GIF"):
+                # Always generate JPEG, except if format is PNG or GIF.
                 format_ = "JPEG"
             image, format_ = scaleSingleFrame(
                 img,
@@ -177,7 +174,7 @@ def scaleSingleFrame(
         if extrema.get("A") == (255, 255):
             # no alpha used, just change the mode, which causes the alpha band
             # to be dropped on save
-            image = image.convert("RGB")
+            image.mode = "RGB"
         else:
             # switch to PNG, which supports alpha
             format_ = "PNG"

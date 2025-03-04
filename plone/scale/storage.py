@@ -104,7 +104,7 @@ class ScalesDict(PersistentDict):
                     del saved[key]
                 else:
                     # modified by saved, deleted by new
-                    self.raise_conflict(saved[key], key)
+                    self.raise_conflict(saved[key], new[key])
         for key in added:
             if key in saved:
                 # added by saved, added by new
@@ -116,7 +116,7 @@ class ScalesDict(PersistentDict):
         for key in modified:
             if key not in saved:
                 # deleted by saved, modified by new
-                self.raise_conflict(key, new[key])
+                self.raise_conflict(saved[key], new[key])
             elif saved[key]["modified"] != old[key]["modified"]:
                 # modified by saved, modified by new
                 self.raise_conflict(saved[key], new[key])
@@ -201,17 +201,11 @@ class AnnotationStorage(MutableMapping):
     def hash_key(self, **parameters):
         if "modified" in parameters:
             del parameters["modified"]
+        key = self.hash(modified=self.modified_time, **parameters)
         fieldname = parameters.get("fieldname", "image")
         dimension = parameters.get("width", parameters.get("scale"))
         if dimension is None:
             dimension = 0
-        if (
-            "scale" in parameters
-            and parameters.get("width")
-            and parameters.get("height")
-        ):
-            del parameters["scale"]
-        key = self.hash(modified=self.modified_time, **parameters)
         hash_key = hashlib.md5(str(key).encode("utf-8")).hexdigest()
         # We return a uid that is recognizable when you inspect a url in html or
         # on the network tab: you immediately see for which field this is and what

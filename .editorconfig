@@ -1,6 +1,5 @@
 # Generated from:
-# https://github.com/plone/meta/tree/main/src/plone/meta/default
-# See the inline comments on how to expand/tweak this configuration file
+# https://github.com/plone/meta/tree/master/config/default
 #
 # EditorConfig Configuration file, for more details see:
 # http://EditorConfig.org
@@ -13,8 +12,7 @@
 root = true
 
 
-[*]
-# Default settings for all files.
+[*]  # For All Files
 # Unix-style newlines with a newline ending every file
 end_of_line = lf
 insert_final_newline = true
@@ -30,27 +28,12 @@ max_line_length = off
 # 4 space indentation
 indent_size = 4
 
-[*.{yml,zpt,pt,dtml,zcml,html,xml}]
+[*.{yml,zpt,pt,dtml,zcml}]
 # 2 space indentation
 indent_size = 2
-
-[*.{json,jsonl,js,jsx,ts,tsx,css,less,scss}]
-# Frontend development
-# 2 space indentation
-indent_size = 2
-max_line_length = 80
 
 [{Makefile,.gitmodules}]
 # Tab indentation (no size specified, but view as 4 spaces)
 indent_style = tab
 indent_size = unset
 tab_width = unset
-
-
-##
-# Add extra configuration options in .meta.toml:
-#  [editorconfig]
-#  extra_lines = """
-#  _your own configuration lines_
-#  """
-##

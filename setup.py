@@ -1,42 +1,44 @@
-from pathlib import Path
 from setuptools import find_packages
 from setuptools import setup
 
 
-version = "4.1.4.dev0"
-
-long_description = (
-    f"{Path('README.rst').read_text()}\n{Path('CHANGES.rst').read_text()}"
-)
+version = "4.0.2.dev0"
+with open("README.rst") as myfile:
+    readme = myfile.read()
+with open("CHANGES.rst") as myfile:
+    changes = myfile.read()
 
 STORAGE_REQUIREMENTS = [
     "ZODB",
+    "zope.annotation",
+    "zope.interface",
     "persistent",
 ]
 
 TEST_REQUIREMENTS = [
     "zope.component",
-    "plone.testing[test]",
+    "zope.configuration",
+    "plone.testing",
 ]
 
 setup(
     name="plone.scale",
     version=version,
     description="Image scaling",
-    long_description=long_description,
-    long_description_content_type="text/x-rst",
-    # Get more strings from
-    # https://pypi.org/classifiers/
+    long_description=readme + "\n" + changes,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
         "Framework :: Plone",
+        "Framework :: Plone :: 5.2",
         "Framework :: Plone :: 6.0",
         "Framework :: Plone :: Core",
+        "Framework :: Zope :: 4",
         "Framework :: Zope :: 5",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -51,12 +53,12 @@ setup(
     namespace_packages=["plone"],
     include_package_data=True,
     zip_safe=False,
-    python_requires=">=3.8",
+    test_suite="plone.scale",
+    python_requires=">=3.7",
     install_requires=[
         "Pillow",
         "setuptools",
         "zope.annotation",
-        "zope.interface",
     ],
     extras_require=dict(
         storage=STORAGE_REQUIREMENTS,
