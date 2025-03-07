@@ -8,6 +8,24 @@ Changelog
 
 .. towncrier release notes start
 
+4.1.4 (2025-03-07)
+------------------
+
+Bug fixes:
+
+
+- Fixed scaling of PNG images with grayscale palettes, causing loss of transparency and resulting in black scaled images [rohnsha0] (#43)
+- Make sure smallest dimension is at least 1px. @MrTango, @rohnsha0 (#112)
+
+
+Internal:
+
+
+- Remove old way to run tests with setuptools [gforcada]
+- Update configuration files.
+  [plone devs]
+
+
 4.1.3 (2024-06-13)
 ------------------
 

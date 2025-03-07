@@ -1,1 +1,0 @@
-Fixed scaling of PNG images with grayscale palettes, causing loss of transparency and resulting in black scaled images [rohnsha0]
