@@ -1,8 +1,8 @@
 from lxml import etree
 
-import math
 import io
 import logging
+import math
 import PIL.Image
 import PIL.ImageFile
 import PIL.ImageSequence
@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 MAX_HEIGHT = 65000
 
 FLOAT_RE = re.compile(r"(?:\d*\.\d+|\d+)")
+
 
 def none_as_int(the_int):
     """For python 3 compatibility, to make int vs. none comparison possible
@@ -585,7 +586,9 @@ def scale_svg_image(
     mode = get_scale_mode(mode)
     tree = etree.parse(image)
     root = tree.getroot()
-    source_width, source_height = root.attrib.get("width", ""), root.attrib.get("height", "")
+    source_width, source_height = root.attrib.get("width", ""), root.attrib.get(
+        "height", ""
+    )
 
     # strip units from width and height
     match = FLOAT_RE.match(source_width)
@@ -599,7 +602,9 @@ def scale_svg_image(
     try:
         source_width, source_height = float(source_width), float(source_height)
     except ValueError:
-        logger.exception(f"Can not convert source dimensions: '{source_width}':'{source_height}'")
+        logger.exception(
+            f"Can not convert source dimensions: '{source_width}':'{source_height}'"
+        )
         data = image.read()
         if isinstance(data, str):
             return data.encode("utf-8"), (int(target_width), int(target_height))
@@ -616,9 +621,14 @@ def scale_svg_image(
         else:
             target_height = target_width / source_aspectratio
     elif mode == "contain":
-        target_width, target_height = _contain_svg_image(root, target_width, target_height)
+        target_width, target_height = _contain_svg_image(
+            root, target_width, target_height
+        )
 
     root.attrib["width"] = str(int(target_width))
     root.attrib["height"] = str(int(target_height))
 
-    return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (int(target_width), int(target_height))
+    return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (
+        int(target_width),
+        int(target_height),
+    )
