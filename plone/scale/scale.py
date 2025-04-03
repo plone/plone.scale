@@ -1,5 +1,6 @@
 from lxml import etree
 
+import codecs
 import io
 import logging
 import math
@@ -546,7 +547,7 @@ def _contain_svg_image(root, target_width: int, target_height: int):
 
 
 def scale_svg_image(
-    image: io.StringIO,
+    image: io.BytesIO,
     target_width: typing.Union[None, int],
     target_height: typing.Union[None, int],
     mode: str = "contain",
@@ -584,6 +585,13 @@ def scale_svg_image(
     `PIL.Image`.
     """
     mode = get_scale_mode(mode)
+
+    if isinstance(image, io.StringIO):
+        image = codecs.EncodedFile(image, "utf-8")
+        warnings.warn(
+            "The 'image' is a StringIO, but a BytesIO is needed, autoconvert.",
+            DeprecationWarning,
+        )
     tree = etree.parse(image)
     root = tree.getroot()
     source_width, source_height = root.attrib.get("width", ""), root.attrib.get(
