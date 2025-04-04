@@ -54,6 +54,7 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "Pillow",
+        "lxml",
         "setuptools",
         "zope.annotation",
         "zope.interface",
