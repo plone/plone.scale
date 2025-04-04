@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+4.2.0 (2025-04-04)
+------------------
+
+New features:
+
+
+- Add method to 'scale' SVGs by modifying display size and viewbox. [jensens[ (#68)
+
+
 4.1.4 (2025-03-07)
 ------------------
 
