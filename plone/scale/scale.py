@@ -12,6 +12,14 @@ import sys
 import typing
 import warnings
 
+# Try to import OpenCV and numpy if they're installed
+try:
+    import cv2
+    import numpy as np
+    HAS_OPENCV = True
+except ImportError:
+    HAS_OPENCV = False
+
 
 try:
     # Pillow 9.1.0+
@@ -194,6 +202,48 @@ def scaleSingleFrame(
     return image, format_
 
 
+def _scale_with_opencv(image, width=None, height=None):
+    """Scale the image using OpenCV if available.
+    
+    This can provide better performance for certain image scaling operations.
+    """
+    if not HAS_OPENCV:
+        return None
+    
+    try:
+        # Convert PIL image to numpy array for OpenCV
+        img_array = np.array(image)
+        
+        # OpenCV uses BGR format, but PIL uses RGB
+        if len(img_array.shape) == 3 and img_array.shape[2] == 3:
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        
+        dimensions = _calculate_all_dimensions(
+            image.size[0], image.size[1], width, height, "scale"
+        )
+        
+        if (dimensions.target_width * dimensions.target_height) > MAX_PIXELS:
+            # The image is too large, return None to fall back to PIL
+            return None
+            
+        # Resize with OpenCV
+        resized = cv2.resize(
+            img_array, 
+            (dimensions.target_width, dimensions.target_height), 
+            interpolation=cv2.INTER_LANCZOS4
+        )
+        
+        # Convert back to RGB for PIL
+        if len(resized.shape) == 3 and resized.shape[2] == 3:
+            resized = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+            
+        # Convert back to PIL Image
+        return PIL.Image.fromarray(resized)
+    except Exception as e:
+        logger.warning(f"OpenCV scaling failed, falling back to PIL: {e}")
+        return None
+
+
 def _scale_thumbnail(image, width=None, height=None):
     """Scale with method "thumbnail".
 
@@ -201,6 +251,12 @@ def _scale_thumbnail(image, width=None, height=None):
     If target aspect ratio is different, either width or height is smaller
     than the given target width or height. No cropping!
     """
+    # Try using OpenCV first if available
+    if HAS_OPENCV:
+        opencv_result = _scale_with_opencv(image, width, height)
+        if opencv_result is not None:
+            return opencv_result
+    
     dimensions = _calculate_all_dimensions(
         image.size[0], image.size[1], width, height, "scale"
     )
@@ -494,6 +550,41 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
         # scaling, so return the potentially pre cropped image
         return image
 
+    # Try using OpenCV for better performance if it's available
+    if HAS_OPENCV:
+        try:
+            # Convert PIL image to numpy array for OpenCV
+            img_array = np.array(image)
+            
+            # OpenCV uses BGR format, but PIL uses RGB
+            if len(img_array.shape) == 3 and img_array.shape[2] == 3:
+                img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+                
+            # Resize with OpenCV
+            resized = cv2.resize(
+                img_array, 
+                (dimensions.target_width, dimensions.target_height), 
+                interpolation=cv2.INTER_LANCZOS4
+            )
+            
+            # Convert back to RGB for PIL
+            if len(resized.shape) == 3 and resized.shape[2] == 3:
+                resized = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+                
+            # Convert back to PIL Image
+            image = PIL.Image.fromarray(resized)
+            
+            if dimensions.post_scale_crop:
+                # crop off remains due to rounding before scaling
+                image = image.crop(dimensions.post_scale_crop)
+                
+            return image
+        except Exception as e:
+            # Fall back to PIL if OpenCV fails
+            logger.warning(f"OpenCV scaling failed, falling back to PIL: {e}")
+            # Continue with PIL method below
+    
+    # Standard PIL approach
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
     image = image.resize((dimensions.target_width, dimensions.target_height), LANCZOS)
 
