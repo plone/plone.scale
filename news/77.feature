@@ -1,0 +1,1 @@
+Add OpenCV support for image scaling @rohnsha0

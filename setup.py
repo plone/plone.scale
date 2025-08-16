@@ -14,6 +14,11 @@ STORAGE_REQUIREMENTS = [
     "persistent",
 ]
 
+OPENCV_REQUIREMENTS = [
+    "opencv-python",
+    "numpy",
+]
+
 TEST_REQUIREMENTS = [
     "zope.component",
     "plone.testing[test]",
@@ -61,6 +66,7 @@ setup(
     ],
     extras_require=dict(
         storage=STORAGE_REQUIREMENTS,
+        opencv=OPENCV_REQUIREMENTS,
         test=STORAGE_REQUIREMENTS + TEST_REQUIREMENTS,
     ),
 )
