@@ -12,6 +12,7 @@ import PIL.Image
 import PIL.ImageDraw
 import warnings
 
+
 with open(os.path.join(TEST_DATA_LOCATION, "logo.png"), "rb") as fio:
     PNG = fio.read()
 with open(os.path.join(TEST_DATA_LOCATION, "logo.gif"), "rb") as fio:
@@ -535,7 +536,7 @@ class ScalingTests(TestCase):
 
         # Scale SVG without width and height attributes
         scaled_svg = scale_svg_image(StringIO(SVG_NO_WIDTH_HEIGHT), 100, 100)
-        self.assertIn(b'<svg', scaled_svg[0])
+        self.assertIn(b"<svg", scaled_svg[0])
         self.assertNotIn(b'width="100"', scaled_svg[0])
         self.assertNotIn(b'height="100"', scaled_svg[0])
 
