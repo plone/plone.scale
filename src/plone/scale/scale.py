@@ -613,6 +613,7 @@ def scale_svg_image(
         logger.exception(
             f"Can not convert source dimensions: '{source_width}':'{source_height}'"
         )
+        image.seek(0)
         data = image.read()
         if isinstance(data, str):
             return data.encode("utf-8"), (int(target_width), int(target_height))

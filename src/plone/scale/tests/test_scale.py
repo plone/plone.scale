@@ -1,5 +1,6 @@
 from io import BytesIO as StringIO
 from plone.scale.scale import calculate_scaled_dimensions
+from plone.scale.scale import scale_svg_image
 from plone.scale.scale import scaleImage
 from plone.scale.scale import scalePILImage
 from plone.scale.tests import TEST_DATA_LOCATION
@@ -21,6 +22,8 @@ ANIGIF = (TEST_DATA_LOCATION / "animated.gif").read_bytes()
 ANIGIF2 = (TEST_DATA_LOCATION / "animated2.gif").read_bytes()
 GREYSCALE_IMG = (TEST_DATA_LOCATION / "greyscale_image.png").read_bytes()
 ANIWEBP = (TEST_DATA_LOCATION / "animated.webp").read_bytes()
+SVG = (TEST_DATA_LOCATION / "logo.svg").read_bytes()
+SVG_NO_WIDTH_HEIGHT = (TEST_DATA_LOCATION / "logo_no_width_height.svg").read_bytes()
 
 
 class ScalingTests(TestCase):
@@ -516,6 +519,18 @@ class ScalingTests(TestCase):
         dimensions = _calculate_all_dimensions(1, 1, 1, 1, "scale")
         self.assertGreaterEqual(dimensions.target_width, 1)
         self.assertGreaterEqual(dimensions.target_height, 1)
+
+    def testScaleSVGImage(self):
+        # Basic scaling test
+        scaled_svg = scale_svg_image(StringIO(SVG), 200, 100)
+        self.assertIn(b'width="200"', scaled_svg[0])
+        self.assertIn(b'height="100"', scaled_svg[0])
+
+        # Scale SVG without width and height attributes
+        scaled_svg = scale_svg_image(StringIO(SVG_NO_WIDTH_HEIGHT), 100, 100)
+        self.assertIn(b'<svg', scaled_svg[0])
+        self.assertNotIn(b'width="100"', scaled_svg[0])
+        self.assertNotIn(b'height="100"', scaled_svg[0])
 
 
 def test_suite():
