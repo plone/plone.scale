@@ -13,6 +13,16 @@ import typing
 import warnings
 
 
+# Try to import OpenCV and numpy if they're installed
+try:
+    import cv2
+    import numpy as np
+
+    HAS_OPENCV = True
+except ImportError:
+    HAS_OPENCV = False
+
+
 try:
     # Pillow 9.1.0+
     LANCZOS = PIL.Image.Resampling.LANCZOS
@@ -194,6 +204,45 @@ def scaleSingleFrame(
     return image, format_
 
 
+def _scale_with_opencv(image, dimensions) -> typing.Optional[PIL.Image.Image]:
+    """Scale the image using OpenCV if available.
+
+    This can provide better performance for certain image scaling operations.
+
+    Parameters:
+    - image: PIL Image to scale
+    - width, height: Target dimensions (used only if dimensions is None)
+    - dimensions: Optional pre-calculated ScaledDimensions object
+    """
+    if not HAS_OPENCV:
+        return None
+
+    try:
+        # Convert PIL image to numpy array for OpenCV
+        img_array = np.array(image)
+
+        # OpenCV uses BGR format, but PIL uses RGB
+        if len(img_array.shape) == 3 and img_array.shape[2] == 3:
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+
+        # Resize with OpenCV
+        resized = cv2.resize(
+            img_array,
+            (dimensions.target_width, dimensions.target_height),
+            interpolation=cv2.INTER_LANCZOS4,
+        )
+
+        # Convert back to RGB for PIL
+        if len(resized.shape) == 3 and resized.shape[2] == 3:
+            resized = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+
+        # Convert back to PIL Image and return
+        return PIL.Image.fromarray(resized)
+    except Exception as e:
+        logger.warning(f"OpenCV scaling failed, falling back to PIL: {e}")
+        return None
+
+
 def _scale_thumbnail(image, width=None, height=None):
     """Scale with method "thumbnail".
 
@@ -201,6 +250,7 @@ def _scale_thumbnail(image, width=None, height=None):
     If target aspect ratio is different, either width or height is smaller
     than the given target width or height. No cropping!
     """
+
     dimensions = _calculate_all_dimensions(
         image.size[0], image.size[1], width, height, "scale"
     )
@@ -210,6 +260,12 @@ def _scale_thumbnail(image, width=None, height=None):
         # scaling, so return the potentially pre cropped image
         return image
 
+    # Try using OpenCV first if available
+    opencv_result = _scale_with_opencv(image=image, dimensions=dimensions)
+    if opencv_result is not None:
+        return opencv_result
+
+    # Fall back to PIL method if OpenCV is not available or fails
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
     image = image.resize((dimensions.target_width, dimensions.target_height), LANCZOS)
     return image
@@ -494,6 +550,12 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
         # scaling, so return the potentially pre cropped image
         return image
 
+    # Try using OpenCV for better performance if it's available
+    opencv_result = _scale_with_opencv(image=image, dimensions=dimensions)
+    if opencv_result is not None:
+        return opencv_result
+
+    # Fall back to PIL method if OpenCV is not available or fails
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
     image = image.resize((dimensions.target_width, dimensions.target_height), LANCZOS)
 
