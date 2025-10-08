@@ -1,4 +1,4 @@
-import os.path
+from pathlib import Path
 
 
-TEST_DATA_LOCATION = os.path.join(os.path.dirname(__file__), "data")
+TEST_DATA_LOCATION = Path(__file__).parent / "data"
