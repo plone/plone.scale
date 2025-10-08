@@ -30,6 +30,8 @@ with open(os.path.join(TEST_DATA_LOCATION, "animated2.gif"), "rb") as fio:
     ANIGIF2 = fio.read()
 with open(os.path.join(TEST_DATA_LOCATION, "greyscale_image.png"), "rb") as fio:
     GREYSCALE_IMG = fio.read()
+with open(os.path.join(TEST_DATA_LOCATION, "animated.webp"), "rb") as fio:
+    ANIWEBP = fio.read()
 
 
 class ScalingTests(TestCase):
@@ -53,6 +55,9 @@ class ScalingTests(TestCase):
 
     def testScaledAnigifKeepGIF2(self):
         self.assertEqual(scaleImage(ANIGIF2, 84, 103, "contain")[1], "GIF")
+
+    def testScaledAniwebpKeepWEBP(self):
+        self.assertEqual(scaleImage(ANIWEBP, 84, 103, "contain")[1], "WEBP")
 
     def testAlphaForcesPNG(self):
         # first image without alpha

@@ -92,7 +92,7 @@ def scaleImage(
         # When we create a new image during scaling we loose the format
         # information, so remember it here.
         format_ = img.format
-        if format_ == "GIF":
+        if format_ in ("GIF", "WEBP"):
             # Attempt to process multiple frames, to support animated GIFs
             append_images = []
             for frame in PIL.ImageSequence.Iterator(img):
@@ -117,14 +117,14 @@ def scaleImage(
                 # Saving as a multi page image
                 animated_kwargs["save_all"] = True
                 animated_kwargs["append_images"] = append_images
-            else:
+            elif format_ == "GIF":
                 # GIF scaled looks better if we have 8-bit alpha and no palette,
                 # but it only works for single frame, so don't do this for animated GIFs.
                 format_ = "PNG"
 
         else:
             # All other formats only process a single frame
-            if format_ not in ("PNG", "GIF", "WEBP"):
+            if format_ not in ("PNG", "GIF"):
                 # Always generate JPEG, except if format is WEBP, PNG or GIF.
                 format_ = "JPEG"
             image, format_ = scaleSingleFrame(
