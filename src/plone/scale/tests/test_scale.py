@@ -6,30 +6,21 @@ from plone.scale.tests import TEST_DATA_LOCATION
 from unittest import TestCase
 
 import functools
-import os.path
 import PIL.Image
 import PIL.ImageDraw
 import warnings
 
 
-with open(os.path.join(TEST_DATA_LOCATION, "logo.png"), "rb") as fio:
-    PNG = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "logo.gif"), "rb") as fio:
-    GIF = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "logo.tiff"), "rb") as fio:
-    TIFF = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "cmyk.jpg"), "rb") as fio:
-    CMYK = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "profile.jpg"), "rb") as fio:
-    PROFILE = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "profile.webp"), "rb") as fio:
-    PROFILE_WEBP = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "animated.gif"), "rb") as fio:
-    ANIGIF = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "animated2.gif"), "rb") as fio:
-    ANIGIF2 = fio.read()
-with open(os.path.join(TEST_DATA_LOCATION, "greyscale_image.png"), "rb") as fio:
-    GREYSCALE_IMG = fio.read()
+PNG = (TEST_DATA_LOCATION / "logo.png").read_bytes()
+GIF = (TEST_DATA_LOCATION / "logo.gif").read_bytes()
+TIFF = (TEST_DATA_LOCATION / "logo.tiff").read_bytes()
+CMYK = (TEST_DATA_LOCATION / "cmyk.jpg").read_bytes()
+PROFILE = (TEST_DATA_LOCATION / "profile.jpg").read_bytes()
+PROFILE_WEBP = (TEST_DATA_LOCATION / "profile.webp").read_bytes()
+ANIGIF = (TEST_DATA_LOCATION / "animated.gif").read_bytes()
+ANIGIF2 = (TEST_DATA_LOCATION / "animated2.gif").read_bytes()
+GREYSCALE_IMG = (TEST_DATA_LOCATION / "greyscale_image.png").read_bytes()
+ANIWEBP = (TEST_DATA_LOCATION / "animated.webp").read_bytes()
 
 
 class ScalingTests(TestCase):
@@ -53,6 +44,9 @@ class ScalingTests(TestCase):
 
     def testScaledAnigifKeepGIF2(self):
         self.assertEqual(scaleImage(ANIGIF2, 84, 103, "contain")[1], "GIF")
+
+    def testScaledAniwebpKeepWEBP(self):
+        self.assertEqual(scaleImage(ANIWEBP, 84, 103, "contain")[1], "WEBP")
 
     def testAlphaForcesPNG(self):
         # first image without alpha
