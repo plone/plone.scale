@@ -50,7 +50,6 @@ setup(
     install_requires=[
         "Pillow",
         "lxml",
-        "setuptools",
         "zope.annotation",
         "zope.interface",
     ],
