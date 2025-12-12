@@ -1,7 +1,7 @@
 from .scale import calculate_scaled_dimensions
 from .scale import get_scale_mode
 from collections.abc import MutableMapping
-from persistent.dict import PersistentDict
+from persistent.mapping import PersistentMapping
 from plone.scale.interfaces import IImageScaleFactory
 from time import time
 from ZODB.POSException import ConflictError
@@ -71,7 +71,7 @@ class IImageScaleStorage(Interface):
         """
 
 
-class ScalesDict(PersistentDict):
+class ScalesDict(PersistentMapping):
     def raise_conflict(self, saved, new):
         logger.info("Conflict")
         logger.debug("saved\n" + pprint.pformat(saved))
@@ -179,7 +179,7 @@ class AnnotationStorage(MutableMapping):
                 safeWrite(self.context)
         scales = annotations["plone.scale"]
         if not isinstance(scales, ScalesDict):
-            # migrate from PersistentDict to ScalesDict
+            # migrate from PersistentMapping to ScalesDict
             new_scales = ScalesDict(scales)
             annotations["plone.scale"] = new_scales
             if safeWrite is not None:
