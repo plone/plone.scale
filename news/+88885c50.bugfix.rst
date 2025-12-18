@@ -1,1 +1,0 @@
-Prevent deprecation warning for ``PersistentDict``: use ``PersistentMapping``.  [maurits]

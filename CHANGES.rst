@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+5.0.0a2 (2025-12-18)
+--------------------
+
+Bug fixes:
+
+
+- Prevent deprecation warning for ``PersistentDict``: use ``PersistentMapping``.  [maurits]
+
+
 5.0.0a1 (2025-11-26)
 --------------------
 
