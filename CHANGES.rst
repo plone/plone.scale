@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+4.3.0 (2026-01-12)
+------------------
+
+New features:
+
+
+- Handle animated WebP images [gforcada] (#124)
+
+
 4.2.1 (2025-09-10)
 ------------------
 
