@@ -16,8 +16,11 @@ import warnings
 try:
     # Pillow 9.1.0+
     LANCZOS = PIL.Image.Resampling.LANCZOS
+    NEAREST = PIL.Image.Resampling.NEAREST
 except AttributeError:
     LANCZOS = PIL.Image.ANTIALIAS
+    NEAREST = PIL.Image.NEAREST
+RESAMPLE = LANCZOS
 
 logger = logging.getLogger(__name__)
 
@@ -86,27 +89,32 @@ def scaleImage(
     if isinstance(image, (bytes, str)):
         image = io.BytesIO(image)
 
-    animated_kwargs = {}
+    save_kwargs = {}
     with PIL.Image.open(image) as img:
         icc_profile = img.info.get("icc_profile")
-        # When we create a new image during scaling we loose the format
+        # When we create a new image during scaling we lose the format
         # information, so remember it here.
         format_ = img.format
-        if format_ in ("GIF", "WEBP"):
-            # Attempt to process multiple frames, to support animated GIFs
+        if format_ in ("GIF", "WEBP") and img.is_animated:
+            # Process multiple frames, to support animations
             append_images = []
             for frame in PIL.ImageSequence.Iterator(img):
-                # We ignore the returned format_ as it won't get optimized
-                # in case of a GIF. This ensures that the format remains
-                # constant across all frames.
-                scaled_frame, _dummy_format_ = scaleSingleFrame(
+                # Call scalePILImage directly to avoid converting to palette mode,
+                # which interferes with optimized saving of the animation
+                frame = frame.convert("RGBA")
+                scaled_frame = scalePILImage(
                     frame,
                     width=width,
                     height=height,
                     mode=mode,
-                    format_=format_,
-                    quality=quality,
                     direction=direction,
+                    # The default resampling creates more colors,
+                    # which interferes with optimizing animated GIF size
+                    # by omitting parts of the frame that haven't changed.
+                    # Using NEAREST won't look as good,
+                    # but avoids saving scaled animated GIFs
+                    # that are much larger than the original.
+                    resample=NEAREST,
                 )
                 append_images.append(scaled_frame)
 
@@ -115,17 +123,20 @@ def scaleImage(
             image = append_images.pop(0)
             if len(append_images) > 0:
                 # Saving as a multi page image
-                animated_kwargs["save_all"] = True
-                animated_kwargs["append_images"] = append_images
+                save_kwargs["save_all"] = True
+                save_kwargs["append_images"] = append_images
             elif format_ == "GIF":
-                # GIF scaled looks better if we have 8-bit alpha and no palette,
+                # PNG looks better if we have 8-bit alpha and no palette,
                 # but it only works for single frame, so don't do this for animated GIFs.
                 format_ = "PNG"
 
         else:
-            # All other formats only process a single frame
-            if format_ not in ("PNG", "GIF"):
-                # Always generate JPEG, except if format is WEBP, PNG or GIF.
+            # No animation; just scale single frame
+            if format_ == "GIF":
+                # PNG looks better if we have 8-bit alpha and no palette.
+                # (It only works for single frame, so we don't do this for animated GIFs.)
+                format_ = "PNG"
+            elif format_ not in ("PNG", "WEBP"):
                 format_ = "JPEG"
             image, format_ = scaleSingleFrame(
                 img,
@@ -149,7 +160,7 @@ def scaleImage(
         optimize=True,
         progressive=True,
         icc_profile=icc_profile,
-        **animated_kwargs,
+        **save_kwargs,
     )
 
     if new_result:
@@ -166,10 +177,13 @@ def scaleSingleFrame(
     height,
     mode,
     format_,
-    quality,
+    quality,  # not used, but here for backwards compatibility
     direction,
+    resample=RESAMPLE,
 ):
-    image = scalePILImage(image, width, height, mode, direction=direction)
+    image = scalePILImage(
+        image, width, height, mode, direction=direction, resample=resample
+    )
 
     # convert to simpler mode if possible
     colors = image.getcolors(maxcolors=256)
@@ -194,7 +208,7 @@ def scaleSingleFrame(
     return image, format_
 
 
-def _scale_thumbnail(image, width=None, height=None):
+def _scale_thumbnail(image, width=None, height=None, resample=RESAMPLE):
     """Scale with method "thumbnail".
 
     Aspect Ratio is kept. Resulting image has to fit in the given box.
@@ -211,7 +225,7 @@ def _scale_thumbnail(image, width=None, height=None):
         return image
 
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
-    image = image.resize((dimensions.target_width, dimensions.target_height), LANCZOS)
+    image = image.resize((dimensions.target_width, dimensions.target_height), resample)
     return image
 
 
@@ -410,12 +424,14 @@ def calculate_scaled_dimensions(
     return (dimensions.final_width, dimensions.final_height)
 
 
-def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
+def scalePILImage(
+    image, width=None, height=None, mode="scale", direction=None, resample=RESAMPLE
+):
     """Scale a PIL image to another size.
 
-    This is all about scaling for the display in a web browser.
+    The `image` parameter must be an instance of the `PIL.Image` class.
 
-    Either width or height - or both - must be given.
+    Either `width` or `height` - or both - must be given.
 
     Three different scaling options are supported via `mode` and correspond to
     the CSS background-size values
@@ -438,9 +454,12 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
         requires both width and height to be specified.
         Does not scale up.
 
-    The `image` parameter must be an instance of the `PIL.Image` class.
+    The `direction` parameter is deprecated. Use `mode` instead.
 
-    The return value the scaled image in the form of another instance of
+    Use the `resample` parameter to set a resampling filter from PIL.Image.Resampling.
+    The default is `LANCZOS` (or `ANTIALIAS` in older versions of PIL).
+
+    The return value is the scaled image in the form of another instance of
     `PIL.Image`.
     """
     # convert zero to None, same semantics: calculate this scale
@@ -470,7 +489,7 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
 
     # for scale we're done:
     if mode == "scale":
-        return _scale_thumbnail(image, width, height)
+        return _scale_thumbnail(image, width, height, resample)
 
     dimensions = _calculate_all_dimensions(
         image.size[0], image.size[1], width, height, mode
@@ -480,9 +499,9 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
         # The original already has the right aspect ratio, so we only need
         # to scale.
         if mode == "contain":
-            image.thumbnail((dimensions.final_width, dimensions.final_height), LANCZOS)
+            image.thumbnail((dimensions.final_width, dimensions.final_height), resample)
             return image
-        return image.resize((dimensions.final_width, dimensions.final_height), LANCZOS)
+        return image.resize((dimensions.final_width, dimensions.final_height), resample)
 
     if dimensions.pre_scale_crop:
         # crop image before scaling to avoid excessive memory use
@@ -495,7 +514,7 @@ def scalePILImage(image, width=None, height=None, mode="scale", direction=None):
         return image
 
     image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
-    image = image.resize((dimensions.target_width, dimensions.target_height), LANCZOS)
+    image = image.resize((dimensions.target_width, dimensions.target_height), resample)
 
     if dimensions.post_scale_crop:
         # crop off remains due to rounding before scaling
