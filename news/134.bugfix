@@ -1,0 +1,1 @@
+Fix a problem where scaled animated GIFs could be saved with a much larger file size than the original image. @davisagli
