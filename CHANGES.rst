@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+4.3.1 (2026-02-10)
+------------------
+
+Bug fixes:
+
+
+- Fix a problem where scaled animated GIFs could be saved with a much larger file size than the original image. @davisagli (#134)
+
+
 4.3.0 (2026-01-12)
 ------------------
 
