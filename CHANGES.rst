@@ -8,6 +8,16 @@ Changelog
 
 .. towncrier release notes start
 
+5.0.0a3 (2026-02-23)
+--------------------
+
+Bug fixes:
+
+
+- Fix SVG scaling when no width/height attributes available. @petschki (#119)
+- Fix a problem where scaled animated GIFs could be saved with a much larger file size than the original image. @davisagli (#134)
+
+
 5.0.0a2 (2025-12-18)
 --------------------
 
