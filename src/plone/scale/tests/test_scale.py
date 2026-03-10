@@ -11,7 +11,6 @@ import PIL.Image
 import PIL.ImageDraw
 import warnings
 
-
 PNG = (TEST_DATA_LOCATION / "logo.png").read_bytes()
 GIF = (TEST_DATA_LOCATION / "logo.gif").read_bytes()
 TIFF = (TEST_DATA_LOCATION / "logo.tiff").read_bytes()

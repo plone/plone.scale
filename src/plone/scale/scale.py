@@ -11,7 +11,6 @@ import re
 import sys
 import warnings
 
-
 try:
     # Pillow 9.1.0+
     LANCZOS = PIL.Image.Resampling.LANCZOS
