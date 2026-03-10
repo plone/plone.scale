@@ -9,9 +9,7 @@ import PIL.ImageFile
 import PIL.ImageSequence
 import re
 import sys
-import typing
 import warnings
-
 
 try:
     # Pillow 9.1.0+
@@ -567,10 +565,10 @@ def _contain_svg_image(root, target_width: int, target_height: int):
 
 def scale_svg_image(
     image: io.BytesIO,
-    target_width: typing.Union[None, int],
-    target_height: typing.Union[None, int],
+    target_width: None | int,
+    target_height: None | int,
     mode: str = "contain",
-) -> typing.Tuple[bytes, typing.Tuple[int, int]]:
+) -> tuple[bytes, tuple[int, int]]:
     """Scale and crop a SVG image to another display size.
 
     This is all about scaling for the display in a web browser.

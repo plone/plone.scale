@@ -11,7 +11,6 @@ import PIL.Image
 import PIL.ImageDraw
 import warnings
 
-
 PNG = (TEST_DATA_LOCATION / "logo.png").read_bytes()
 GIF = (TEST_DATA_LOCATION / "logo.gif").read_bytes()
 TIFF = (TEST_DATA_LOCATION / "logo.tiff").read_bytes()
@@ -28,7 +27,7 @@ SVG_NO_WIDTH_HEIGHT = (TEST_DATA_LOCATION / "logo_no_width_height.svg").read_byt
 
 class ScalingTests(TestCase):
     def testNewSizeReturned(self):
-        (imagedata, format, size) = scaleImage(PNG, 42, 51, "contain")
+        imagedata, format, size = scaleImage(PNG, 42, 51, "contain")
         input = StringIO(imagedata)
         image = PIL.Image.open(input)
         self.assertEqual(image.size, size)
@@ -70,7 +69,7 @@ class ScalingTests(TestCase):
         self.assertEqual(scaleImage(result, 84, 103, "contain")[1], "PNG")
 
     def testScaledCMYKIsRGB(self):
-        (imagedata, format, size) = scaleImage(CMYK, 42, 51, "contain")
+        imagedata, format, size = scaleImage(CMYK, 42, 51, "contain")
         input = StringIO(imagedata)
         image = PIL.Image.open(input)
         self.assertEqual(image.mode, "RGB")
@@ -79,20 +78,20 @@ class ScalingTests(TestCase):
         self.assertEqual(scaleImage(PNG, 84, 103, "contain")[1], "PNG")
 
     def testScaledPreservesProfile(self):
-        (imagedata, format, size) = scaleImage(PROFILE, 42, 51, "contain")
+        imagedata, format, size = scaleImage(PROFILE, 42, 51, "contain")
         input = StringIO(imagedata)
         image = PIL.Image.open(input)
         self.assertIsNotNone(image.info.get("icc_profile"))
 
     def testScaleWithFewColorsStaysColored(self):
-        (imagedata, format, size) = scaleImage(PROFILE, 16, None, "contain")
+        imagedata, format, size = scaleImage(PROFILE, 16, None, "contain")
         image = PIL.Image.open(StringIO(imagedata))
         self.assertEqual(max(image.size), 16)
         self.assertEqual(image.mode, "RGB")
         self.assertEqual(image.format, "JPEG")
 
     def testScaledWebp(self):
-        (imagedata, format, size) = scaleImage(PROFILE_WEBP, 120, 120)
+        imagedata, format, size = scaleImage(PROFILE_WEBP, 120, 120)
         self.assertEqual(format, "WEBP")
         self.assertEqual(size, (120, 120))
         self.assertTrue(len(imagedata) < len(PROFILE_WEBP))
@@ -107,7 +106,7 @@ class ScalingTests(TestCase):
             draw.line(((0, i), (256, i)), fill=(i, i, i))
         result = StringIO()
         src.save(result, "JPEG")
-        (imagedata, format, size) = scaleImage(result, 200, None, "contain")
+        imagedata, format, size = scaleImage(result, 200, None, "contain")
         image = PIL.Image.open(StringIO(imagedata))
         self.assertEqual(max(image.size), 200)
         self.assertEqual(image.mode, "L")
@@ -162,7 +161,7 @@ class ScalingTests(TestCase):
         self.assertEqual(png.format, "PNG")
         self.assertIsNone(png.getcolors(maxcolors=256))
         # scale it to a size where we get less than 256 colors
-        (imagedata, format, size) = scaleImage(dst.getvalue(), 24, None, "contain")
+        imagedata, format, size = scaleImage(dst.getvalue(), 24, None, "contain")
         image = PIL.Image.open(StringIO(imagedata))
         # we should now have an image in palette mode
         self.assertEqual(image.mode, "P")
