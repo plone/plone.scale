@@ -1,0 +1,2 @@
+Fix ``IndexError`` when scaling images with non-RGB color modes (e.g. BMP with palette+alpha).
+@jensens
