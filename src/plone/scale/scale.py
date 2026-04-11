@@ -267,6 +267,9 @@ def _calculate_all_dimensions(
     if height is not None and (height >= MAX_HEIGHT or height <= 0):
         height = None
 
+    if width is not None and width <= 0:
+        width = None
+
     if mode not in ("contain", "cover", "scale"):
         raise ValueError("Unknown scale mode '%s'" % mode)
 

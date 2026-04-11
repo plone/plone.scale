@@ -452,15 +452,23 @@ class ScalingTests(TestCase):
         """
         # calc = functools.partial(calculate_scaled_dimensions, mode="scale")
         calc = calculate_scaled_dimensions
+
         self.assertEqual(calc(1, 1, 1, 1), (1, 1))
         self.assertEqual(calc(10, 10, 1, 1), (1, 1))
+
         # Mode "scale" only scales down, not up:
         self.assertEqual(calc(1, 1, 10, 10), (1, 1))
         self.assertEqual(calc(10, 20, 10, 10), (5, 10))
+
         # Try the new preview scale:
         self.assertEqual(calc(10, 20, 400, 65536), (10, 20))
         self.assertEqual(calc(600, 300, 400, 65536), (400, 200))
         self.assertEqual(calc(600, 1200, 400, 65536), (400, 800))
+
+        # Scale with width `0`
+        self.assertEqual(calc(100, 100, 0, 50), (50, 50))
+        # Scale with height `0`
+        self.assertEqual(calc(100, 100, 50, 0), (50, 50))
 
     def testAnimatedGifContainsAllFrames(self):
         image = scaleImage(ANIGIF, 84, 103, "contain")[0]
