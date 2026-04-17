@@ -146,6 +146,17 @@ class ScalingTests(TestCase):
         # Check format maintained
         self.assertEqual(scaled_image.format, "PNG")
 
+    def testScaleNonRGBColorTuples(self):
+        # Images in modes like LA (greyscale+alpha) return 2-element color
+        # tuples from getcolors(), not 3-element RGB tuples.  The greyscale
+        # optimisation must not crash with IndexError on these.
+        # See https://github.com/plone/plone.scale/issues/34
+        src = PIL.Image.new("LA", (100, 100), (128, 255))
+        buf = StringIO()
+        src.save(buf, "PNG")
+        imagedata, format_, size = scaleImage(buf.getvalue(), 50, 50, "scale")
+        self.assertIsNotNone(imagedata)
+
     def testAutomaticPalette(self):
         # get a JPEG with more than 256 colors
         jpeg = PIL.Image.open(StringIO(PROFILE))

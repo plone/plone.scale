@@ -185,12 +185,12 @@ def scaleSingleFrame(
 
     # convert to simpler mode if possible
     colors = image.getcolors(maxcolors=256)
-    if image.mode not in ("P", "L", "LA") and colors:
-        if format_ == "JPEG":
+    if colors:
+        if image.mode in ("RGB", "RGBA") and format_ == "JPEG":
             # check if it's all grey
             if all(rgb[0] == rgb[1] == rgb[2] for c, rgb in colors):
                 image = image.convert("L")
-        elif format_ in ("PNG", "GIF"):
+        elif image.mode not in ("P", "L", "LA") and format_ in ("PNG", "GIF"):
             image = image.convert("P")
 
     if image.mode == "RGBA" and format_ == "JPEG":
