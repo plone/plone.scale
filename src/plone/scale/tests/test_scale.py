@@ -539,6 +539,27 @@ class ScalingTests(TestCase):
         self.assertNotIn(b'width="100"', scaled_svg[0])
         self.assertNotIn(b'height="100"', scaled_svg[0])
 
+    def testScaleSVGImageZeroDimensions(self):
+        # logo.svg has aspect ratio 158.253 / 40.686 ~= 3.889
+        # Zero height -> derive from source aspect ratio (keeps aspect).
+        _, (w, h) = scale_svg_image(StringIO(SVG), 200, 0, mode="scale")
+        self.assertEqual(w, 200)
+        self.assertEqual(h, int(200 / (158.253 / 40.686)))
+
+        # Zero width -> derive from source aspect ratio.
+        _, (w, h) = scale_svg_image(StringIO(SVG), 0, 100, mode="scale")
+        self.assertEqual(h, 100)
+        self.assertEqual(w, int(100 * (158.253 / 40.686)))
+
+        # None height -> same as zero.
+        _, (w, h) = scale_svg_image(StringIO(SVG), 200, None, mode="scale")
+        self.assertEqual(w, 200)
+
+        # contain mode with zero height must not raise.
+        _, (w, h) = scale_svg_image(StringIO(SVG), 200, 0, mode="contain")
+        self.assertEqual(w, 200)
+        self.assertGreater(h, 0)
+
 
 def test_suite():
     from unittest import defaultTestLoader
