@@ -463,15 +463,23 @@ class ScalingTests(TestCase):
         """
         # calc = functools.partial(calculate_scaled_dimensions, mode="scale")
         calc = calculate_scaled_dimensions
+
         self.assertEqual(calc(1, 1, 1, 1), (1, 1))
         self.assertEqual(calc(10, 10, 1, 1), (1, 1))
+
         # Mode "scale" only scales down, not up:
         self.assertEqual(calc(1, 1, 10, 10), (1, 1))
         self.assertEqual(calc(10, 20, 10, 10), (5, 10))
+
         # Try the new preview scale:
         self.assertEqual(calc(10, 20, 400, 65536), (10, 20))
         self.assertEqual(calc(600, 300, 400, 65536), (400, 200))
         self.assertEqual(calc(600, 1200, 400, 65536), (400, 800))
+
+        # Scale with width `0`
+        self.assertEqual(calc(100, 100, 0, 50), (50, 50))
+        # Scale with height `0`
+        self.assertEqual(calc(100, 100, 50, 0), (50, 50))
 
     def testAnimatedGifContainsAllFrames(self):
         image = scaleImage(ANIGIF, 84, 103, "contain")[0]
@@ -541,6 +549,27 @@ class ScalingTests(TestCase):
         self.assertIn(b"<svg", scaled_svg[0])
         self.assertNotIn(b'width="100"', scaled_svg[0])
         self.assertNotIn(b'height="100"', scaled_svg[0])
+
+    def testScaleSVGImageZeroDimensions(self):
+        # logo.svg has aspect ratio 158.253 / 40.686 ~= 3.889
+        # Zero height -> derive from source aspect ratio (keeps aspect).
+        _, (w, h) = scale_svg_image(StringIO(SVG), 200, 0, mode="scale")
+        self.assertEqual(w, 200)
+        self.assertEqual(h, int(200 / (158.253 / 40.686)))
+
+        # Zero width -> derive from source aspect ratio.
+        _, (w, h) = scale_svg_image(StringIO(SVG), 0, 100, mode="scale")
+        self.assertEqual(h, 100)
+        self.assertEqual(w, int(100 * (158.253 / 40.686)))
+
+        # None height -> same as zero.
+        _, (w, h) = scale_svg_image(StringIO(SVG), 200, None, mode="scale")
+        self.assertEqual(w, 200)
+
+        # contain mode with zero height must not raise.
+        _, (w, h) = scale_svg_image(StringIO(SVG), 200, 0, mode="contain")
+        self.assertEqual(w, 200)
+        self.assertGreater(h, 0)
 
 
 def test_suite():

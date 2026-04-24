@@ -267,6 +267,9 @@ def _calculate_all_dimensions(
     if height is not None and (height >= MAX_HEIGHT or height <= 0):
         height = None
 
+    if width is not None and width <= 0:
+        width = None
+
     if mode not in ("contain", "cover", "scale"):
         raise ValueError("Unknown scale mode '%s'" % mode)
 
@@ -631,11 +634,32 @@ def scale_svg_image(
             f"Can not convert source dimensions: '{source_width}':'{source_height}'"
         )
         return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (
-            int(target_width),
-            int(target_height),
+            int(target_width or 0),
+            int(target_height or 0),
         )
 
-    source_aspectratio = source_width / source_height
+    # Normalize target dimensions: 0 or None means "auto — derive from source
+    # aspect ratio". Same semantics as ``_calculate_all_dimensions`` uses for
+    # raster images.
+    if target_width is not None and target_width <= 0:
+        target_width = None
+    if target_height is not None and target_height <= 0:
+        target_height = None
+
+    if not source_width or not source_height:
+        # Cannot compute source aspect ratio; fall back to requested dims.
+        source_aspectratio = 1.0
+        target_width = target_width or int(source_width) or 1
+        target_height = target_height or int(source_height) or 1
+    else:
+        source_aspectratio = source_width / source_height
+        if target_width is None and target_height is None:
+            target_width, target_height = source_width, source_height
+        elif target_width is None:
+            target_width = target_height * source_aspectratio
+        elif target_height is None:
+            target_height = target_width / source_aspectratio
+
     target_aspectratio = target_width / target_height
     if mode in ["scale", "cover"]:
         # check if new width is larger than the one we get with aspect ratio
