@@ -76,7 +76,6 @@ class AnnotationStorageTests(TestCase):
         scale = storage.scale(foo=23, bar=42)
         self.assertIn("uid", scale)
         self.assertIn("key", scale)
-        self.assertIn("fieldname", scale)
         self.assertEqual(scale["data"], "some data")
         self.assertEqual(scale["width"], 42)
 
@@ -97,12 +96,18 @@ class AnnotationStorageTests(TestCase):
         scale = storage.pre_scale(foo=23, bar=42)
         self.assertIn("uid", scale)
         self.assertIn("key", scale)
-        self.assertIn("fieldname", scale)
         self.assertEqual(scale["data"], None)
         # We get the values from the DummyImage class.
         self.assertEqual(scale["width"], 60)
         self.assertEqual(scale["height"], 40)
         self.assertEqual(scale["mimetype"], "image/jpeg")
+
+    def testScaleWithFieldname(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.scale(foo=23, bar=42, fieldname="image")
+        self.assertIn("fieldname", scale)
+        self.assertEqual(scale["fieldname"], "image")
 
     def testPreScaleForNonExistingScale(self):
         self._provide_dummy_scale_adapter()
@@ -148,6 +153,13 @@ class AnnotationStorageTests(TestCase):
         # scale does the same.
         new_scale = storage.scale(width=50, height=80)
         self.assertIsNone(new_scale)
+
+    def testPreScaleWithFieldname(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.pre_scale(foo=23, bar=42, fieldname="image")
+        self.assertIn("fieldname", scale)
+        self.assertEqual(scale["fieldname"], "image")
 
     def test_get_or_generate(self):
         self._provide_dummy_scale_adapter()
