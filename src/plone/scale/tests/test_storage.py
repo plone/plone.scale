@@ -76,6 +76,7 @@ class AnnotationStorageTests(TestCase):
         scale = storage.scale(foo=23, bar=42)
         self.assertIn("uid", scale)
         self.assertIn("key", scale)
+        self.assertIn("fieldname", scale)
         self.assertEqual(scale["data"], "some data")
         self.assertEqual(scale["width"], 42)
 
@@ -96,6 +97,7 @@ class AnnotationStorageTests(TestCase):
         scale = storage.pre_scale(foo=23, bar=42)
         self.assertIn("uid", scale)
         self.assertIn("key", scale)
+        self.assertIn("fieldname", scale)
         self.assertEqual(scale["data"], None)
         # We get the values from the DummyImage class.
         self.assertEqual(scale["width"], 60)
