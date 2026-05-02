@@ -260,6 +260,8 @@ class AnnotationStorage(MutableMapping):
             width=width,
             height=height,
         )
+        if fieldname:
+            info["fieldname"] = fieldname
         self.storage[uid] = info
         logger.debug(f"Pre scale returns new {info}")
         return info

@@ -102,6 +102,13 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(scale["height"], 40)
         self.assertEqual(scale["mimetype"], "image/jpeg")
 
+    def testScaleWithFieldname(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.scale(foo=23, bar=42, fieldname="image")
+        self.assertIn("fieldname", scale)
+        self.assertEqual(scale["fieldname"], "image")
+
     def testPreScaleForNonExistingScale(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage
@@ -146,6 +153,13 @@ class AnnotationStorageTests(TestCase):
         # scale does the same.
         new_scale = storage.scale(width=50, height=80)
         self.assertIsNone(new_scale)
+
+    def testPreScaleWithFieldname(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.pre_scale(foo=23, bar=42, fieldname="image")
+        self.assertIn("fieldname", scale)
+        self.assertEqual(scale["fieldname"], "image")
 
     def test_get_or_generate(self):
         self._provide_dummy_scale_adapter()
