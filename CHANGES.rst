@@ -8,6 +8,43 @@ Changelog
 
 .. towncrier release notes start
 
+5.0.0 (2026-05-07)
+------------------
+
+New features:
+
+
+- Add missing `fieldname` key to the scale information produced by `pre_scale` method @erral (#143)
+
+
+Bug fixes:
+
+
+- Fix ``IndexError`` when scaling images with non-RGB color modes (e.g. BMP with palette+alpha).
+  @jensens (#34)
+- Fix incorrect scale calculation if zero-width.
+
+  When width or height are set to ``0`` and the other dimension is set, the
+  zero-dimension should be calculated by keeping the aspect ratio. This works
+  fine when height is set to ``0`` but breaks and generates a ``1x1`` dimension
+  if width is ``0``.
+
+  Additionally, ``scale_svg_image`` raised ``ZeroDivisionError`` when either
+  target dimension was ``0`` or ``None``. The SVG scaling path now applies the
+  same "zero means auto, keep aspect ratio" semantics as the raster path.
+
+  This PR fixes that.
+
+  @thet (#140)
+
+
+Internal:
+
+
+- Update configuration files.
+  [plone devs]
+
+
 5.0.0a3 (2026-02-23)
 --------------------
 
