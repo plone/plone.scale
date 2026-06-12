@@ -1,24 +1,24 @@
-from lxml import etree
-
 import codecs
 import io
 import logging
 import math
-import PIL.Image
-import PIL.ImageFile
-import PIL.ImageSequence
 import re
 import sys
 import warnings
 
+import PIL.Image
+import PIL.ImageFile
+import PIL.ImageSequence
+from lxml import etree
+
 try:
     # Pillow 9.1.0+
-    LANCZOS = PIL.Image.Resampling.LANCZOS
     NEAREST = PIL.Image.Resampling.NEAREST
+    BICUBIC = PIL.Image.Resampling.BICUBIC
 except AttributeError:
-    LANCZOS = PIL.Image.ANTIALIAS
     NEAREST = PIL.Image.NEAREST
-RESAMPLE = LANCZOS
+    BICUBIC = PIL.Image.BICUBIC
+RESAMPLE = BICUBIC
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +53,74 @@ PIL.ImageFile.MAXBLOCK = 1000000
 PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 MAX_PIXELS = 8192 * 8192
+
+# MozJPEG-inspired quantization tables for masterpiece compression
+MOZ_LUM = [
+    12,
+    17,
+    20,
+    21,
+    30,
+    34,
+    56,
+    63,
+    18,
+    20,
+    20,
+    26,
+    39,
+    40,
+    68,
+    75,
+    21,
+    22,
+    24,
+    40,
+    56,
+    60,
+    103,
+    110,
+    22,
+    25,
+    36,
+    56,
+    81,
+    104,
+    147,
+    150,
+    31,
+    35,
+    52,
+    77,
+    107,
+    121,
+    200,
+    200,
+    37,
+    46,
+    68,
+    99,
+    128,
+    153,
+    200,
+    200,
+    50,
+    64,
+    81,
+    120,
+    153,
+    176,
+    200,
+    200,
+    60,
+    80,
+    103,
+    130,
+    160,
+    185,
+    200,
+    200,
+]
 
 
 def scaleImage(
@@ -151,6 +219,11 @@ def scaleImage(
         result = io.BytesIO()
         new_result = True
 
+    jpeg_kwargs = {}
+    if format_ == "JPEG":
+        jpeg_kwargs["qtables"] = [MOZ_LUM]
+        jpeg_kwargs["subsampling"] = 2
+
     image.save(
         result,
         format_,
@@ -158,6 +231,7 @@ def scaleImage(
         optimize=True,
         progressive=True,
         icc_profile=icc_profile,
+        **jpeg_kwargs,
         **save_kwargs,
     )
 
@@ -184,7 +258,7 @@ def scaleSingleFrame(
     )
 
     # convert to simpler mode if possible
-    colors = image.getcolors(maxcolors=256)
+    colors = image.getcolors(maxcolors=1024)
     if colors:
         if image.mode in ("RGB", "RGBA") and format_ == "JPEG":
             # check if it's all grey
@@ -458,7 +532,7 @@ def scalePILImage(
     The `direction` parameter is deprecated. Use `mode` instead.
 
     Use the `resample` parameter to set a resampling filter from PIL.Image.Resampling.
-    The default is `LANCZOS` (or `ANTIALIAS` in older versions of PIL).
+    The default is `BICUBIC`.
 
     The return value is the scaled image in the form of another instance of
     `PIL.Image`.
