@@ -262,6 +262,7 @@ class AnnotationStorage(MutableMapping):
         )
         if fieldname:
             info["fieldname"] = fieldname
+        self._cleanup(fieldname=fieldname)
         self.storage[uid] = info
         logger.debug(f"Pre scale returns new {info}")
         return info
