@@ -10,7 +10,6 @@ import time
 import zope.annotation.attribute
 import zope.annotation.interfaces
 
-
 _marker = object()
 
 
