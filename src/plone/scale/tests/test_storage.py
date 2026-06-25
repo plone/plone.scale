@@ -10,6 +10,7 @@ import time
 import zope.annotation.attribute
 import zope.annotation.interfaces
 
+
 _marker = object()
 
 
@@ -410,14 +411,14 @@ class AnnotationStorageTests(TestCase):
         storage.modified = lambda: orig_modified
         storage.pre_scale(foo=23, bar=42)
         self.assertEqual(len(storage), 1)
-        
+
         # Advance time beyond 24 hours
-        next_modified = orig_modified + 24 * 60 * 60 * 1000 + 10000 # 10 seconds more
+        next_modified = orig_modified + 24 * 60 * 60 * 1000 + 10000  # 10 seconds more
         storage.modified = lambda: next_modified
-        
+
         # Request a new pre_scale
         storage.pre_scale(foo=23, bar=50)
-        
+
         self.assertEqual(len(storage), 1, "pre_scale did not cleanup old entries")
 
     def testClear(self):
