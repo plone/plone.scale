@@ -254,11 +254,13 @@ class AnnotationStorage(MutableMapping):
         info = dict(
             uid=uid,
             key=key,
-            modified=int(time() * 1000),
-            mimetype=mimetype,
             data=None,
+            mimetype=mimetype,
+            modified=int(time() * 1000),
             width=width,
             height=height,
+            scale=parameters.get("scale"),
+            mode=mode,
         )
         if fieldname:
             info["fieldname"] = fieldname
@@ -281,17 +283,20 @@ class AnnotationStorage(MutableMapping):
         self._cleanup(fieldname=fieldname)
         data, format_, dimensions = result
         width, height = dimensions
+        mode = get_scale_mode(parameters.get("mode"), parameters.get("direction"))
         if uid is None:
             uid = self.hash_key(**parameters)
         key = self.hash(**parameters)
         info = dict(
             uid=uid,
+            key=key,
             data=data,
+            mimetype=f"image/{format_.lower()}",
+            modified=self.modified_time or int(time() * 1000),
             width=width,
             height=height,
-            mimetype=f"image/{format_.lower()}",
-            key=key,
-            modified=self.modified_time or int(time() * 1000),
+            scale=parameters.get("scale"),
+            mode=mode,
         )
         if fieldname:
             info["fieldname"] = fieldname
