@@ -6,6 +6,7 @@ from unittest import TestCase
 from zope.component import provideAdapter
 from zope.interface import implementer
 
+import time
 import zope.annotation.attribute
 import zope.annotation.interfaces
 
@@ -401,6 +402,23 @@ class AnnotationStorageTests(TestCase):
         self.assertNotIn(scale_image["uid"], storage)
         del storage[scale_leadimage_new["uid"]]
         self.assertEqual(len(storage), 0)
+
+    def testPreScaleCleanup(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        orig_modified = int(time.time() * 1000)
+        storage.modified = lambda: orig_modified
+        storage.pre_scale(foo=23, bar=42)
+        self.assertEqual(len(storage), 1)
+
+        # Advance time beyond 24 hours
+        next_modified = orig_modified + 24 * 60 * 60 * 1000 + 10000  # 10 seconds more
+        storage.modified = lambda: next_modified
+
+        # Request a new pre_scale
+        storage.pre_scale(foo=23, bar=50)
+
+        self.assertEqual(len(storage), 1, "pre_scale did not cleanup old entries")
 
     def testClear(self):
         self._provide_dummy_scale_adapter()
