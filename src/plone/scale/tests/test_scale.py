@@ -1,4 +1,6 @@
 from io import BytesIO as StringIO
+from io import StringIO as TextIO
+from lxml import etree
 from plone.scale.scale import calculate_scaled_dimensions
 from plone.scale.scale import scale_svg_image
 from plone.scale.scale import scaleImage
@@ -576,6 +578,42 @@ class ScalingTests(TestCase):
         _, (w, h) = scale_svg_image(StringIO(SVG), 200, 0, mode="contain")
         self.assertEqual(w, 200)
         self.assertGreater(h, 0)
+
+    def testScaleSVGImageAutomaticDimensions(self):
+        svg = b'<svg width="30" height="20" viewBox="0 0 30 20"/>'
+        for mode in ("contain", "scale", "cover"):
+            for automatic in (None, 0, -1):
+                for width, height, expected in (
+                    (2, automatic, (2, 1)),
+                    (automatic, 1, (1, 1)),
+                    (automatic, automatic, (30, 20)),
+                ):
+                    with self.subTest(mode=mode, width=width, height=height):
+                        data, size = scale_svg_image(
+                            StringIO(svg), width, height, mode=mode
+                        )
+                        root = etree.fromstring(data)
+                        self.assertEqual(size, expected)
+                        self.assertEqual(root.get("width"), str(size[0]))
+                        self.assertEqual(root.get("height"), str(size[1]))
+                        # Deriving one side must not introduce cropping by
+                        # truncating fractional dimensions before computing ratios.
+                        self.assertEqual(root.get("viewBox"), "0 0 30 20")
+
+    def testScaleSVGImageMalformedViewBox(self):
+        for viewbox in ("0 0 30", "0 0 invalid 20", "0 0 0 20"):
+            with self.subTest(viewbox=viewbox):
+                svg = f'<svg width="30" height="20" viewBox="{viewbox}"/>'
+                data, size = scale_svg_image(StringIO(svg.encode()), 10, 10)
+                self.assertEqual(size, (10, 10))
+                self.assertEqual(etree.fromstring(data).get("viewBox"), viewbox)
+
+    def testScaleSVGImageTextStream(self):
+        svg = '<svg width="30" height="20"><title>Größe</title></svg>'
+        with self.assertWarns(DeprecationWarning):
+            data, size = scale_svg_image(TextIO(svg), 10, 10)
+        self.assertEqual(size, (10, 10))
+        self.assertEqual(etree.fromstring(data).findtext("title"), "Größe")
 
 
 def test_suite():

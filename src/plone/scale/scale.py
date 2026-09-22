@@ -1,6 +1,7 @@
 from lxml import etree
+from typing import Any
+from typing import BinaryIO
 
-import codecs
 import io
 import logging
 import math
@@ -16,8 +17,8 @@ try:
     LANCZOS = PIL.Image.Resampling.LANCZOS
     NEAREST = PIL.Image.Resampling.NEAREST
 except AttributeError:
-    LANCZOS = PIL.Image.ANTIALIAS
-    NEAREST = PIL.Image.NEAREST
+    LANCZOS = getattr(PIL.Image, "ANTIALIAS")
+    NEAREST = getattr(PIL.Image, "NEAREST")
 RESAMPLE = LANCZOS
 
 logger = logging.getLogger(__name__)
@@ -65,9 +66,9 @@ def scaleImage(
     direction=None,
 ):
     """Scale the given image data to another size and return the result
-    as a string or optionally write in to the file-like `result` object.
+    as bytes or optionally write it to the file-like `result` object.
 
-    The `image` parameter can either be the raw image data (ie a `str`
+    The `image` parameter can either be the raw image data (ie a `bytes`
     instance) or an open file.
 
     The `quality` parameter can be used to set the quality of the
@@ -84,16 +85,16 @@ def scaleImage(
     or GIF image. This is needed to make sure alpha channel information is
     not lost, which JPEG does not support.
     """
-    if isinstance(image, (bytes, str)):
+    if isinstance(image, bytes):
         image = io.BytesIO(image)
 
-    save_kwargs = {}
+    save_kwargs: dict[str, Any] = {}
     with PIL.Image.open(image) as img:
         icc_profile = img.info.get("icc_profile")
         # When we create a new image during scaling we lose the format
         # information, so remember it here.
         format_ = img.format
-        if format_ in ("GIF", "WEBP") and img.is_animated:
+        if format_ in ("GIF", "WEBP") and getattr(img, "is_animated", False):
             # Process multiple frames, to support animations
             append_images = []
             for frame in PIL.ImageSequence.Iterator(img):
@@ -249,9 +250,10 @@ class ScaledDimensions:
     def __init__(self, original_width=0, original_height=0):
         self.final_width = self.target_width = original_width
         self.final_height = self.target_height = original_height
-        self.factor_width = self.factor_height = 1.0
-        self.post_scale_crop = False
-        self.pre_scale_crop = False
+        self.factor_width: float | None = 1.0
+        self.factor_height: float | None = 1.0
+        self.post_scale_crop: tuple[int, int, int, int] | None = None
+        self.pre_scale_crop: tuple[int, int, int, int] | None = None
 
 
 def _calculate_all_dimensions(
@@ -345,14 +347,13 @@ def _calculate_all_dimensions(
         target_height = height
 
     # determine whether we need to crop before scaling
-    pre_scale_crop = (width is not None and target_width > width) or (
+    do_pre_scale_crop = (width is not None and target_width > width) or (
         height is not None and target_height > height
     )
-    dimensions.pre_scale_crop = pre_scale_crop
-
-    if pre_scale_crop:
+    if do_pre_scale_crop:
         # crop image before scaling to avoid excessive memory use
         if use_height:
+            assert height is not None and factor_width is not None
             left = 0
             right = original_width
             top = int(math.floor(((target_height - height) / 2.0) / factor_width))
@@ -365,6 +366,7 @@ def _calculate_all_dimensions(
             # calculate new scale target_height from cropped height
             target_height = int(round(pre_scale_crop_height * factor_width))
         else:
+            assert width is not None and factor_height is not None
             left = int(math.floor(((target_width - width) / 2.0) / factor_height))
             right = int(
                 math.ceil((((target_width - width) / 2.0) + width) / factor_height)
@@ -390,19 +392,19 @@ def _calculate_all_dimensions(
     dimensions.final_height = target_height
 
     # determine whether we have to crop after scaling due to rounding
-    post_scale_crop = (width is not None and target_width > width) or (
+    do_post_scale_crop = (width is not None and target_width > width) or (
         height is not None and target_height > height
     )
-    dimensions.post_scale_crop = post_scale_crop
-
-    if post_scale_crop:
+    if do_post_scale_crop:
         if use_height:
+            assert height is not None
             left = 0
             right = target_width
             top = int((target_height - height) / 2.0)
             bottom = top + height
             dimensions.final_height = bottom - top
         else:
+            assert width is not None
             left = int((target_width - width) / 2.0)
             right = left + width
             top = 0
@@ -480,7 +482,7 @@ def scalePILImage(
         # If palette is grayscale, convert to gray+alpha
         # Else convert palette based images to 3x8bit+alpha
         palette = image.getpalette()
-        if palette[0::3] == palette[1::3] == palette[2::3]:
+        if palette is not None and palette[0::3] == palette[1::3] == palette[2::3]:
             image = image.convert("LA")
         else:
             image = image.convert("RGBA")
@@ -525,8 +527,12 @@ def scalePILImage(
 
 
 def _contain_svg_image(
-    root, source_width: int, source_height: int, target_width: int, target_height: int
-):
+    root: etree._Element,
+    source_width: float,
+    source_height: float,
+    target_width: float,
+    target_height: float,
+) -> tuple[float, float]:
     """Scale SVG viewbox, modifies tree in place.
 
     Starts by scaling the relatively smallest dimension to the required size and crops the other dimension if needed.
@@ -535,12 +541,12 @@ def _contain_svg_image(
     if not viewbox_attr:
         viewbox_attr = f"0 0 {source_width} {source_height}"
         root.set("viewBox", viewbox_attr)
-    viewbox = viewbox_attr.split(" ")
-    if len(viewbox) != 4:
-        return root
+    viewbox_parts = viewbox_attr.split(" ")
+    if len(viewbox_parts) != 4:
+        return target_width, target_height
 
     try:
-        viewbox = [int(float(x)) for x in viewbox]
+        viewbox = [int(float(x)) for x in viewbox_parts]
     except ValueError:
         return target_width, target_height
     viewbox_width = viewbox[2]
@@ -573,7 +579,7 @@ def _contain_svg_image(
 
 
 def scale_svg_image(
-    image: io.BytesIO,
+    image: BinaryIO | io.StringIO,
     target_width: None | int,
     target_height: None | int,
     mode: str = "contain",
@@ -605,39 +611,39 @@ def scale_svg_image(
         requires both width and height to be specified.
         Does scale up.
 
-    The `image` parameter must be bytes of the SVG, utf-8 encoded.
+    The `image` parameter is a binary file-like object containing UTF-8 SVG.
 
-    The return value the scaled bytes in the form of another instance of
-    `PIL.Image`.
+    Return the scaled SVG bytes and an integer (width, height) tuple.
     """
     mode = get_scale_mode(mode)
 
     if isinstance(image, io.StringIO):
-        image = codecs.EncodedFile(image, "utf-8")
+        image = io.BytesIO(image.read().encode("utf-8"))
         warnings.warn(
             "The 'image' is a StringIO, but a BytesIO is needed, autoconvert.",
             DeprecationWarning,
         )
     tree = etree.parse(image)
     root = tree.getroot()
-    source_width, source_height = root.attrib.get("width", ""), root.attrib.get(
-        "height", ""
-    )
+    source_width_attr, source_height_attr = root.attrib.get(
+        "width", ""
+    ), root.attrib.get("height", "")
 
     # strip units from width and height
-    match = FLOAT_RE.match(source_width)
+    match = FLOAT_RE.match(source_width_attr)
     if match:
-        source_width = match.group(0)
-    match = FLOAT_RE.match(source_height)
+        source_width_attr = match.group(0)
+    match = FLOAT_RE.match(source_height_attr)
     if match:
-        source_height = match.group(0)
+        source_height_attr = match.group(0)
 
     # to float
     try:
-        source_width, source_height = float(source_width), float(source_height)
+        source_width = float(source_width_attr)
+        source_height = float(source_height_attr)
     except ValueError:
         logger.exception(
-            f"Can not convert source dimensions: '{source_width}':'{source_height}'"
+            f"Can not convert source dimensions: '{source_width_attr}':'{source_height_attr}'"
         )
         return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (
             int(target_width or 0),
@@ -652,38 +658,48 @@ def scale_svg_image(
     if target_height is not None and target_height <= 0:
         target_height = None
 
+    # Keep resolved dimensions separate from the optional integer inputs.
+    # Fractional dimensions must survive until after viewBox cropping.
+    width: float
+    height: float
     if not source_width or not source_height:
         # Cannot compute source aspect ratio; fall back to requested dims.
         source_aspectratio = 1.0
-        target_width = target_width or int(source_width) or 1
-        target_height = target_height or int(source_height) or 1
+        width = target_width or int(source_width) or 1
+        height = target_height or int(source_height) or 1
     else:
         source_aspectratio = source_width / source_height
-        if target_width is None and target_height is None:
-            target_width, target_height = source_width, source_height
-        elif target_width is None:
-            target_width = target_height * source_aspectratio
-        elif target_height is None:
-            target_height = target_width / source_aspectratio
+        if target_width is None:
+            if target_height is None:
+                width, height = source_width, source_height
+            else:
+                height = target_height
+                width = height * source_aspectratio
+        else:
+            width = target_width
+            height = (
+                width / source_aspectratio if target_height is None else target_height
+            )
 
-    target_aspectratio = target_width / target_height
+    target_aspectratio = width / height
     if mode in ["scale", "cover"]:
         # check if new width is larger than the one we get with aspect ratio
         # if we scale on height
-        if source_width * target_aspectratio < target_width:
+        if source_width * target_aspectratio < width:
             # keep height, new width
-            target_width = target_height * source_aspectratio
+            width = height * source_aspectratio
         else:
-            target_height = target_width / source_aspectratio
+            height = width / source_aspectratio
     elif mode == "contain":
-        target_width, target_height = _contain_svg_image(
-            root, source_width, source_height, target_width, target_height
+        width, height = _contain_svg_image(
+            root, source_width, source_height, width, height
         )
 
-    root.attrib["width"] = str(int(target_width))
-    root.attrib["height"] = str(int(target_height))
+    output_width, output_height = int(width), int(height)
+    root.attrib["width"] = str(output_width)
+    root.attrib["height"] = str(output_height)
 
     return etree.tostring(tree, encoding="utf-8", xml_declaration=True), (
-        int(target_width),
-        int(target_height),
+        output_width,
+        output_height,
     )
