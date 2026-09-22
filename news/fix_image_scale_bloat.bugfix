@@ -1,0 +1,1 @@
+Trigger proactive cleanup in pre_scale to prevent metadata accumulation in annotations.
