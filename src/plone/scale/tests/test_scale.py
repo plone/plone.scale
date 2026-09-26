@@ -4,9 +4,11 @@ from plone.scale.scale import scale_svg_image
 from plone.scale.scale import scaleImage
 from plone.scale.scale import scalePILImage
 from plone.scale.tests import TEST_DATA_LOCATION
+from unittest import skipUnless
 from unittest import TestCase
 
 import functools
+import PIL.features
 import PIL.Image
 import PIL.ImageDraw
 import warnings
@@ -23,6 +25,12 @@ GREYSCALE_IMG = (TEST_DATA_LOCATION / "greyscale_image.png").read_bytes()
 ANIWEBP = (TEST_DATA_LOCATION / "animated.webp").read_bytes()
 SVG = (TEST_DATA_LOCATION / "logo.svg").read_bytes()
 SVG_NO_WIDTH_HEIGHT = (TEST_DATA_LOCATION / "logo_no_width_height.svg").read_bytes()
+
+AVIF_SUPPORT = PIL.features.check("avif")
+
+
+def is_avif(data):
+    return data[4:12] == b"ftypavif"
 
 
 class ScalingTests(TestCase):
@@ -98,6 +106,67 @@ class ScalingTests(TestCase):
         input = StringIO(imagedata)
         image = PIL.Image.open(input)
         self.assertIsNotNone(image.info.get("icc_profile"))
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testTargetFormatAvif(self):
+        imagedata, format_, size = scaleImage(
+            PNG, 84, 103, "contain", target_format="AVIF"
+        )
+        self.assertEqual(format_, "AVIF")
+        self.assertTrue(is_avif(imagedata))
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(image.size, size)
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testTargetFormatIsCaseInsensitive(self):
+        self.assertEqual(scaleImage(PNG, 84, 103, target_format="avif")[1], "AVIF")
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testTargetFormatAvifKeepsAlpha(self):
+        src = PIL.Image.new("RGBA", (64, 64), (200, 30, 30, 128))
+        result = StringIO()
+        src.save(result, "TIFF")
+        imagedata, format_, size = scaleImage(result, 32, 32, target_format="AVIF")
+        # Alpha does not force PNG when a target format is asked for.
+        self.assertEqual(format_, "AVIF")
+        self.assertEqual(PIL.Image.open(StringIO(imagedata)).mode, "RGBA")
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testTargetFormatAvifFromPaletteAndCmyk(self):
+        for data in (GIF, CMYK, GREYSCALE_IMG):
+            imagedata, format_, size = scaleImage(data, 42, 51, target_format="AVIF")
+            self.assertEqual(format_, "AVIF")
+            self.assertTrue(is_avif(imagedata))
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testTargetFormatAvifPreservesProfile(self):
+        imagedata, format_, size = scaleImage(PROFILE, 42, 51, target_format="AVIF")
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertIsNotNone(image.info.get("icc_profile"))
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testTargetFormatAvifKeepsAnimation(self):
+        imagedata, format_, size = scaleImage(ANIGIF, 84, 103, target_format="AVIF")
+        self.assertEqual(format_, "AVIF")
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertGreater(image.n_frames, 1)
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testScaledAvifKeepsAvif(self):
+        result = StringIO()
+        PIL.Image.new("RGB", (200, 100), (30, 120, 200)).save(result, "AVIF")
+        imagedata, format_, size = scaleImage(result.getvalue(), 100, 100)
+        self.assertEqual(format_, "AVIF")
+        self.assertEqual(size, (100, 50))
+        self.assertTrue(is_avif(imagedata))
+
+    def testTargetFormatJpegFlattensAnimation(self):
+        imagedata, format_, size = scaleImage(ANIGIF, 84, 103, target_format="JPEG")
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(getattr(image, "n_frames", 1), 1)
+
+    def testTargetFormatJpegOverridesPng(self):
+        self.assertEqual(scaleImage(PNG, 84, 103, target_format="JPEG")[1], "JPEG")
 
     def testAutomaticGreyscale(self):
         src = PIL.Image.new("RGB", (256, 256), (255, 255, 255))

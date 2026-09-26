@@ -54,6 +54,12 @@ PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 MAX_PIXELS = 8192 * 8192
 
+# Formats a scale keeps when it is not asked for another one.
+# Everything else becomes JPEG (or PNG when it needs alpha).
+KEEP_FORMATS = ("PNG", "WEBP", "AVIF")
+# Formats that can hold an animation.
+ANIMATED_FORMATS = ("GIF", "WEBP", "AVIF")
+
 
 def scaleImage(
     image,
@@ -63,6 +69,7 @@ def scaleImage(
     quality=88,
     result=None,
     direction=None,
+    target_format=None,
 ):
     """Scale the given image data to another size and return the result
     as a string or optionally write in to the file-like `result` object.
@@ -80,10 +87,15 @@ def scaleImage(
     The `width`, `height`, `mode` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
 
-    The generated image is a JPEG image, unless the original is a WEBP, PNG
-    or GIF image. This is needed to make sure alpha channel information is
+    The generated image is a JPEG image, unless the original is a WEBP, AVIF,
+    PNG or GIF image. This is needed to make sure alpha channel information is
     not lost, which JPEG does not support.
+
+    Pass a Pillow format name as `target_format` (e.g. "AVIF") to encode the
+    scale in that format instead, whatever the original was.
     """
+    if target_format:
+        target_format = target_format.upper()
     if isinstance(image, (bytes, str)):
         image = io.BytesIO(image)
 
@@ -93,7 +105,8 @@ def scaleImage(
         # When we create a new image during scaling we lose the format
         # information, so remember it here.
         format_ = img.format
-        if format_ in ("GIF", "WEBP") and img.is_animated:
+        animated = format_ in ANIMATED_FORMATS and img.is_animated
+        if animated and (target_format or format_) in ANIMATED_FORMATS:
             # Process multiple frames, to support animations
             append_images = []
             for frame in PIL.ImageSequence.Iterator(img):
@@ -119,6 +132,8 @@ def scaleImage(
             # The first image is the basis for save
             # All other images than the first will be added as a save parameter
             image = append_images.pop(0)
+            if target_format:
+                format_ = target_format
             if len(append_images) > 0:
                 # Saving as a multi page image
                 save_kwargs["save_all"] = True
@@ -130,11 +145,13 @@ def scaleImage(
 
         else:
             # No animation; just scale single frame
-            if format_ == "GIF":
+            if target_format:
+                format_ = target_format
+            elif format_ == "GIF":
                 # PNG looks better if we have 8-bit alpha and no palette.
                 # (It only works for single frame, so we don't do this for animated GIFs.)
                 format_ = "PNG"
-            elif format_ not in ("PNG", "WEBP"):
+            elif format_ not in KEEP_FORMATS:
                 format_ = "JPEG"
             image, format_ = scaleSingleFrame(
                 img,
