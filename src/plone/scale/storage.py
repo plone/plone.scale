@@ -253,6 +253,9 @@ class AnnotationStorage(MutableMapping):
         target_format = parameters.get("target_format")
         if target_format:
             mimetype = f"image/{target_format.lower()}"
+        elif mimetype == "image/avif":
+            # Plain scales of AVIF are the JPEG fallback, see scaleImage.
+            mimetype = "image/jpeg"
         key = self.hash(**parameters)
         info = dict(
             uid=uid,

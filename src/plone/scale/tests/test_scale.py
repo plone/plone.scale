@@ -33,6 +33,13 @@ def is_avif(data):
     return data[4:12] == b"ftypavif"
 
 
+def avif_image(mode):
+    color = (30, 120, 200, 128) if mode == "RGBA" else (30, 120, 200)
+    result = StringIO()
+    PIL.Image.new(mode, (200, 100), color).save(result, "AVIF")
+    return result.getvalue()
+
+
 class ScalingTests(TestCase):
     def testNewSizeReturned(self):
         imagedata, format, size = scaleImage(PNG, 42, 51, "contain")
@@ -152,12 +159,31 @@ class ScalingTests(TestCase):
         self.assertGreater(image.n_frames, 1)
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
-    def testScaledAvifKeepsAvif(self):
-        result = StringIO()
-        PIL.Image.new("RGB", (200, 100), (30, 120, 200)).save(result, "AVIF")
-        imagedata, format_, size = scaleImage(result.getvalue(), 100, 100)
-        self.assertEqual(format_, "AVIF")
+    def testScaledAvifFallsBackToJpeg(self):
+        imagedata, format_, size = scaleImage(avif_image("RGB"), 100, 100)
+        self.assertEqual(format_, "JPEG")
         self.assertEqual(size, (100, 50))
+        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "JPEG")
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testScaledAvifWithAlphaFallsBackToPng(self):
+        imagedata, format_, size = scaleImage(avif_image("RGBA"), 100, 100)
+        self.assertEqual(format_, "PNG")
+        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "PNG")
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testScaledAnimatedAvifFallsBackToJpeg(self):
+        animated = scaleImage(ANIGIF, 84, 103, target_format="AVIF")[0]
+        imagedata, format_, size = scaleImage(animated, 42, 51)
+        self.assertEqual(format_, "JPEG")
+        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "JPEG")
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testAvifWithTargetFormatAvifStaysAvif(self):
+        imagedata, format_, size = scaleImage(
+            avif_image("RGB"), 100, 100, target_format="AVIF"
+        )
+        self.assertEqual(format_, "AVIF")
         self.assertTrue(is_avif(imagedata))
 
     def testTargetFormatJpegFlattensAnimation(self):

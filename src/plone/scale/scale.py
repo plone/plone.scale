@@ -55,10 +55,13 @@ PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
 MAX_PIXELS = 8192 * 8192
 
 # Formats a scale keeps when it is not asked for another one.
-# Everything else becomes JPEG (or PNG when it needs alpha).
-KEEP_FORMATS = ("PNG", "WEBP", "AVIF")
+# Everything else becomes JPEG (or PNG when it needs alpha), AVIF included:
+# its scales are the fallback for browsers without AVIF support.
+KEEP_FORMATS = ("PNG", "WEBP")
 # Formats that can hold an animation.
 ANIMATED_FORMATS = ("GIF", "WEBP", "AVIF")
+# Animations a scale keeps when it is not asked for another format.
+KEEP_ANIMATED_FORMATS = ("GIF", "WEBP")
 
 
 def scaleImage(
@@ -87,8 +90,8 @@ def scaleImage(
     The `width`, `height`, `mode` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
 
-    The generated image is a JPEG image, unless the original is a WEBP, AVIF,
-    PNG or GIF image. This is needed to make sure alpha channel information is
+    The generated image is a JPEG image, unless the original is a WEBP, PNG
+    or GIF image. This is needed to make sure alpha channel information is
     not lost, which JPEG does not support.
 
     Pass a Pillow format name as `target_format` (e.g. "AVIF") to encode the
@@ -106,7 +109,10 @@ def scaleImage(
         # information, so remember it here.
         format_ = img.format
         animated = format_ in ANIMATED_FORMATS and img.is_animated
-        if animated and (target_format or format_) in ANIMATED_FORMATS:
+        if animated and (
+            target_format in ANIMATED_FORMATS
+            or (not target_format and format_ in KEEP_ANIMATED_FORMATS)
+        ):
             # Process multiple frames, to support animations
             append_images = []
             for frame in PIL.ImageSequence.Iterator(img):
