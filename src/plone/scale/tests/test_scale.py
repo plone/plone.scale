@@ -23,6 +23,7 @@ GREYSCALE_IMG = (TEST_DATA_LOCATION / "greyscale_image.png").read_bytes()
 ANIWEBP = (TEST_DATA_LOCATION / "animated.webp").read_bytes()
 SVG = (TEST_DATA_LOCATION / "logo.svg").read_bytes()
 SVG_NO_WIDTH_HEIGHT = (TEST_DATA_LOCATION / "logo_no_width_height.svg").read_bytes()
+SVG_NO_VIEWBOX = (TEST_DATA_LOCATION / "logo_no_viewbox.svg").read_bytes()
 
 
 class ScalingTests(TestCase):
@@ -543,12 +544,17 @@ class ScalingTests(TestCase):
         scaled_svg = scale_svg_image(StringIO(SVG), 200, 100)
         self.assertIn(b'width="200"', scaled_svg[0])
         self.assertIn(b'height="100"', scaled_svg[0])
+        self.assertIn(b'viewBox="39 0 80 40"', scaled_svg[0])
 
         # Scale SVG without width and height attributes
         scaled_svg = scale_svg_image(StringIO(SVG_NO_WIDTH_HEIGHT), 100, 100)
         self.assertIn(b"<svg", scaled_svg[0])
         self.assertNotIn(b'width="100"', scaled_svg[0])
         self.assertNotIn(b'height="100"', scaled_svg[0])
+
+        # Scale SVG without viewBox attributes
+        scaled_svg = scale_svg_image(StringIO(SVG_NO_VIEWBOX), 200, 100)
+        self.assertIn(b'viewBox="39 0 80 40"', scaled_svg[0])
 
     def testScaleSVGImageZeroDimensions(self):
         # logo.svg has aspect ratio 158.253 / 40.686 ~= 3.889
