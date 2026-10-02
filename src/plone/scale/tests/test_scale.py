@@ -10,6 +10,7 @@ from unittest import TestCase
 import functools
 import PIL.features
 import PIL.Image
+import PIL.ImageCms
 import PIL.ImageDraw
 import warnings
 
@@ -27,10 +28,26 @@ SVG = (TEST_DATA_LOCATION / "logo.svg").read_bytes()
 SVG_NO_WIDTH_HEIGHT = (TEST_DATA_LOCATION / "logo_no_width_height.svg").read_bytes()
 
 AVIF_SUPPORT = PIL.features.check("avif")
+CMYK_PROFILE = PIL.Image.open(StringIO(CMYK)).info["icc_profile"]
+RGB_PROFILE = PIL.Image.open(StringIO(PROFILE)).info["icc_profile"]
 
 
 def is_avif(data):
     return data[4:12] == b"ftypavif"
+
+
+def profile_color_space(imagedata):
+    icc_profile = PIL.Image.open(StringIO(imagedata)).info.get("icc_profile")
+    if not icc_profile:
+        return None
+    profile = PIL.ImageCms.ImageCmsProfile(StringIO(icc_profile))
+    return profile.profile.xcolor_space.strip()
+
+
+def jpeg_image(mode, color, icc_profile=None):
+    result = StringIO()
+    PIL.Image.new(mode, (60, 40), color).save(result, "JPEG", icc_profile=icc_profile)
+    return result.getvalue()
 
 
 def avif_image(mode):
@@ -82,6 +99,50 @@ class ScalingTests(TestCase):
                 src.putpixel((x, y), (x, y, 0, x))
         src.save(result, "TIFF")
         self.assertEqual(scaleImage(result, 84, 103, "contain")[1], "PNG")
+
+    def testScaledCMYKIsConvertedThroughItsProfile(self):
+        cyan = (255, 0, 0, 0)
+        imagedata, format_, size = scaleImage(
+            jpeg_image("CMYK", cyan, CMYK_PROFILE), 30, 20
+        )
+        expected = PIL.ImageCms.profileToProfile(
+            PIL.Image.new("CMYK", (1, 1), cyan),
+            PIL.ImageCms.ImageCmsProfile(StringIO(CMYK_PROFILE)),
+            PIL.ImageCms.createProfile("sRGB"),
+            outputMode="RGB",
+        ).getpixel((0, 0))
+        # The profile's cyan is not the (0, 255, 255) of a plain conversion.
+        self.assertLess(expected[1], 230)
+        pixel = PIL.Image.open(StringIO(imagedata)).getpixel((15, 10))
+        for channel, value in zip(pixel, expected):
+            self.assertAlmostEqual(channel, value, delta=6)
+        self.assertEqual(profile_color_space(imagedata), "RGB")
+
+    def testScaledCMYKDoesNotCarryTheCMYKProfile(self):
+        imagedata, format_, size = scaleImage(CMYK, 42, 51, "contain")
+        self.assertEqual(profile_color_space(imagedata), "RGB")
+
+    def testScaledCMYKWithoutProfile(self):
+        imagedata, format_, size = scaleImage(
+            jpeg_image("CMYK", (255, 0, 0, 0)), 30, 20
+        )
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(image.mode, "RGB")
+        self.assertIsNone(image.info.get("icc_profile"))
+
+    def testScaledCMYKWithUnreadableProfile(self):
+        data = jpeg_image("CMYK", (255, 0, 0, 0), b"not a profile")
+        imagedata, format_, size = scaleImage(data, 30, 20)
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(image.mode, "RGB")
+        self.assertIsNone(image.info.get("icc_profile"))
+
+    def testGreyscaleScaleDropsTheRGBProfile(self):
+        data = jpeg_image("RGB", (128, 128, 128), RGB_PROFILE)
+        imagedata, format_, size = scaleImage(data, 30, 20)
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(image.mode, "L")
+        self.assertIsNone(image.info.get("icc_profile"))
 
     def testScaledCMYKIsRGB(self):
         imagedata, format, size = scaleImage(CMYK, 42, 51, "contain")
@@ -144,12 +205,14 @@ class ScalingTests(TestCase):
             imagedata, format_, size = scaleImage(data, 42, 51, target_format="AVIF")
             self.assertEqual(format_, "AVIF")
             self.assertTrue(is_avif(imagedata))
+            # Chrome refuses an AVIF whose profile is for other pixels.
+            expected = "RGB" if data is CMYK else None
+            self.assertEqual(profile_color_space(imagedata), expected)
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
     def testTargetFormatAvifPreservesProfile(self):
         imagedata, format_, size = scaleImage(PROFILE, 42, 51, target_format="AVIF")
-        image = PIL.Image.open(StringIO(imagedata))
-        self.assertIsNotNone(image.info.get("icc_profile"))
+        self.assertEqual(profile_color_space(imagedata), "RGB")
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
     def testTargetFormatAvifKeepsAnimation(self):

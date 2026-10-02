@@ -4,7 +4,9 @@ import codecs
 import io
 import logging
 import math
+import PIL.features
 import PIL.Image
+import PIL.ImageCms
 import PIL.ImageFile
 import PIL.ImageSequence
 import re
@@ -104,7 +106,6 @@ def scaleImage(
 
     save_kwargs = {}
     with PIL.Image.open(image) as img:
-        icc_profile = img.info.get("icc_profile")
         # When we create a new image during scaling we lose the format
         # information, so remember it here.
         format_ = img.format
@@ -180,7 +181,7 @@ def scaleImage(
         quality=quality,
         optimize=True,
         progressive=True,
-        icc_profile=icc_profile,
+        icc_profile=_matching_profile(image),
         **save_kwargs,
     )
 
@@ -190,6 +191,62 @@ def scaleImage(
         result.seek(0)
 
     return result, format_, image.size
+
+
+def _color_space(mode):
+    """The ICC color space of pixels in a Pillow mode: RGB, CMYK or GRAY."""
+    if mode == "CMYK":
+        return "CMYK"
+    if mode in ("1", "L", "LA", "La", "I", "F") or mode.startswith("I;"):
+        return "GRAY"
+    return "RGB"
+
+
+def _read_profile(icc_profile):
+    if not icc_profile or not PIL.features.check("littlecms2"):
+        return None
+    try:
+        return PIL.ImageCms.ImageCmsProfile(io.BytesIO(icc_profile))
+    except (OSError, ValueError):
+        # PyCMSError is an OSError: an unreadable profile is no profile.
+        return None
+
+
+def _profile_color_space(icc_profile):
+    profile = _read_profile(icc_profile)
+    if profile is None:
+        return None
+    return profile.profile.xcolor_space.strip()
+
+
+def _matching_profile(image):
+    """The image's ICC profile if it describes the image's pixels, else None.
+
+    A profile for other pixels, like the CMYK one of a print image on its
+    RGB scale or an RGB one on a scale that became greyscale, is ignored by
+    browsers in a JPEG, but Chrome refuses to decode such an AVIF.
+    """
+    icc_profile = image.info.get("icc_profile")
+    if icc_profile and _profile_color_space(icc_profile) != _color_space(image.mode):
+        return None
+    return icc_profile
+
+
+def _cmyk_to_srgb(image):
+    """Convert through the embedded CMYK profile when there is a usable one."""
+    icc_profile = image.info.get("icc_profile")
+    profile = _read_profile(icc_profile)
+    if profile is not None and _profile_color_space(icc_profile) == "CMYK":
+        try:
+            # Carries the sRGB profile in its info.
+            return PIL.ImageCms.profileToProfile(
+                image, profile, PIL.ImageCms.createProfile("sRGB"), outputMode="RGB"
+            )
+        except PIL.ImageCms.PyCMSError:
+            logger.warning("Ignoring the CMYK profile of an image", exc_info=True)
+    image = image.convert("RGB")
+    image.info.pop("icc_profile", None)
+    return image
 
 
 def scaleSingleFrame(
@@ -507,10 +564,17 @@ def scalePILImage(
             image = image.convert("LA")
         else:
             image = image.convert("RGBA")
-    elif image.mode == "CMYK":
-        # Convert CMYK to RGB, allowing for web previews of print images
-        image = image.convert("RGB")
 
+    image = _resize(image, width, height, mode, resample)
+
+    if image.mode == "CMYK":
+        # Convert CMYK to RGB, allowing for web previews of print images.
+        # After scaling: the conversion through the profile costs per pixel.
+        image = _cmyk_to_srgb(image)
+    return image
+
+
+def _resize(image, width, height, mode, resample):
     # for scale we're done:
     if mode == "scale":
         return _scale_thumbnail(image, width, height, resample)
