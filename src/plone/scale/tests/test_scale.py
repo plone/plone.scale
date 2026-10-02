@@ -238,24 +238,24 @@ class ScalingTests(TestCase):
         self.assertGreater(image.n_frames, 1)
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
-    def testScaledAvifFallsBackToJpeg(self):
+    def testScaledAvifStaysAvif(self):
         imagedata, format_, size = scaleImage(avif_image("RGB"), 100, 100)
-        self.assertEqual(format_, "JPEG")
+        self.assertEqual(format_, "AVIF")
         self.assertEqual(size, (100, 50))
-        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "JPEG")
+        self.assertTrue(is_avif(imagedata))
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
-    def testScaledAvifWithAlphaFallsBackToPng(self):
+    def testScaledAvifWithAlphaStaysAvif(self):
         imagedata, format_, size = scaleImage(avif_image("RGBA"), 100, 100)
-        self.assertEqual(format_, "PNG")
-        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "PNG")
+        self.assertEqual(format_, "AVIF")
+        self.assertEqual(PIL.Image.open(StringIO(imagedata)).mode, "RGBA")
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
-    def testScaledAnimatedAvifFallsBackToJpeg(self):
+    def testScaledAnimatedAvifStaysAnimated(self):
         animated = scaleImage(ANIGIF, 84, 103, target_format="AVIF")[0]
         imagedata, format_, size = scaleImage(animated, 42, 51)
-        self.assertEqual(format_, "JPEG")
-        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "JPEG")
+        self.assertEqual(format_, "AVIF")
+        self.assertGreater(PIL.Image.open(StringIO(imagedata)).n_frames, 1)
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
     def testAvifWithTargetFormatAvifStaysAvif(self):
@@ -264,6 +264,31 @@ class ScalingTests(TestCase):
         )
         self.assertEqual(format_, "AVIF")
         self.assertTrue(is_avif(imagedata))
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testAvifWithTargetFormatJpegIsJpeg(self):
+        imagedata, format_, size = scaleImage(
+            avif_image("RGB"), 100, 100, target_format="JPEG"
+        )
+        self.assertEqual(format_, "JPEG")
+        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "JPEG")
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testAvifWithAlphaAndTargetFormatJpegFallsBackToPng(self):
+        imagedata, format_, size = scaleImage(
+            avif_image("RGBA"), 100, 100, target_format="JPEG"
+        )
+        self.assertEqual(format_, "PNG")
+        self.assertEqual(PIL.Image.open(StringIO(imagedata)).format, "PNG")
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testAnimatedAvifWithTargetFormatJpegIsASingleFrameJpeg(self):
+        animated = scaleImage(ANIGIF, 84, 103, target_format="AVIF")[0]
+        imagedata, format_, size = scaleImage(animated, 42, 51, target_format="JPEG")
+        self.assertEqual(format_, "JPEG")
+        image = PIL.Image.open(StringIO(imagedata))
+        self.assertEqual(image.format, "JPEG")
+        self.assertEqual(getattr(image, "n_frames", 1), 1)
 
     def testTargetFormatJpegFlattensAnimation(self):
         imagedata, format_, size = scaleImage(ANIGIF, 84, 103, target_format="JPEG")

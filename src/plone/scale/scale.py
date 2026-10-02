@@ -57,13 +57,10 @@ PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
 MAX_PIXELS = 8192 * 8192
 
 # Formats a scale keeps when it is not asked for another one.
-# Everything else becomes JPEG (or PNG when it needs alpha), AVIF included:
-# its scales are the fallback for browsers without AVIF support.
-KEEP_FORMATS = ("PNG", "WEBP")
+# Everything else becomes JPEG (or PNG when it needs alpha).
+KEEP_FORMATS = ("PNG", "WEBP", "AVIF")
 # Formats that can hold an animation.
 ANIMATED_FORMATS = ("GIF", "WEBP", "AVIF")
-# Animations a scale keeps when it is not asked for another format.
-KEEP_ANIMATED_FORMATS = ("GIF", "WEBP")
 
 
 def scaleImage(
@@ -93,12 +90,14 @@ def scaleImage(
     The `width`, `height`, `mode` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
 
-    The generated image is a JPEG image, unless the original is a WEBP, PNG
-    or GIF image. This is needed to make sure alpha channel information is
-    not lost, which JPEG does not support.
+    The generated image is a JPEG image, unless the original is a PNG, WEBP,
+    AVIF or GIF image. This is needed to make sure alpha channel information
+    is not lost, which JPEG does not support.
 
-    Pass a Pillow format name as `target_format` (e.g. "AVIF") to encode the
-    scale in that format instead, whatever the original was.
+    Pass a Pillow format name as `target_format` (e.g. "AVIF", or "JPEG" for
+    a fallback of an AVIF original) to encode the scale in that format
+    instead, whatever the original was. A JPEG target still becomes PNG when
+    the scale uses its alpha channel.
 
     `speed` trades encoding time against file size for AVIF: 0 is slowest and
     smallest, 10 is fastest, Pillow's default is 6. Other encoders ignore it.
@@ -116,10 +115,7 @@ def scaleImage(
         # information, so remember it here.
         format_ = img.format
         animated = format_ in ANIMATED_FORMATS and img.is_animated
-        if animated and (
-            target_format in ANIMATED_FORMATS
-            or (not target_format and format_ in KEEP_ANIMATED_FORMATS)
-        ):
+        if animated and (not target_format or target_format in ANIMATED_FORMATS):
             # Process multiple frames, to support animations
             append_images = []
             for frame in PIL.ImageSequence.Iterator(img):
