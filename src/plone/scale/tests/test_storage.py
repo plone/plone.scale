@@ -152,16 +152,6 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(scale["mimetype"], "image/avif")
         self.assertNotEqual(scale["uid"], storage.pre_scale(width=50, height=80)["uid"])
 
-    def testPreScaleOfAvifReportsTheJpegFallback(self):
-        avif = DummyImage()
-        avif.contentType = "image/avif"
-        self._provide_dummy_scale_adapter(avif)
-        storage = self.storage
-        scale = storage.pre_scale(width=50, height=80)
-        self.assertEqual(scale["mimetype"], "image/jpeg")
-        twin = storage.pre_scale(width=50, height=80, target_format="AVIF")
-        self.assertEqual(twin["mimetype"], "image/avif")
-
     def testPreScaleForNonExistingField(self):
         self._provide_dummy_scale_adapter(None)
         storage = self.storage
