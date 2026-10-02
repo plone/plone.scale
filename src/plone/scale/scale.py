@@ -75,6 +75,7 @@ def scaleImage(
     result=None,
     direction=None,
     target_format=None,
+    speed=None,
 ):
     """Scale the given image data to another size and return the result
     as a string or optionally write in to the file-like `result` object.
@@ -98,6 +99,9 @@ def scaleImage(
 
     Pass a Pillow format name as `target_format` (e.g. "AVIF") to encode the
     scale in that format instead, whatever the original was.
+
+    `speed` trades encoding time against file size for AVIF: 0 is slowest and
+    smallest, 10 is fastest, Pillow's default is 6. Other encoders ignore it.
     """
     if target_format:
         target_format = target_format.upper()
@@ -105,6 +109,8 @@ def scaleImage(
         image = io.BytesIO(image)
 
     save_kwargs = {}
+    if speed is not None:
+        save_kwargs["speed"] = speed
     with PIL.Image.open(image) as img:
         # When we create a new image during scaling we lose the format
         # information, so remember it here.

@@ -4,6 +4,7 @@ from plone.scale.scale import scale_svg_image
 from plone.scale.scale import scaleImage
 from plone.scale.scale import scalePILImage
 from plone.scale.tests import TEST_DATA_LOCATION
+from unittest import mock
 from unittest import skipUnless
 from unittest import TestCase
 
@@ -213,6 +214,21 @@ class ScalingTests(TestCase):
     def testTargetFormatAvifPreservesProfile(self):
         imagedata, format_, size = scaleImage(PROFILE, 42, 51, target_format="AVIF")
         self.assertEqual(profile_color_space(imagedata), "RGB")
+
+    def testSpeedReachesTheEncoder(self):
+        with mock.patch.object(PIL.Image.Image, "save") as save:
+            scaleImage(PNG, 84, 103, target_format="AVIF", speed=8)
+        self.assertEqual(save.call_args.kwargs["speed"], 8)
+        with mock.patch.object(PIL.Image.Image, "save") as save:
+            scaleImage(PNG, 84, 103, target_format="AVIF")
+        self.assertNotIn("speed", save.call_args.kwargs)
+
+    @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
+    def testTargetFormatAvifAtFullSpeed(self):
+        imagedata, format_, size = scaleImage(
+            PROFILE, 42, 51, target_format="AVIF", speed=10
+        )
+        self.assertTrue(is_avif(imagedata))
 
     @skipUnless(AVIF_SUPPORT, "Pillow cannot encode AVIF")
     def testTargetFormatAvifKeepsAnimation(self):
