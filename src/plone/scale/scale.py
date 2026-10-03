@@ -4,7 +4,9 @@ import codecs
 import io
 import logging
 import math
+import PIL.features
 import PIL.Image
+import PIL.ImageCms
 import PIL.ImageFile
 import PIL.ImageSequence
 import re
@@ -54,6 +56,12 @@ PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 MAX_PIXELS = 8192 * 8192
 
+# Formats a scale keeps when it is not asked for another one.
+# Everything else becomes JPEG (or PNG when it needs alpha).
+KEEP_FORMATS = ("PNG", "WEBP", "AVIF")
+# Formats that can hold an animation.
+ANIMATED_FORMATS = ("GIF", "WEBP", "AVIF")
+
 
 def scaleImage(
     image,
@@ -63,6 +71,8 @@ def scaleImage(
     quality=88,
     result=None,
     direction=None,
+    target_format=None,
+    speed=None,
 ):
     """Scale the given image data to another size and return the result
     as a string or optionally write in to the file-like `result` object.
@@ -80,20 +90,32 @@ def scaleImage(
     The `width`, `height`, `mode` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
 
-    The generated image is a JPEG image, unless the original is a WEBP, PNG
-    or GIF image. This is needed to make sure alpha channel information is
-    not lost, which JPEG does not support.
+    The generated image is a JPEG image, unless the original is a PNG, WEBP,
+    AVIF or GIF image. This is needed to make sure alpha channel information
+    is not lost, which JPEG does not support.
+
+    Pass a Pillow format name as `target_format` (e.g. "AVIF", or "JPEG" for
+    a fallback of an AVIF original) to encode the scale in that format
+    instead, whatever the original was. A JPEG target still becomes PNG when
+    the scale uses its alpha channel.
+
+    `speed` trades encoding time against file size for AVIF: 0 is slowest and
+    smallest, 10 is fastest, Pillow's default is 6. Other encoders ignore it.
     """
+    if target_format:
+        target_format = target_format.upper()
     if isinstance(image, (bytes, str)):
         image = io.BytesIO(image)
 
     save_kwargs = {}
+    if speed is not None:
+        save_kwargs["speed"] = speed
     with PIL.Image.open(image) as img:
-        icc_profile = img.info.get("icc_profile")
         # When we create a new image during scaling we lose the format
         # information, so remember it here.
         format_ = img.format
-        if format_ in ("GIF", "WEBP") and img.is_animated:
+        animated = format_ in ANIMATED_FORMATS and img.is_animated
+        if animated and (not target_format or target_format in ANIMATED_FORMATS):
             # Process multiple frames, to support animations
             append_images = []
             for frame in PIL.ImageSequence.Iterator(img):
@@ -119,6 +141,8 @@ def scaleImage(
             # The first image is the basis for save
             # All other images than the first will be added as a save parameter
             image = append_images.pop(0)
+            if target_format:
+                format_ = target_format
             if len(append_images) > 0:
                 # Saving as a multi page image
                 save_kwargs["save_all"] = True
@@ -130,11 +154,13 @@ def scaleImage(
 
         else:
             # No animation; just scale single frame
-            if format_ == "GIF":
+            if target_format:
+                format_ = target_format
+            elif format_ == "GIF":
                 # PNG looks better if we have 8-bit alpha and no palette.
                 # (It only works for single frame, so we don't do this for animated GIFs.)
                 format_ = "PNG"
-            elif format_ not in ("PNG", "WEBP"):
+            elif format_ not in KEEP_FORMATS:
                 format_ = "JPEG"
             image, format_ = scaleSingleFrame(
                 img,
@@ -157,7 +183,7 @@ def scaleImage(
         quality=quality,
         optimize=True,
         progressive=True,
-        icc_profile=icc_profile,
+        icc_profile=_matching_profile(image),
         **save_kwargs,
     )
 
@@ -167,6 +193,62 @@ def scaleImage(
         result.seek(0)
 
     return result, format_, image.size
+
+
+def _color_space(mode):
+    """The ICC color space of pixels in a Pillow mode: RGB, CMYK or GRAY."""
+    if mode == "CMYK":
+        return "CMYK"
+    if mode in ("1", "L", "LA", "La", "I", "F") or mode.startswith("I;"):
+        return "GRAY"
+    return "RGB"
+
+
+def _read_profile(icc_profile):
+    if not icc_profile or not PIL.features.check("littlecms2"):
+        return None
+    try:
+        return PIL.ImageCms.ImageCmsProfile(io.BytesIO(icc_profile))
+    except (OSError, ValueError):
+        # PyCMSError is an OSError: an unreadable profile is no profile.
+        return None
+
+
+def _profile_color_space(icc_profile):
+    profile = _read_profile(icc_profile)
+    if profile is None:
+        return None
+    return profile.profile.xcolor_space.strip()
+
+
+def _matching_profile(image):
+    """The image's ICC profile if it describes the image's pixels, else None.
+
+    A profile for other pixels, like the CMYK one of a print image on its
+    RGB scale or an RGB one on a scale that became greyscale, is ignored by
+    browsers in a JPEG, but Chrome refuses to decode such an AVIF.
+    """
+    icc_profile = image.info.get("icc_profile")
+    if icc_profile and _profile_color_space(icc_profile) != _color_space(image.mode):
+        return None
+    return icc_profile
+
+
+def _cmyk_to_srgb(image):
+    """Convert through the embedded CMYK profile when there is a usable one."""
+    icc_profile = image.info.get("icc_profile")
+    profile = _read_profile(icc_profile)
+    if profile is not None and _profile_color_space(icc_profile) == "CMYK":
+        try:
+            # Carries the sRGB profile in its info.
+            return PIL.ImageCms.profileToProfile(
+                image, profile, PIL.ImageCms.createProfile("sRGB"), outputMode="RGB"
+            )
+        except PIL.ImageCms.PyCMSError:
+            logger.warning("Ignoring the CMYK profile of an image", exc_info=True)
+    image = image.convert("RGB")
+    image.info.pop("icc_profile", None)
+    return image
 
 
 def scaleSingleFrame(
@@ -484,10 +566,17 @@ def scalePILImage(
             image = image.convert("LA")
         else:
             image = image.convert("RGBA")
-    elif image.mode == "CMYK":
-        # Convert CMYK to RGB, allowing for web previews of print images
-        image = image.convert("RGB")
 
+    image = _resize(image, width, height, mode, resample)
+
+    if image.mode == "CMYK":
+        # Convert CMYK to RGB, allowing for web previews of print images.
+        # After scaling: the conversion through the profile costs per pixel.
+        image = _cmyk_to_srgb(image)
+    return image
+
+
+def _resize(image, width, height, mode, resample):
     # for scale we're done:
     if mode == "scale":
         return _scale_thumbnail(image, width, height, resample)

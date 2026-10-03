@@ -250,6 +250,9 @@ class AnnotationStorage(MutableMapping):
             orig_width, orig_height, width, height, mode
         )
         mimetype = value.contentType
+        target_format = parameters.get("target_format")
+        if target_format:
+            mimetype = f"image/{target_format.lower()}"
         key = self.hash(**parameters)
         info = dict(
             uid=uid,
