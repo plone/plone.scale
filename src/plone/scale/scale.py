@@ -524,12 +524,18 @@ def scalePILImage(
     return image
 
 
-def _contain_svg_image(root, target_width: int, target_height: int):
+def _contain_svg_image(
+    root, source_width: int, source_height: int, target_width: int, target_height: int
+):
     """Scale SVG viewbox, modifies tree in place.
 
     Starts by scaling the relatively smallest dimension to the required size and crops the other dimension if needed.
     """
-    viewbox = root.attrib.get("viewBox", "").split(" ")
+    viewbox_attr = root.attrib.get("viewBox", "")
+    if not viewbox_attr:
+        viewbox_attr = f"0 0 {source_width} {source_height}"
+        root.set("viewBox", viewbox_attr)
+    viewbox = viewbox_attr.split(" ")
     if len(viewbox) != 4:
         return root
 
@@ -671,7 +677,7 @@ def scale_svg_image(
             target_height = target_width / source_aspectratio
     elif mode == "contain":
         target_width, target_height = _contain_svg_image(
-            root, target_width, target_height
+            root, source_width, source_height, target_width, target_height
         )
 
     root.attrib["width"] = str(int(target_width))
