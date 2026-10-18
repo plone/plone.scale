@@ -330,6 +330,11 @@ class ScalingTests(TestCase):
 
     def testModes(self):
         """Test modes to actually behavie like documented."""
+        img = PIL.Image.new("RGB", (200, 200), (0, 0, 0))
+        img_scaled = scalePILImage(img, 100, 100, mode="contain")
+        self.assertEqual(img_scaled.size, (100, 100))
+        self.assertEqual(img.size, (200, 200))
+
         # Mode contain
         # v
         # A

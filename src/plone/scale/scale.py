@@ -500,6 +500,7 @@ def scalePILImage(
         # The original already has the right aspect ratio, so we only need
         # to scale.
         if mode == "contain":
+            image = image.copy()
             image.thumbnail((dimensions.final_width, dimensions.final_height), resample)
             return image
         return image.resize((dimensions.final_width, dimensions.final_height), resample)
