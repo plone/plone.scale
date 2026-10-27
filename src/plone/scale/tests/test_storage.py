@@ -145,6 +145,13 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(scale["height"], 80)
         self.assertEqual(scale["mimetype"], "image/jpeg")
 
+    def testPreScaleWithTargetFormat(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.pre_scale(width=50, height=80, target_format="AVIF")
+        self.assertEqual(scale["mimetype"], "image/avif")
+        self.assertNotEqual(scale["uid"], storage.pre_scale(width=50, height=80)["uid"])
+
     def testPreScaleForNonExistingField(self):
         self._provide_dummy_scale_adapter(None)
         storage = self.storage

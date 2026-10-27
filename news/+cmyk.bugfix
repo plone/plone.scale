@@ -1,0 +1,3 @@
+Convert CMYK images to sRGB through their embedded ICC profile instead of a plain mode conversion, after scaling.
+A scale only embeds a profile that describes its pixels: the CMYK profile of a print image, so far attached to its RGB scales, makes an AVIF undecodable in Chrome and added half a megabyte to every scale.
+@MrTango
