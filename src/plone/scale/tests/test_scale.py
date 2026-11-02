@@ -489,7 +489,7 @@ class ScalingTests(TestCase):
     def testAnimatedGifContainsAllFrames(self):
         image = scaleImage(ANIGIF, 84, 103, "contain")[0]
         with PIL.Image.open(StringIO(image)) as img:
-            frames = [frame for frame in PIL.ImageSequence.Iterator(img)]
+            frames = [*PIL.ImageSequence.Iterator(img)]
             self.assertEqual(len(frames), 6)
             for frame in frames:
                 self.assertEqual(frame.width, 84)
@@ -498,7 +498,7 @@ class ScalingTests(TestCase):
     def testAnimatedGifContainsAllFrames2(self):
         image = scaleImage(ANIGIF2, 84, 103, "contain")[0]
         with PIL.Image.open(StringIO(image)) as img:
-            frames = [frame for frame in PIL.ImageSequence.Iterator(img)]
+            frames = [*PIL.ImageSequence.Iterator(img)]
             self.assertEqual(len(frames), 35)
             for frame in frames:
                 self.assertEqual(frame.width, 84)
