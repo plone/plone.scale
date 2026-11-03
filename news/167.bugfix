@@ -1,2 +1,0 @@
-Keep the input image unchanged when scaling with ``mode="contain"``.
-

@@ -8,6 +8,15 @@ Changelog
 
 .. towncrier release notes start
 
+5.1.1 (2026-11-03)
+------------------
+
+Bug fixes:
+
+
+- Keep the input image unchanged when scaling with ``mode="contain"``. (#167)
+
+
 5.1.0 (2026-09-07)
 ------------------
 
