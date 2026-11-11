@@ -102,6 +102,14 @@ class AnnotationStorageTests(TestCase):
         self.assertEqual(scale["height"], 40)
         self.assertEqual(scale["mimetype"], "image/jpeg")
 
+    def testPreScaleWithFormat(self):
+        self._provide_dummy_scale_adapter()
+        storage = self.storage
+        scale = storage.pre_scale(width=50, height=80, format="webp")
+        self.assertEqual(scale["mimetype"], "image/webp")
+        # The format is part of the key, so its scales get other urls.
+        self.assertNotEqual(scale["uid"], storage.pre_scale(width=50, height=80)["uid"])
+
     def testScaleWithFieldname(self):
         self._provide_dummy_scale_adapter()
         storage = self.storage

@@ -1,5 +1,7 @@
 from io import BytesIO as StringIO
 from plone.scale.scale import calculate_scaled_dimensions
+from plone.scale.scale import get_scale_format
+from plone.scale.scale import guess_scale_mimetype
 from plone.scale.scale import scale_svg_image
 from plone.scale.scale import scaleImage
 from plone.scale.scale import scalePILImage
@@ -9,6 +11,7 @@ from unittest import TestCase
 import functools
 import PIL.Image
 import PIL.ImageDraw
+import unittest.mock
 import warnings
 
 PNG = (TEST_DATA_LOCATION / "logo.png").read_bytes()
@@ -575,6 +578,109 @@ class ScalingTests(TestCase):
         _, (w, h) = scale_svg_image(StringIO(SVG), 200, 0, mode="contain")
         self.assertEqual(w, 200)
         self.assertGreater(h, 0)
+
+
+def _photo(size=(200, 150), mode="RGB", alpha=255):
+    """An image with many colors, like a photo."""
+    image = PIL.Image.new(mode, size)
+    image.putdata(
+        [
+            (x * 255 // size[0], y * 255 // size[1], (x * y) % 256, alpha)[: len(mode)]
+            for y in range(size[1])
+            for x in range(size[0])
+        ]
+    )
+    return image
+
+
+def _data(image, format, **kwargs):
+    result = StringIO()
+    image.save(result, format, **kwargs)
+    return result.getvalue()
+
+
+class ScaleFormatTests(TestCase):
+    def _scale(self, data, format, **kwargs):
+        result, format_, size = scaleImage(data, 100, 75, "scale", format=format)
+        image = PIL.Image.open(StringIO(result))
+        self.assertEqual(image.format, format_)
+        self.assertEqual(image.size, size)
+        return format_, image
+
+    def testNoFormatKeepsDefault(self):
+        self.assertEqual(scaleImage(PNG, 84, 103, "contain", format=None)[1], "PNG")
+        self.assertEqual(scaleImage(PNG, 84, 103, "contain", format="")[1], "PNG")
+
+    def testJpegToWebp(self):
+        format_, image = self._scale(_data(_photo(), "JPEG"), "webp")
+        self.assertEqual(format_, "WEBP")
+        self.assertEqual(image.mode, "RGB")
+
+    def testJpegToAvif(self):
+        if get_scale_format("avif") != "AVIF":
+            self.skipTest("Pillow cannot write AVIF")
+        format_, image = self._scale(_data(_photo(), "JPEG"), "AVIF")
+        self.assertEqual(format_, "AVIF")
+
+    def testAvifFallsBackToWebp(self):
+        with unittest.mock.patch(
+            "plone.scale.scale._avif_supported", return_value=False
+        ):
+            self.assertEqual(get_scale_format("avif"), "WEBP")
+            format_, image = self._scale(_data(_photo(), "JPEG"), "avif")
+        self.assertEqual(format_, "WEBP")
+
+    def testPngPhotoToJpeg(self):
+        # An opaque PNG with many colors is a photo: convert it.
+        format_, image = self._scale(_data(_photo(), "PNG"), "jpeg")
+        self.assertEqual(format_, "JPEG")
+
+    def testPngPhotoWithUnusedAlphaToWebp(self):
+        format_, image = self._scale(_data(_photo(mode="RGBA"), "PNG"), "webp")
+        self.assertEqual(format_, "WEBP")
+        self.assertEqual(image.mode, "RGB")
+
+    def testTransparencyKeptInWebp(self):
+        format_, image = self._scale(
+            _data(_photo(mode="RGBA", alpha=128), "PNG"), "webp"
+        )
+        self.assertEqual(format_, "WEBP")
+        self.assertEqual(image.mode, "RGBA")
+
+    def testTransparencyWithJpegGivesPng(self):
+        format_, image = self._scale(
+            _data(_photo(mode="RGBA", alpha=128), "PNG"), "jpeg"
+        )
+        self.assertEqual(format_, "PNG")
+
+    def testGraphicStaysPng(self):
+        # Few colors, like a logo or diagram: lossless PNG is better.
+        self.assertEqual(scaleImage(PNG, 84, 103, "contain", format="webp")[1], "PNG")
+        self.assertEqual(scaleImage(GIF, 84, 103, "contain", format="webp")[1], "PNG")
+        graphic = PIL.Image.new("RGB", (200, 150), "white")
+        PIL.ImageDraw.Draw(graphic).rectangle((20, 20, 120, 100), fill="red")
+        self.assertEqual(self._scale(_data(graphic, "PNG"), "avif")[0], "PNG")
+
+    def testAnimationKeepsFormat(self):
+        self.assertEqual(
+            scaleImage(ANIGIF, 84, 103, "contain", format="webp")[1], "GIF"
+        )
+
+    def testCmykToWebp(self):
+        format_, image = self._scale(CMYK, "webp")
+        self.assertEqual(format_, "WEBP")
+        self.assertEqual(image.mode, "RGB")
+
+    def testUnknownFormat(self):
+        with self.assertRaises(ValueError):
+            scaleImage(PNG, 84, 103, "contain", format="tiff")
+
+    def testGuessScaleMimetype(self):
+        self.assertEqual(guess_scale_mimetype("image/png"), "image/png")
+        self.assertEqual(guess_scale_mimetype("image/png", ""), "image/png")
+        self.assertEqual(guess_scale_mimetype("image/png", "webp"), "image/webp")
+        self.assertEqual(guess_scale_mimetype("image/jpeg", "JPEG"), "image/jpeg")
+        self.assertEqual(guess_scale_mimetype("image/svg+xml", "webp"), "image/svg+xml")
 
 
 def test_suite():
