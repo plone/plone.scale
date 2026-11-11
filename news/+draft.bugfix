@@ -1,0 +1,5 @@
+Keep JPEG scales sharp when they are at least twice as small as the original.
+The JPEG decoder now reduces the image to at least twice the size of the scale
+(as Pillow's ``Image.thumbnail`` does), instead of straight to the size of the scale,
+which made such scales visibly blurrier and blockier.
+@jladage

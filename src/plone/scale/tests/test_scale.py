@@ -9,6 +9,10 @@ import functools
 import PIL.Image
 import PIL.ImageDraw
 import warnings
+from plone.scale.scale import LANCZOS
+import math
+import PIL.ImageChops
+import PIL.ImageStat
 
 
 PNG = (TEST_DATA_LOCATION / "logo.png").read_bytes()
@@ -516,6 +520,41 @@ class ScalingTests(TestCase):
         dimensions = _calculate_all_dimensions(1, 1, 1, 1, "scale")
         self.assertGreaterEqual(dimensions.target_width, 1)
         self.assertGreaterEqual(dimensions.target_height, 1)
+
+    def testDraftKeepsQuality(self):
+        # Scale a JPEG with fine detail to 1/4: a zone plate, with rings up to
+        # about half the highest frequency the scale can show. Letting the
+        # JPEG decoder reduce it straight to the target size (Image.draft)
+        # gives a visibly worse scale than decoding it at twice the target
+        # size and resizing from there.
+        size, target = 1200, 300
+        k = math.pi * target / (size * size)
+        src = PIL.Image.new("L", (size, size))
+        src.putdata(
+            [
+                int(
+                    127.5
+                    + 127.5 * math.cos(k * ((x - size / 2) ** 2 + (y - size / 2) ** 2))
+                )
+                for y in range(size)
+                for x in range(size)
+            ]
+        )
+        data = StringIO()
+        src.convert("RGB").save(data, "JPEG", quality=95)
+        reference = (
+            PIL.Image.open(StringIO(data.getvalue()))
+            .convert("RGB")
+            .resize((target, target), LANCZOS)
+        )
+        scaled = PIL.Image.open(
+            StringIO(
+                scaleImage(data.getvalue(), target, target, "scale", quality=95)[0]
+            )
+        ).convert("RGB")
+        rms = PIL.ImageStat.Stat(PIL.ImageChops.difference(reference, scaled)).rms
+        # Decoding at 1/4 gives about 10.5 here, at 1/2 about 4.
+        self.assertLess(max(rms), 7)
 
 
 def test_suite():
