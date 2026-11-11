@@ -55,6 +55,29 @@ PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
 MAX_PIXELS = 8192 * 8192
 
 
+def parse_focal_point(focal_point):
+    """Return a focal point as a tuple (x, y) of floats from 0 to 1, or None.
+
+    It may be given as such a tuple or list, or as a string "x,y". It is the
+    point of the image that cropping keeps in view, as a fraction of the width
+    and height. Without it, cropping keeps the center.
+    """
+    if focal_point is None or focal_point == "":
+        return None
+    if isinstance(focal_point, str):
+        focal_point = focal_point.split(",")
+    x, y = (min(max(float(value), 0.0), 1.0) for value in focal_point)
+    return x, y
+
+
+def _crop_start(focal, total, size):
+    """Start of a window of `size` in `total`: centered, or as close to the
+    focal point (a fraction of `total`) as fits."""
+    if focal is None:
+        return (total - size) / 2.0
+    return min(max(focal * total - size / 2.0, 0.0), float(total - size))
+
+
 def scaleImage(
     image,
     width=None,
@@ -63,6 +86,7 @@ def scaleImage(
     quality=88,
     result=None,
     direction=None,
+    focal_point=None,
 ):
     """Scale the given image data to another size and return the result
     as a string or optionally write in to the file-like `result` object.
@@ -79,6 +103,10 @@ def scaleImage(
 
     The `width`, `height`, `mode` parameters will be passed to
     :meth:`scalePILImage`, which performs the actual scaling.
+
+    With `focal_point`, an (x, y) tuple or "x,y" string with fractions of the
+    width and height, the modes that crop keep that point in view instead of
+    the center.
 
     The generated image is a JPEG image, unless the original is a WEBP, PNG
     or GIF image. This is needed to make sure alpha channel information is
@@ -113,6 +141,7 @@ def scaleImage(
                     # but avoids saving scaled animated GIFs
                     # that are much larger than the original.
                     resample=NEAREST,
+                    focal_point=focal_point,
                 )
                 append_images.append(scaled_frame)
 
@@ -144,6 +173,7 @@ def scaleImage(
                 format_=format_,
                 quality=quality,
                 direction=direction,
+                focal_point=focal_point,
             )
 
     new_result = False
@@ -178,9 +208,16 @@ def scaleSingleFrame(
     quality,  # not used, but here for backwards compatibility
     direction,
     resample=RESAMPLE,
+    focal_point=None,
 ):
     image = scalePILImage(
-        image, width, height, mode, direction=direction, resample=resample
+        image,
+        width,
+        height,
+        mode,
+        direction=direction,
+        resample=resample,
+        focal_point=focal_point,
     )
 
     # convert to simpler mode if possible
@@ -255,7 +292,7 @@ class ScaledDimensions:
 
 
 def _calculate_all_dimensions(
-    original_width, original_height, width, height, mode="scale"
+    original_width, original_height, width, height, mode="scale", focal_point=None
 ):
     """Calculate all dimensions we need for scaling.
 
@@ -355,20 +392,18 @@ def _calculate_all_dimensions(
         if use_height:
             left = 0
             right = original_width
-            top = int(math.floor(((target_height - height) / 2.0) / factor_width))
-            bottom = int(
-                math.ceil((((target_height - height) / 2.0) + height) / factor_width)
-            )
+            start = _crop_start(focal_point and focal_point[1], target_height, height)
+            top = int(math.floor(start / factor_width))
+            bottom = int(math.ceil((start + height) / factor_width))
             pre_scale_crop_height = bottom - top
             # set new height in case we abort
             dimensions.final_height = pre_scale_crop_height
             # calculate new scale target_height from cropped height
             target_height = int(round(pre_scale_crop_height * factor_width))
         else:
-            left = int(math.floor(((target_width - width) / 2.0) / factor_height))
-            right = int(
-                math.ceil((((target_width - width) / 2.0) + width) / factor_height)
-            )
+            start = _crop_start(focal_point and focal_point[0], target_width, width)
+            left = int(math.floor(start / factor_height))
+            right = int(math.ceil((start + width) / factor_height))
             top = 0
             bottom = original_height
             pre_scale_crop_width = right - left
@@ -399,11 +434,13 @@ def _calculate_all_dimensions(
         if use_height:
             left = 0
             right = target_width
-            top = int((target_height - height) / 2.0)
+            top = int(
+                _crop_start(focal_point and focal_point[1], target_height, height)
+            )
             bottom = top + height
             dimensions.final_height = bottom - top
         else:
-            left = int((target_width - width) / 2.0)
+            left = int(_crop_start(focal_point and focal_point[0], target_width, width))
             right = left + width
             top = 0
             bottom = target_height
@@ -426,7 +463,13 @@ def calculate_scaled_dimensions(
 
 
 def scalePILImage(
-    image, width=None, height=None, mode="scale", direction=None, resample=RESAMPLE
+    image,
+    width=None,
+    height=None,
+    mode="scale",
+    direction=None,
+    resample=RESAMPLE,
+    focal_point=None,
 ):
     """Scale a PIL image to another size.
 
@@ -493,7 +536,12 @@ def scalePILImage(
         return _scale_thumbnail(image, width, height, resample)
 
     dimensions = _calculate_all_dimensions(
-        image.size[0], image.size[1], width, height, mode
+        image.size[0],
+        image.size[1],
+        width,
+        height,
+        mode,
+        focal_point=parse_focal_point(focal_point),
     )
 
     if dimensions.factor_height == dimensions.factor_width:

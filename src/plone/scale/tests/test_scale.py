@@ -1,5 +1,6 @@
 from io import BytesIO as StringIO
 from plone.scale.scale import calculate_scaled_dimensions
+from plone.scale.scale import parse_focal_point
 from plone.scale.scale import scale_svg_image
 from plone.scale.scale import scaleImage
 from plone.scale.scale import scalePILImage
@@ -9,6 +10,7 @@ from unittest import TestCase
 import functools
 import PIL.Image
 import PIL.ImageDraw
+import PIL.ImageStat
 import warnings
 
 PNG = (TEST_DATA_LOCATION / "logo.png").read_bytes()
@@ -575,6 +577,76 @@ class ScalingTests(TestCase):
         _, (w, h) = scale_svg_image(StringIO(SVG), 200, 0, mode="contain")
         self.assertEqual(w, 200)
         self.assertGreater(h, 0)
+
+
+class FocalPointTests(TestCase):
+    def _gradient(self, width, height, horizontal=True):
+        """An image whose red goes from 0 to 255, left to right or down."""
+        image = PIL.Image.new("RGB", (width, height))
+        size = width if horizontal else height
+        image.putdata(
+            [
+                ((x if horizontal else y) * 255 // (size - 1), 0, 0)
+                for y in range(height)
+                for x in range(width)
+            ]
+        )
+        data = StringIO()
+        image.save(data, "PNG")
+        return data.getvalue()
+
+    def _red(self, data, *args, **kwargs):
+        """Mean red of the scale: where the crop is."""
+        result, format_, size = scaleImage(data, *args, **kwargs)
+        image = PIL.Image.open(StringIO(result)).convert("RGB")
+        return round(PIL.ImageStat.Stat(image).mean[0]), size
+
+    def testCenterByDefault(self):
+        wide = self._gradient(400, 100)
+        self.assertEqual(self._red(wide, 100, 100, "contain"), (127, (100, 100)))
+        self.assertEqual(
+            self._red(wide, 100, 100, "contain", focal_point=(0.5, 0.5)),
+            (127, (100, 100)),
+        )
+
+    def testHorizontal(self):
+        wide = self._gradient(400, 100)
+        # The window of 100 of 400 pixels around x = 120: 70 to 170.
+        self.assertEqual(
+            self._red(wide, 100, 100, "contain", focal_point="0.3,0.5")[0], 76
+        )
+        # At the edges the window stays inside the image.
+        self.assertEqual(
+            self._red(wide, 100, 100, "contain", focal_point=(0, 0.5))[0], 31
+        )
+        self.assertEqual(
+            self._red(wide, 100, 100, "contain", focal_point=(1, 0.5))[0], 223
+        )
+
+    def testVertical(self):
+        tall = self._gradient(100, 400, horizontal=False)
+        self.assertEqual(
+            self._red(tall, 100, 100, "contain", focal_point=(0.5, 0.3))[0], 76
+        )
+        self.assertEqual(
+            self._red(tall, 100, 100, "contain", focal_point=(0.5, 1))[0], 223
+        )
+
+    def testNoCropNoEffect(self):
+        # Scaling without cropping ignores the focal point.
+        wide = self._gradient(400, 100)
+        self.assertEqual(
+            self._red(wide, 200, 65536, "scale", focal_point=(0, 0)),
+            self._red(wide, 200, 65536, "scale"),
+        )
+
+    def testParseFocalPoint(self):
+        self.assertIsNone(parse_focal_point(None))
+        self.assertIsNone(parse_focal_point(""))
+        self.assertEqual(parse_focal_point("0.25,0.75"), (0.25, 0.75))
+        self.assertEqual(parse_focal_point([0, 1]), (0.0, 1.0))
+        # Clamped to the image.
+        self.assertEqual(parse_focal_point((-1, 2)), (0.0, 1.0))
 
 
 def test_suite():
