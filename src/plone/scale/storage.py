@@ -1,5 +1,6 @@
 from .scale import calculate_scaled_dimensions
 from .scale import get_scale_mode
+from .scale import guess_scale_mimetype
 from collections.abc import MutableMapping
 from persistent.dict import PersistentDict
 from plone.scale.interfaces import IImageScaleFactory
@@ -250,7 +251,7 @@ class AnnotationStorage(MutableMapping):
         width, height = calculate_scaled_dimensions(
             orig_width, orig_height, width, height, mode
         )
-        mimetype = value.contentType
+        mimetype = guess_scale_mimetype(value.contentType, parameters.get("format"))
         key = self.hash(**parameters)
         info = dict(
             uid=uid,

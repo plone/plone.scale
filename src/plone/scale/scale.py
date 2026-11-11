@@ -4,6 +4,7 @@ import codecs
 import io
 import logging
 import math
+import PIL.features
 import PIL.Image
 import PIL.ImageFile
 import PIL.ImageSequence
@@ -75,6 +76,67 @@ def _draft(image, width, height):
             math.ceil(height * DRAFT_REDUCING_GAP),
         ),
     )
+# Formats that scales can be converted to, see ``scaleImage``.
+SCALE_FORMATS = ("JPEG", "WEBP", "AVIF")
+
+# The quality of scales is given as for JPEG. At the same number, AVIF gives
+# a clearly better image than JPEG, so it gets a lower one: 88 becomes 79,
+# which still scores a bit better than JPEG (ssimulacra2) on photos.
+AVIF_QUALITY_FACTOR = 0.9
+
+
+def _avif_supported():
+    try:
+        return PIL.features.check("avif")
+    except (ValueError, KeyError):  # Pillow < 11.2 does not know AVIF
+        return False
+
+
+def get_scale_format(format):
+    """Return the format to convert scales to: one of SCALE_FORMATS, or None.
+
+    ``format`` is a format name in any case ("webp"), or empty for none. AVIF
+    falls back to WEBP when Pillow cannot write it.
+    """
+    if not format:
+        return None
+    format = format.upper()
+    if format not in SCALE_FORMATS:
+        raise ValueError(
+            f"Unknown scale format {format!r}, expected one of {SCALE_FORMATS}"
+        )
+    if format == "AVIF" and not _avif_supported():
+        logger.warning("Pillow cannot write AVIF images: using WEBP for scales.")
+        return "WEBP"
+    return format
+
+
+def guess_scale_mimetype(mimetype, format=None):
+    """Return the mimetype that a scale of an image will most likely get.
+
+    ``mimetype`` is the one of the original, ``format`` the format to convert
+    scales to (see ``scaleImage``). Without a format this is the mimetype of
+    the original. The scale itself may still differ: a graphic stays PNG,
+    an animation keeps its format, and JPEG becomes PNG to keep transparency.
+    """
+    format = get_scale_format(format)
+    if format is None or mimetype == "image/svg+xml":
+        return mimetype
+    return f"image/{format.lower()}"
+
+
+def _is_graphic(image):
+    """Is this a lossless image with few colors, like a logo or diagram?
+
+    Such images are smaller as PNG, and keep their sharp edges.
+    """
+    if image.format not in ("PNG", "GIF"):
+        return False
+    if image.mode in ("1", "P", "PA"):
+        return True
+    if image.mode in ("RGB", "RGBA"):
+        return image.getcolors(maxcolors=256) is not None
+    return False
 
 
 def scaleImage(
@@ -85,6 +147,7 @@ def scaleImage(
     quality=88,
     result=None,
     direction=None,
+    format=None,
 ):
     """Scale the given image data to another size and return the result
     as a string or optionally write in to the file-like `result` object.
@@ -105,7 +168,14 @@ def scaleImage(
     The generated image is a JPEG image, unless the original is a WEBP, PNG
     or GIF image. This is needed to make sure alpha channel information is
     not lost, which JPEG does not support.
+
+    With `format` ("JPEG", "WEBP" or "AVIF", in any case) the scale is
+    converted to that format instead, except for animations, and for PNG and
+    GIF images with few colors, like logos and diagrams, which stay PNG.
+    WEBP and AVIF keep transparency; with JPEG, an image that uses it becomes
+    a PNG. The `quality` is given as for JPEG, see AVIF_QUALITY_FACTOR.
     """
+    target_format = get_scale_format(format)
     if isinstance(image, (bytes, str)):
         image = io.BytesIO(image)
 
@@ -158,6 +228,8 @@ def scaleImage(
                 format_ = "PNG"
             elif format_ not in ("PNG", "WEBP"):
                 format_ = "JPEG"
+            if target_format and not _is_graphic(img):
+                format_ = target_format
             image, format_ = scaleSingleFrame(
                 img,
                 width=width,
@@ -173,6 +245,11 @@ def scaleImage(
         result = io.BytesIO()
         new_result = True
 
+    if format_ == "AVIF":
+        quality = max(1, round(quality * AVIF_QUALITY_FACTOR))
+    elif format_ == "WEBP" and target_format:
+        # slowest and smallest: a scale is only made once
+        save_kwargs["method"] = 6
     image.save(
         result,
         format_,
@@ -215,15 +292,21 @@ def scaleSingleFrame(
         elif format_ in ("PNG", "GIF"):
             image = image.convert("P")
 
-    if image.mode == "RGBA" and format_ == "JPEG":
+    if image.mode == "RGBA" and format_ in ("JPEG", "WEBP", "AVIF"):
         extrema = dict(zip(image.getbands(), image.getextrema()))
         if extrema.get("A") == (255, 255):
             # no alpha used, just change the mode, which causes the alpha band
             # to be dropped on save
             image = image.convert("RGB")
-        else:
+        elif format_ == "JPEG":
             # switch to PNG, which supports alpha
             format_ = "PNG"
+
+    if format_ in ("WEBP", "AVIF") and image.mode not in ("RGB", "RGBA"):
+        # These encoders only take RGB(A), so convert for instance CMYK
+        # and palette images, keeping transparency when there is any.
+        has_alpha = "A" in image.getbands() or "transparency" in image.info
+        image = image.convert("RGBA" if has_alpha else "RGB")
 
     return image, format_
 
