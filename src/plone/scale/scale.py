@@ -56,6 +56,26 @@ PIL.ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 MAX_PIXELS = 8192 * 8192
 
+# A JPEG can be decoded at 1/2, 1/4 or 1/8 of its size (``Image.draft``),
+# which is much faster than decoding it fully and then scaling it down. But
+# the scaling of the JPEG decoder is crude: decoding straight to the target
+# size gives visibly blurrier and blockier scales. So only let the decoder
+# reduce the image to at least this many times the target size, and let
+# Pillow do the rest. Pillow's own ``Image.thumbnail`` does the same, with
+# the same default, as ``reducing_gap``.
+DRAFT_REDUCING_GAP = 2.0
+
+
+def _draft(image, width, height):
+    """Let the JPEG decoder reduce the image, with a margin, see above."""
+    image.draft(
+        image.mode,
+        (
+            math.ceil(width * DRAFT_REDUCING_GAP),
+            math.ceil(height * DRAFT_REDUCING_GAP),
+        ),
+    )
+
 
 def scaleImage(
     image,
@@ -224,7 +244,7 @@ def _scale_thumbnail(image, width=None, height=None, resample=RESAMPLE):
         # scaling, so return the potentially pre cropped image
         return image
 
-    image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
+    _draft(image, dimensions.target_width, dimensions.target_height)
     image = image.resize((dimensions.target_width, dimensions.target_height), resample)
     return image
 
@@ -513,7 +533,7 @@ def scalePILImage(
         # scaling, so return the potentially pre cropped image
         return image
 
-    image.draft(image.mode, (dimensions.target_width, dimensions.target_height))
+    _draft(image, dimensions.target_width, dimensions.target_height)
     image = image.resize((dimensions.target_width, dimensions.target_height), resample)
 
     if dimensions.post_scale_crop:
