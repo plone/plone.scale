@@ -1,0 +1,4 @@
+Let the JPEG decoder reduce the image to no less than twice the size of the scale,
+as Pillow's ``Image.thumbnail`` does, instead of straight to the size of the scale,
+which made scales that are at least twice as small as the original measurably softer.
+@jladage
